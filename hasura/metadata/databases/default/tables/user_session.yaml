@@ -1,0 +1,22 @@
+table:
+  name: session
+  schema: user
+select_permissions:
+  - role: guest-consumer
+    permission:
+      columns:
+        - revoked
+        - user_id
+        - device_info
+        - access_token
+        - ip_address
+        - refresh_token
+        - user_agent
+        - access_token_expires_at
+        - created_at
+        - last_used_at
+        - refresh_token_expires_at
+        - updated_at
+        - id
+      filter: {}
+    comment: ""
