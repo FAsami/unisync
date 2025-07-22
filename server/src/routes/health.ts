@@ -3,15 +3,13 @@ import { ApiResponse } from "../utils";
 
 const router = Router();
 
-interface HealthData {
-  status: string;
-  uptime: number;
-  environment: string;
-  version: string;
-}
-
 router.get("/health", (req: Request, res: Response) => {
-  const healthData: HealthData = {
+  const healthData: {
+    status: string;
+    uptime: number;
+    environment: string;
+    version: string;
+  } = {
     status: "OK",
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || "development",
@@ -24,7 +22,6 @@ router.get("/health", (req: Request, res: Response) => {
     200,
     req
   );
-  console.log("response");
 
   if (req.startTime) {
     response.body.meta.duration = Date.now() - req.startTime;

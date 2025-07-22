@@ -2,13 +2,11 @@ import helmet from "helmet";
 import cors from "cors";
 import { Express } from "express";
 
-// CORS configuration
 export const corsOptions = {
   origin: (
     origin: string | undefined,
     callback: (err: Error | null, allow?: boolean) => void
   ) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
 
     const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
@@ -24,12 +22,13 @@ export const corsOptions = {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true, // Allow cookies and authentication headers
-  optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
+  credentials: true,
+  optionsSuccessStatus: 200,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: [
     "Origin",
     "X-Requested-With",
+    "X-Hasura-Access-Token",
     "Content-Type",
     "Accept",
     "Authorization",
@@ -37,7 +36,6 @@ export const corsOptions = {
   ],
 };
 
-// Helmet configuration
 export const helmetConfig = {
   contentSecurityPolicy: {
     directives: {
@@ -56,20 +54,11 @@ export const helmetConfig = {
   crossOriginResourcePolicy: { policy: "cross-origin" as const },
 };
 
-// Apply security middleware to the app
 export const applySecurityMiddleware = (app: Express) => {
-  // Apply Helmet for security headers
   app.use(helmet(helmetConfig));
-
-  // Apply CORS
   app.use(cors(corsOptions));
-
-  // Additional security headers
   app.use((req, res, next) => {
-    // Remove X-Powered-By header
     res.removeHeader("X-Powered-By");
-
-    // Add custom security headers
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-Frame-Options", "DENY");
     res.setHeader("X-XSS-Protection", "1; mode=block");

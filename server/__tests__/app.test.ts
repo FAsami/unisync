@@ -1,3 +1,10 @@
+// Mock ES modules that cause issues in Jest
+jest.mock("graphql-request", () => ({
+  GraphQLClient: jest.fn().mockImplementation(() => ({
+    request: jest.fn(),
+  })),
+}));
+
 import request from "supertest";
 import app from "../src/index";
 

@@ -15,7 +15,6 @@ export const requestInfo = (
   res: Response,
   next: NextFunction
 ): void => {
-  // Ensure headers object exists
   if (!req.headers) {
     req.headers = {};
   }
