@@ -14,12 +14,21 @@ export const corsOptions = {
       "http://localhost:3001",
       "http://127.0.0.1:3000",
       "http://127.0.0.1:3001",
+      "http://localhost:8081", // Expo development server
+      "http://192.168.0.198:8081", // Expo development server on network
+      "exp://192.168.0.198:8081", // Expo Go
+      "exp://localhost:8081", // Expo Go local
     ];
 
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error("Not allowed by CORS"));
+      // For development, allow all origins
+      if (process.env.NODE_ENV === "development") {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
     }
   },
   credentials: true,
@@ -43,7 +52,12 @@ export const helmetConfig = {
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
+      connectSrc: [
+        "'self'",
+        "http://localhost:*",
+        "http://192.168.0.198:*",
+        "exp://*",
+      ],
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
