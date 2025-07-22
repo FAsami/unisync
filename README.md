@@ -1,6 +1,6 @@
 # UniSync
 
-A full-stack synchronization platform built with React Native, Node.js, Hasura GraphQL, and PostgreSQL.
+A full-stack application with mobile app, server API, and Hasura GraphQL.
 
 ## 🏗️ Architecture
 
@@ -9,7 +9,7 @@ unisync/
 ├── mobile/          # React Native/Expo app
 ├── server/          # Node.js/Express API
 ├── hasura/          # GraphQL API
-├── web/             # Web app (future)
+├── web/             # Empty directory
 └── docker-compose.yml
 ```
 
@@ -17,21 +17,20 @@ unisync/
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js
 - Docker & Docker Compose
-- Expo CLI (`npm install -g @expo/cli`)
+- Expo CLI
 
 ### 1. Start Backend Services
 
 ```bash
-# Start PostgreSQL and Hasura
 docker-compose up -d
 ```
 
-**Services:**
+Services:
 
-- PostgreSQL: `localhost:9200`
-- Hasura Console: `http://localhost:9203` (admin secret: `123`)
+- PostgreSQL: localhost:9200
+- Hasura: http://localhost:9203 (admin secret: 123)
 
 ### 2. Start API Server
 
@@ -41,7 +40,7 @@ npm install
 npm run dev
 ```
 
-Server runs on port `9201`.
+Server runs on port 9201.
 
 ### 3. Start Mobile App
 
@@ -55,44 +54,21 @@ npx expo start
 
 ### [Server API](./server/README.md)
 
-Node.js/Express API server with TypeScript, authentication, and GraphQL integration.
-
-**Key Features:**
-
-- REST API endpoints
-- JWT authentication
-- Hasura webhook integration
-- Comprehensive testing with Jest
-- Structured logging with Winston
+Node.js/Express API server with TypeScript.
 
 ### [Hasura GraphQL](./hasura/README.md)
 
-GraphQL API layer with PostgreSQL backend and real-time capabilities.
-
-**Key Features:**
-
-- Auto-generated GraphQL API
-- Database migrations
-- Authentication webhooks
-- Real-time subscriptions
-- Admin console
+GraphQL API with PostgreSQL backend.
 
 ### Mobile App
 
-React Native application with Expo for cross-platform development.
-
-**Key Features:**
-
-- File-based routing
-- TypeScript support
-- Cross-platform compatibility
-- Hot reload development
+React Native application with Expo.
 
 ## 🔧 Development
 
 ### Environment Setup
 
-1. **Database Setup**
+1. Database Setup
 
    ```bash
    cd hasura
@@ -100,59 +76,25 @@ React Native application with Expo for cross-platform development.
    hasura metadata apply
    ```
 
-2. **Code Generation**
+2. Code Generation
 
    ```bash
    cd server
    npm run codegen
    ```
 
-3. **Testing**
+3. Testing
    ```bash
    cd server
    npm test
    ```
 
-### Development Workflow
-
-- **Server**: TypeScript with hot reload
-- **Mobile**: Expo development server
-- **Database**: Hasura console for schema management
-- **Testing**: Jest for unit and integration tests
-
-## 📊 Current Status
-
-### ✅ Implemented
-
-- Basic server API with health check and authentication
-- Hasura GraphQL setup with user session management
-- Mobile app structure with Expo
-- Docker infrastructure
-- Database schema for user sessions
-
-### 🚧 In Progress
-
-- Authentication system refinement
-- Mobile app features
-- API endpoint expansion
-
-### 📋 Planned
-
-- Web application
-- Real-time synchronization
-- Advanced user management
-- Performance monitoring
-
 ## 🔗 Links
 
 - [Server Documentation](./server/README.md)
 - [Hasura Documentation](./hasura/README.md)
-- [Mobile App](./mobile/) (uses default Expo README)
+- [Mobile App](./mobile/)
 
 ## 📞 Support
 
-- **Contact**: foysal.developer@gmail.com
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
+- Contact: foysal.developer@gmail.com
