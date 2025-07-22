@@ -3,10 +3,8 @@ import { JWTService, DecodedToken } from "../../utils/jwt";
 import { AppError } from "../../utils/response/AppError";
 
 const authorizeRequestWebhook = (req: Request, res: Response) => {
-  console.log("req.box", req.body);
   try {
-    const accessToken = req.body.headers["X-hasura-access-token"] as string;
-    console.log("accesss token", req.body.headers);
+    const accessToken = req.body.headers["x-hasura-access-token"] as string;
     if (!accessToken) {
       throw new AppError("Access token is required", 401);
     }
@@ -28,7 +26,6 @@ const authorizeRequestWebhook = (req: Request, res: Response) => {
         error: error.message,
       });
     } else {
-      console.error("Webhook authorization error:", error);
       res.status(500).json({
         error: "Internal server error during authorization",
       });
