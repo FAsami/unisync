@@ -1,0 +1,1 @@
+CREATE TABLE "academic"."announcements" ("id" serial NOT NULL, "title" text NOT NULL, "content" jsonb NOT NULL, "announced_at" timestamptz NOT NULL, "announcer_id" serial NOT NULL, "target_type" text NOT NULL DEFAULT 'BATCH', "target_id" integer NOT NULL, PRIMARY KEY ("id") , FOREIGN KEY ("announcer_id") REFERENCES "academic"."users"("id") ON UPDATE restrict ON DELETE restrict);
