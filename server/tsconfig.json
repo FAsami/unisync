@@ -21,9 +21,11 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "baseUrl": "./",
+     "types": ["node"], 
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
