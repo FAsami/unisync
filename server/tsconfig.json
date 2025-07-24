@@ -21,7 +21,6 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "baseUrl": "./",
-    "types": ["node"],
     "typeRoots": ["./node_modules/@types"],
     "allowSyntheticDefaultImports": true,
     "paths": {
