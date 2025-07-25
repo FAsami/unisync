@@ -43,12 +43,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
       setIsOnline(networkStatus);
       setHasValidToken(authStatus);
-
-      console.log(
-        `Auth status: online=${networkStatus}, authenticated=${authStatus}`
-      );
     } catch (error) {
-      console.error("Failed to check auth status:", error);
       setHasValidToken(false);
     } finally {
       setIsLoading(false);
@@ -61,7 +56,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       setHasValidToken(!!token);
       setIsSessionRevoked(false);
     } catch (error) {
-      console.error("Failed to refresh auth:", error);
       setHasValidToken(false);
     }
   };
@@ -71,33 +65,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       await handleSessionRevocation();
       setIsSessionRevoked(false);
       setHasValidToken(false);
-      // Re-check auth status after handling revocation
       await checkAuthStatus();
     } catch (error) {
-      console.error("Failed to handle revocation:", error);
+      // Handle silently
     }
   };
 
   useEffect(() => {
     checkAuthStatus();
-
-    // Check auth status periodically
     const interval = setInterval(checkAuthStatus, 30000); // Every 30 seconds
-
-    // Listen for auth events
     const handleSessionRevokedEvent = () => {
-      console.log("🚨 Session revoked event received");
       setIsSessionRevoked(true);
       setHasValidToken(false);
     };
 
     const handleSessionExpiredEvent = () => {
-      console.log("⏰ Session expired event received");
       setHasValidToken(false);
     };
 
     const handleAuthErrorEvent = () => {
-      console.log("❌ Auth error event received");
       setHasValidToken(false);
     };
 

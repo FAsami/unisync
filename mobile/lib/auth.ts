@@ -3,7 +3,6 @@ import { axiosClient } from "./axios";
 import { jwtDecode } from "jwt-decode";
 import NetInfo from "@react-native-community/netinfo";
 
-// Simple event emitter for auth events
 type AuthEventType = "SESSION_REVOKED" | "SESSION_EXPIRED" | "AUTH_ERROR";
 type AuthEventListener = (data?: any) => void;
 
@@ -126,38 +125,25 @@ const attemptTokenRefresh = async (
   try {
     const isConnected = await checkNetworkConnectivity();
     if (!isConnected) {
-      console.log("No network connection, skipping token refresh");
       return null;
     }
 
-    console.log("Attempting token refresh...");
     const response = await axiosClient.post<ApiResponse>("/auth/refresh", {
       refresh_token: refreshToken,
     });
 
     if (response.data.success && response.data.data) {
       await handleTokenStorage(response.data.data);
-      console.log("Token refresh successful");
       return response.data.data.access_token;
     }
 
-    console.warn("Token refresh response invalid");
     return null;
   } catch (error: any) {
     const errorData = error.response?.data?.error;
     const errorCode = errorData?.code;
 
-    console.error(
-      "Token refresh failed:",
-      error.response?.data || error.message
-    );
-
-    // Handle specific revocation scenarios
     if (error.response?.status === 401) {
       if (errorCode === "SESSION_REVOKED") {
-        console.warn(
-          "⚠️ Session has been revoked by server - clearing all tokens"
-        );
         await clearStoredTokens();
         authEventEmitter.emit("SESSION_REVOKED", {
           reason: "Session revoked by server",
@@ -168,9 +154,6 @@ const attemptTokenRefresh = async (
         errorCode === "SESSION_NOT_FOUND" ||
         errorCode === "REFRESH_TOKEN_EXPIRED"
       ) {
-        console.warn(
-          "⚠️ Session not found or refresh token expired - clearing tokens"
-        );
         await clearStoredTokens();
         authEventEmitter.emit("SESSION_EXPIRED", {
           reason:
@@ -181,8 +164,6 @@ const attemptTokenRefresh = async (
         });
         return null;
       } else {
-        // Generic 401 - likely expired or invalid token
-        console.warn("⚠️ Token refresh unauthorized - clearing tokens");
         await clearStoredTokens();
         authEventEmitter.emit("AUTH_ERROR", {
           reason: "Unauthorized token refresh",
@@ -200,26 +181,18 @@ const attemptGuestTokenGeneration = async (): Promise<string | null> => {
   try {
     const isConnected = await checkNetworkConnectivity();
     if (!isConnected) {
-      console.log("No network connection, skipping guest token generation");
       return null;
     }
 
-    console.log("Generating new guest token...");
     const response = await axiosClient.post<ApiResponse>("/auth/guest-session");
 
     if (response.data.success && response.data.data) {
       await handleTokenStorage(response.data.data);
-      console.log("Guest token generation successful");
       return response.data.data.access_token;
     }
 
-    console.error("Guest token response invalid");
     return null;
   } catch (error: any) {
-    console.error(
-      "Guest token generation failed:",
-      error.response?.data || error.message
-    );
     return null;
   }
 };
@@ -228,54 +201,39 @@ export const getGuestSessionToken = async (
   forceRefresh = false
 ): Promise<string | null> => {
   try {
-    // Return cached token if valid and not forcing refresh
     if (!forceRefresh && tokenCache && tokenCache.expires > Date.now()) {
-      console.log("Returning cached token");
       return tokenCache.token;
     }
 
     let accessToken = await AsyncStorage.getItem("access_token");
     let refreshToken = await AsyncStorage.getItem("refresh_token");
 
-    // Try to use existing access token if valid
     if (!forceRefresh && accessToken && isTokenValid(accessToken)) {
-      console.log("Using existing valid access token");
       cacheToken(accessToken);
       return accessToken;
     }
-
-    // Try to refresh tokens if we have a refresh token
     if (refreshToken) {
       const refreshedToken = await attemptTokenRefresh(refreshToken);
       if (refreshedToken) {
         return refreshedToken;
       }
     }
-
-    // Generate new guest token as final fallback
     const newToken = await attemptGuestTokenGeneration();
     if (newToken) {
       return newToken;
     }
 
-    console.error("All token acquisition methods failed");
     return null;
   } catch (error) {
-    console.error("Unexpected error in getGuestSessionToken:", error);
-
-    // Emergency fallback - try one more guest token generation
     try {
-      console.log("Attempting emergency guest token generation...");
       return await attemptGuestTokenGeneration();
     } catch (fallbackError) {
-      console.error("Emergency fallback failed:", fallbackError);
       return null;
     }
   }
 };
 
 export const clearAuthData = async (): Promise<void> => {
-  console.log("Clearing all authentication data");
   await clearStoredTokens();
 };
 
@@ -292,7 +250,6 @@ export const refreshTokenIfNeeded = async (): Promise<string | null> => {
   try {
     const accessToken = await AsyncStorage.getItem("access_token");
     if (!accessToken || !isTokenValid(accessToken)) {
-      console.log("Token refresh needed");
       return await getGuestSessionToken(true);
     }
     return accessToken;
@@ -305,13 +262,10 @@ export const getOfflineToken = async (): Promise<string | null> => {
   try {
     const accessToken = await AsyncStorage.getItem("access_token");
     if (accessToken && isTokenValid(accessToken)) {
-      console.log("Returning cached offline token");
       return accessToken;
     }
-    console.log("No valid offline token available");
     return null;
   } catch (error) {
-    console.error("Failed to get offline token:", error);
     return null;
   }
 };
@@ -333,7 +287,6 @@ export const validateSessionWithServer = async (): Promise<{
 
     const isConnected = await checkNetworkConnectivity();
     if (!isConnected) {
-      // Can't validate without network, assume valid for now
       return {
         isValid: true,
         isRevoked: false,
@@ -341,9 +294,8 @@ export const validateSessionWithServer = async (): Promise<{
       };
     }
 
-    // Try to make a simple request to validate the token
     try {
-      const response = await axiosClient.get("/health", {
+      await axiosClient.get("/health", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -366,8 +318,6 @@ export const validateSessionWithServer = async (): Promise<{
 
         return { isValid: false, isRevoked: false, reason: "Token invalid" };
       }
-
-      // Network or other error - assume valid for now
       return {
         isValid: true,
         isRevoked: false,
@@ -375,28 +325,21 @@ export const validateSessionWithServer = async (): Promise<{
       };
     }
   } catch (error) {
-    console.error("Session validation error:", error);
     return { isValid: true, isRevoked: false, reason: "Validation error" };
   }
 };
 
 export const handleSessionRevocation = async (): Promise<void> => {
-  console.log("🔄 Handling session revocation...");
   await clearStoredTokens();
-
-  // Try to get a new guest session
   try {
     const newToken = await attemptGuestTokenGeneration();
     if (newToken) {
-      console.log("✅ New guest session created after revocation");
       authEventEmitter.emit("AUTH_ERROR", {
         reason: "Session revoked, new guest session created",
         timestamp: new Date().toISOString(),
       });
-    } else {
-      console.error("❌ Failed to create new session after revocation");
     }
   } catch (error) {
-    console.error("Failed to create new session after revocation:", error);
+    // Handle silently
   }
 };

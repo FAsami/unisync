@@ -1,3 +1,4 @@
+import { getEnv } from "@/utils/getEnv";
 import axios, {
   InternalAxiosRequestConfig,
   AxiosResponse,
@@ -10,7 +11,7 @@ interface RetryConfig extends InternalAxiosRequestConfig {
 }
 
 const axiosClient = axios.create({
-  baseURL: "http://192.168.0.198:9201/api/v1",
+  baseURL: getEnv("SERVER_URL"),
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
