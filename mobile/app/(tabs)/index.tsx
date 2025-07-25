@@ -1,12 +1,12 @@
-import { View, StyleSheet } from "react-native";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+import { View, StyleSheet } from 'react-native'
+import { ThemedText } from '@/components/ThemedText'
+import { ThemedView } from '@/components/ThemedView'
 
-export default function HomeScreen() {
+const HomeScreen = () => {
   return (
     <ThemedView style={styles.container}>
       <View style={styles.content}>
-        <ThemedText type='title' style={styles.title}>
+        <ThemedText type="title" style={styles.title}>
           Welcome to UniSync
         </ThemedText>
         <ThemedText style={styles.subtitle}>
@@ -14,8 +14,10 @@ export default function HomeScreen() {
         </ThemedText>
       </View>
     </ThemedView>
-  );
+  )
 }
+
+export default HomeScreen
 
 const styles = StyleSheet.create({
   container: {
@@ -23,16 +25,16 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 20,
   },
   title: {
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: 16,
   },
   subtitle: {
-    textAlign: "center",
+    textAlign: 'center',
     opacity: 0.7,
   },
-});
+})
