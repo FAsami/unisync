@@ -1,73 +1,69 @@
-import { View, StyleSheet, ScrollView } from 'react-native'
+import { StyleSheet, ScrollView, View } from 'react-native'
 import { ThemedText } from '@/components/ThemedText'
 import { ThemedView } from '@/components/ThemedView'
 import { AppColors } from '@/constants/Colors'
 
-const HomeScreen = () => {
+export default function ScheduleScreen() {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <ThemedText type="title" style={styles.title}>
-            Welcome to UniSync
+            Schedule
           </ThemedText>
           <ThemedText style={styles.subtitle}>
-            Your university synchronization platform
+            Your daily and weekly class timetable
           </ThemedText>
         </View>
 
         <View style={styles.content}>
           <View style={styles.card}>
             <ThemedText type="defaultSemiBold" style={styles.cardTitle}>
-              📅 Today's Overview
+              📅 Today's Classes
             </ThemedText>
             <ThemedText style={styles.cardContent}>
-              • Next class: Mathematics at 9:00 AM
+              • 9:00 AM - Mathematics (Room 101)
             </ThemedText>
             <ThemedText style={styles.cardContent}>
-              • 2 assignments due this week
+              • 11:00 AM - Physics (Lab 203)
             </ThemedText>
             <ThemedText style={styles.cardContent}>
-              • 1 lab report pending
+              • 2:00 PM - Computer Science (Room 305)
             </ThemedText>
           </View>
 
           <View style={styles.card}>
             <ThemedText type="defaultSemiBold" style={styles.cardTitle}>
-              🔔 Recent Announcements
+              📊 Weekly Overview
             </ThemedText>
             <ThemedText style={styles.cardContent}>
-              • Spring semester exam schedule released
+              Monday: 4 classes scheduled
             </ThemedText>
             <ThemedText style={styles.cardContent}>
-              • Library hours extended for finals
+              Tuesday: 3 classes scheduled
             </ThemedText>
             <ThemedText style={styles.cardContent}>
-              • New course registration opens Monday
+              Wednesday: 5 classes scheduled
             </ThemedText>
           </View>
 
           <View style={styles.card}>
             <ThemedText type="defaultSemiBold" style={styles.cardTitle}>
-              🚀 Quick Actions
+              🕐 Next Class
             </ThemedText>
             <ThemedText style={styles.cardContent}>
-              • View today's schedule
+              Mathematics - Room 101
             </ThemedText>
             <ThemedText style={styles.cardContent}>
-              • Check pending tasks
+              Starts in 45 minutes
             </ThemedText>
-            <ThemedText style={styles.cardContent}>
-              • Update profile information
-            </ThemedText>
+            <ThemedText style={styles.cardContent}>Prof. Dr. Smith</ThemedText>
           </View>
         </View>
       </ScrollView>
     </View>
   )
 }
-
-export default HomeScreen
 
 const styles = StyleSheet.create({
   container: {

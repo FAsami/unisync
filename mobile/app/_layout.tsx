@@ -18,10 +18,12 @@ import {
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import 'react-native-reanimated'
+import { PaperProvider } from 'react-native-paper'
 
 import { useColorScheme } from '@/hooks/useColorScheme'
 import { AuthProvider } from '@/contexts/Auth'
 import { GraphQLProvider } from '@/contexts/Apollo'
+import { lightTheme, darkTheme } from '@/constants/Theme'
 
 const RootLayout = () => {
   const colorScheme = useColorScheme()
@@ -41,20 +43,23 @@ const RootLayout = () => {
     return null
   }
 
+  const paperTheme = colorScheme === 'dark' ? darkTheme : lightTheme
+  const navigationTheme = colorScheme === 'dark' ? DarkTheme : DefaultTheme
+
   return (
-    <AuthProvider>
-      <GraphQLProvider>
-        <ThemeProvider
-          value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-        >
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </GraphQLProvider>
-    </AuthProvider>
+    <PaperProvider theme={paperTheme}>
+      <AuthProvider>
+        <GraphQLProvider>
+          <ThemeProvider value={navigationTheme}>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </GraphQLProvider>
+      </AuthProvider>
+    </PaperProvider>
   )
 }
 export default RootLayout
