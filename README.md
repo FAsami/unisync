@@ -9,7 +9,6 @@ unisync/
 ├── mobile/          # React Native/Expo app
 ├── server/          # Node.js/Express API
 ├── hasura/          # GraphQL API
-├── web/             # Empty directory
 └── docker-compose.yml
 ```
 
