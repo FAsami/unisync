@@ -30,6 +30,24 @@ primary_region = 'nrt'
   RATE_LIMIT_WINDOW_MS=900000
   RATE_LIMIT_MAX_REQUESTS=100
 
+# Health check configuration
+[health_check]
+  grace_period = "10s"
+  interval = "30s"
+  restart_limit = 0
+  timeout = "5s"
 
+# Metrics configuration
+[metrics]
+  port = 9091
+  path = "/metrics"
 
+# Process configuration
+[processes]
+  app = "node dist/index.js"
 
+# Auto-scaling configuration
+[auto_scale]
+  min_instances = 1
+  max_instances = 3
+  target_cpu_percent = 70
