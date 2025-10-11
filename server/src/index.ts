@@ -24,7 +24,9 @@ app.use(morgan("combined", { stream }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(requestInfo);
+
 app.use("/api/v1", routes);
+
 app.use(notFoundHandler);
 app.use(errorHandler);
 
@@ -52,6 +54,7 @@ if (process.env.NODE_ENV !== "test") {
   app.listen(PORT, () => {
     logger.info(`🚀 Server is running on port ${PORT}`);
     logger.info(`Environment: ${process.env.NODE_ENV || "development"}`);
+    logger.info(`🔗 API Endpoint: http://localhost:${PORT}/api/v1`);
   });
 }
 
