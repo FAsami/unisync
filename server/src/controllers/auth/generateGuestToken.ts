@@ -11,30 +11,25 @@ import { JWTService } from "../../utils/jwt";
 export const generateGuestToken = async (req: Request, res: Response) => {
   try {
     const graphqlClient = getGraphQLClient();
-
     const sessionId = crypto.randomUUID();
-
     const accessToken = JWTService.generateAccessToken({
       sessionId,
       userId: null,
       role: "guest-consumer",
     });
-
     const refreshToken = JWTService.generateRefreshToken({
       sessionId,
       userId: null,
       role: "guest-consumer",
     });
-
     const accessTokenExpires = JWTService.getTokenExpiration(accessToken);
     const refreshTokenExpires = JWTService.getTokenExpiration(refreshToken);
-
     const ipAddress = req.ip || "unknown";
     const userAgent = req.get("User-Agent") || "unknown";
 
     const deviceInfo = {
-      platform: req.header("x-platform") || "web",
-      browser: req.header("x-browser") || "Unknown",
+      platform: req.header("x-platform") || null,
+      browser: req.header("x-browser") || null,
     };
 
     const variables: InsertSessionMutationVariables = {
