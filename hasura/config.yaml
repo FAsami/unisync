@@ -2,6 +2,7 @@ version: 3
 endpoint: http://localhost:9203
 metadata_directory: metadata
 admin_secret: 123
+metadata_database_url: postgres://postgres:postgrespassword@localhost:9200/unisync
 actions:
   kind: synchronous
   handler_webhook_baseurl: http://localhost:3000

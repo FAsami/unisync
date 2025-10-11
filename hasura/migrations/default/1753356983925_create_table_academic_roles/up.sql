@@ -1,1 +1,0 @@
-CREATE TABLE "academic"."roles" ("id" serial NOT NULL, "user_id" integer NOT NULL, "role" text NOT NULL, "scope" text NOT NULL DEFAULT 'BATCH', "scope_id" integer NOT NULL, "assigned_at" timestamptz NOT NULL, PRIMARY KEY ("id") );

@@ -1,1 +1,0 @@
-CREATE TABLE "academic"."file_attachments" ("id" serial NOT NULL, "file_id" integer NOT NULL, "entity_type" text NOT NULL DEFAULT 'NOTE', "entity_id" integer NOT NULL, "attached_at" timestamptz NOT NULL DEFAULT now(), PRIMARY KEY ("id") , FOREIGN KEY ("file_id") REFERENCES "academic"."files"("id") ON UPDATE restrict ON DELETE restrict);

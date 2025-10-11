@@ -1,1 +1,0 @@
-CREATE TABLE "academic"."batches" ("id" serial NOT NULL, "name" text NOT NULL, "code" text NOT NULL, "department_id" integer NOT NULL, PRIMARY KEY ("id") , FOREIGN KEY ("department_id") REFERENCES "academic"."departments"("id") ON UPDATE restrict ON DELETE restrict, UNIQUE ("name", "code"));

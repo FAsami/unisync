@@ -6,7 +6,6 @@ select_permissions:
     permission:
       columns:
         - revoked
-        - user_id
         - device_info
         - access_token
         - ip_address
@@ -18,5 +17,7 @@ select_permissions:
         - refresh_token_expires_at
         - updated_at
         - id
+        - user_id
       filter: {}
+      limit: 1
     comment: ""
