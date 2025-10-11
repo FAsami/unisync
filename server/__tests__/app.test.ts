@@ -29,13 +29,11 @@ describe("Main Application", () => {
       const originalPort = process.env.PORT;
       delete process.env.PORT;
 
-      // Import the app again to test default port
       jest.resetModules();
       const { default: testApp } = require("../src/index");
 
       expect(testApp).toBeDefined();
 
-      // Restore original PORT
       if (originalPort) {
         process.env.PORT = originalPort;
       }
@@ -44,8 +42,6 @@ describe("Main Application", () => {
     it("should use custom port when PORT is set", () => {
       const originalPort = process.env.PORT;
       process.env.PORT = "4000";
-
-      // Import the app again to test custom port
       jest.resetModules();
       const { default: testApp } = require("../src/index");
 

@@ -1,15 +1,11 @@
 import dotenv from "dotenv";
+import path from "path";
 
-// Load environment variables for testing
-dotenv.config({ path: ".env.test" });
-
-// Set test environment
 process.env.NODE_ENV = "test";
+dotenv.config({ path: path.resolve(__dirname, "../.env.test") });
 
-// Global test timeout
 jest.setTimeout(10000);
 
-// Mock console methods to reduce noise in tests
 global.console = {
   ...console,
   log: jest.fn(),

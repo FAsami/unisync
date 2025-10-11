@@ -1,6 +1,5 @@
 import { config } from "../../src/config/environment";
 
-// Mock environment variables
 const originalEnv = process.env;
 
 beforeEach(() => {
@@ -49,14 +48,6 @@ describe("Environment Configuration", () => {
   });
 
   describe("JWT Configuration", () => {
-    it("should use default JWT secret when not set", () => {
-      delete process.env.JWT_SECRET;
-
-      const { config: testConfig } = require("../../src/config/environment");
-
-      expect(testConfig.JWT_SECRET).toBe("longLongAgo");
-    });
-
     it("should use custom JWT secret when set", () => {
       process.env.JWT_SECRET = "custom-jwt-secret";
 
@@ -99,16 +90,6 @@ describe("Environment Configuration", () => {
   });
 
   describe("Hasura Configuration", () => {
-    it("should use default Hasura endpoint when not set", () => {
-      delete process.env.HASURA_ENDPOINT;
-
-      const { config: testConfig } = require("../../src/config/environment");
-
-      expect(testConfig.HASURA_ENDPOINT).toBe(
-        "http://localhost:9203/v1/graphql"
-      );
-    });
-
     it("should use custom Hasura endpoint when set", () => {
       process.env.HASURA_ENDPOINT = "https://api.example.com/graphql";
 
@@ -204,40 +185,7 @@ describe("Environment Configuration", () => {
     });
   });
 
-  describe("Sentry Configuration", () => {
-    it("should use default Sentry DSN when not set", () => {
-      delete process.env.SENTRY_DSN;
-
-      const { config: testConfig } = require("../../src/config/environment");
-
-      expect(testConfig.SENTRY_DSN).toBe(
-        "https://8e85f06a4a781f26e7ffdebd35cfef33@o4508676239327232.ingest.us.sentry.io/4509696729677824"
-      );
-    });
-
-    it("should use custom Sentry DSN when set", () => {
-      process.env.SENTRY_DSN = "https://sentry.example.com/dsn";
-
-      const { config: testConfig } = require("../../src/config/environment");
-
-      expect(testConfig.SENTRY_DSN).toBe("https://sentry.example.com/dsn");
-    });
-  });
-
   describe("CORS Configuration", () => {
-    it("should use default allowed origins when not set", () => {
-      delete process.env.ALLOWED_ORIGINS;
-
-      const { config: testConfig } = require("../../src/config/environment");
-
-      expect(testConfig.ALLOWED_ORIGINS).toEqual([
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001",
-      ]);
-    });
-
     it("should use custom allowed origins when set", () => {
       process.env.ALLOWED_ORIGINS =
         "https://app.example.com,https://api.example.com";

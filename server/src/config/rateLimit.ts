@@ -38,8 +38,8 @@ export const authLimiter = rateLimit({
 });
 
 export const webhookLimiter = rateLimit({
-  windowMs: 1 * 1000, // 1 second window
-  max: 100, // 100 requests per second
+  windowMs: 1 * 1000,
+  max: 100,
   message: {
     error: "Too many webhook requests, please try again later.",
     retryAfter: "1 second",
@@ -92,9 +92,18 @@ export const healthLimiter = rateLimit({
 });
 
 export const applyRateLimiting = (app: Express) => {
-  // app.use(generalLimiter);
-  // app.use("/api/v1/auth/webhook/authorize", webhookLimiter);
-  // app.use("/api/v1/auth", authLimiter);
-  // app.use("/api/v1", apiLimiter);
-  // app.use("/health", healthLimiter);
+  app.use(generalLimiter);
+
+  // Webhook needs separate, higher limit
+  app.use("/api/v1/auth/webhook/authorize", webhookLimiter);
+
+  // Auth endpoints (except webhook) get strict limit
+  app.use("/api/v1/auth/guest-session", authLimiter);
+  app.use("/api/v1/auth/refresh", authLimiter);
+
+  // Future OTP routes
+  // app.use("/api/v1/auth/otp", otpLimiter);
+
+  // General API limit
+  app.use("/api/v1", apiLimiter);
 };

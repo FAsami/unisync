@@ -14,17 +14,19 @@ export const corsOptions = {
       "http://localhost:3001",
       "http://127.0.0.1:3000",
       "http://127.0.0.1:3001",
-      "http://localhost:8081", // Expo development server
-      "http://192.168.0.198:8081", // Expo development server on network
-      "exp://192.168.0.198:8081", // Expo Go
-      "exp://localhost:8081", // Expo Go local
+      "http://localhost:8081",
+      "http://192.168.0.198:8081",
+      "exp://192.168.0.198:8081",
+      "exp://localhost:8081",
     ];
 
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      // For development, allow all origins
-      if (process.env.NODE_ENV === "development") {
+      if (
+        process.env.NODE_ENV === "development" ||
+        process.env.NODE_ENV === "test"
+      ) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));

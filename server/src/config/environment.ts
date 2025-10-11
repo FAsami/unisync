@@ -1,17 +1,13 @@
 import dotenv from "dotenv";
+import path from "path";
 
-dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 export const config = {
   NODE_ENV: process.env.NODE_ENV || "development",
-  PORT: parseInt(process.env.PORT || "3000", 10),
+  PORT: parseInt(process.env.PORT || "9201", 10),
   SENTRY_DSN: process.env.SENTRY_DSN,
-  ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS?.split(",") || [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-  ],
+  ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS?.split(","),
   RATE_LIMIT_WINDOW_MS: parseInt(
     process.env.RATE_LIMIT_WINDOW_MS || "900000",
     10
@@ -25,12 +21,13 @@ export const config = {
   API_VERSION: process.env.API_VERSION || "v1",
   APP_VERSION: process.env.APP_VERSION || "1.0.0",
   HASURA_ENDPOINT:
-    process.env.HASURA_ENDPOINT || "http://localhost:8080/v1/graphql",
-  HASURA_ADMIN_SECRET: process.env.HASURA_ADMIN_SECRET,
+    process.env.HASURA_ENDPOINT || "http://localhost:9203/v1/graphql",
+  HASURA_ADMIN_SECRET: process.env.HASURA_ADMIN_SECRET || "123",
   JWT_SECRET: process.env.JWT_SECRET || "longLongAgo",
   JWT_ACCESS_TOKEN_EXPIRY: process.env.JWT_ACCESS_TOKEN_EXPIRY || "1h",
   JWT_REFRESH_TOKEN_EXPIRY: process.env.JWT_REFRESH_TOKEN_EXPIRY || "30d",
 } as const;
+console.log("[config]", config);
 
 export type Config = typeof config;
 
