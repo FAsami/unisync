@@ -30,7 +30,7 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=9201
+ENV PORT=8080
 
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init
@@ -51,11 +51,11 @@ RUN mkdir -p /app/logs && chown -R nodejs:nodejs /app/logs
 
 # Add health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:9201/api/v1/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || '8080') + '/api/v1/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
 
 USER nodejs
 
-EXPOSE 9201
+EXPOSE 8080
 
 # Use dumb-init for proper signal handling
 ENTRYPOINT ["dumb-init", "--"]

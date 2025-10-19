@@ -1,8 +1,9 @@
 version: 3
-endpoint: http://localhost:9203
+endpoint:
+  from_env: HASURA_GRAPHQL_ENDPOINT
 metadata_directory: metadata
-admin_secret: 123
-metadata_database_url: postgres://postgres:postgrespassword@localhost:9200/unisync
+admin_secret:
+  from_env: HASURA_GRAPHQL_ADMIN_SECRET
 actions:
   kind: synchronous
   handler_webhook_baseurl: http://localhost:3000

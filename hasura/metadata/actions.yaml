@@ -8,6 +8,8 @@ actions:
         - name: SERVER-AUTH-SECRET
           value_from_env: SERVER_AUTH_SECRET
       timeout: 60
+    permissions:
+      - role: guest-consumer
 custom_types:
   enums:
     - name: IdentifierTypeEnum
