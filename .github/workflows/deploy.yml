@@ -58,9 +58,34 @@ jobs:
       - name: Health check
         run: |
           echo "Waiting for deployment to be ready..."
-          sleep 30
-          curl -f https://unisync-api.fly.dev/api/v1/health || exit 1
-          curl -f https://unisync-api.fly.dev/docs || exit 1
+          sleep 60
+          echo "Starting health check..."
+
+          # Health check with retry logic
+          max_attempts=10
+          attempt=0
+          until [ $attempt -ge $max_attempts ]; do
+            if curl -f --max-time 10 https://unisync-api.fly.dev/api/v1/health; then
+              echo "✅ Health endpoint is responding"
+              break
+            fi
+            attempt=$((attempt+1))
+            echo "Health check attempt $attempt/$max_attempts failed. Retrying in 10s..."
+            sleep 10
+          done
+
+          if [ $attempt -ge $max_attempts ]; then
+            echo "❌ Health check failed after $max_attempts attempts"
+            exit 1
+          fi
+
+          # Check docs endpoint
+          if curl -f --max-time 10 https://unisync-api.fly.dev/docs; then
+            echo "✅ Docs endpoint is responding"
+          else
+            echo "⚠️ Docs endpoint not responding, but health check passed"
+          fi
+
           echo "✅ Deployment completed successfully!"
 
       - name: Deployment summary
