@@ -19,6 +19,8 @@ primary_region = 'nrt'
 
 [[vm]]
   size = 'shared-cpu-1x'
+  # Prefer IPv4 to avoid connectivity issues
+  preferred_ipv4 = true
 
 [env]
   NODE_ENV = "production"
@@ -30,6 +32,11 @@ primary_region = 'nrt'
   JWT_REFRESH_TOKEN_EXPIRY = "30d"
   RATE_LIMIT_WINDOW_MS=900000
   RATE_LIMIT_MAX_REQUESTS=100
+  # Force IPv4 to avoid IPv6 connectivity issues
+  NODE_OPTIONS = "--dns-result-order=ipv4first"
+  # Add connection timeouts
+  HTTP_TIMEOUT = "10000"
+  HTTPS_TIMEOUT = "10000"
 
 # Health check configuration
 [health_check]
