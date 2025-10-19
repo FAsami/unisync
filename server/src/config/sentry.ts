@@ -7,6 +7,7 @@ export const initSentry = () => {
     release: process.env.APP_VERSION || "1.0.0",
     tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
     debug: process.env.NODE_ENV === "development",
+    integrations: [Sentry.contextLinesIntegration({ frameContextLines: 0 })],
     beforeSend(event, hint) {
       if (process.env.NODE_ENV === "test") {
         return null;
@@ -24,6 +25,7 @@ export const initSentry = () => {
       "ECONNRESET",
       "ECONNREFUSED",
       /^Route .* not found$/,
+      /Missing parameter name/,
     ],
   });
 };
