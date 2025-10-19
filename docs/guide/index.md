@@ -1,37 +1,54 @@
 # Getting Started
 
-Welcome to the Unisync documentation! This guide will help you get started with the platform.
+Welcome to the Unisync documentation! This guide will help you get started with the project.
 
 ## What is Unisync?
 
-Unisync is a unified synchronization platform designed to keep your data synchronized across multiple platforms including web, mobile (iOS/Android), and server applications.
+Unisync is a full-stack application consisting of a mobile app (iOS/Android), REST API server, and GraphQL backend powered by Hasura.
 
 ## Architecture Overview
 
-The Unisync platform consists of several key components:
+The Unisync project consists of the following components:
 
-### Server
+### Server (REST API)
 
-- **Technology**: Node.js with Express
-- **API**: GraphQL via Hasura
-- **Authentication**: JWT-based authentication with OTP verification
-- **Database**: PostgreSQL
+- **Technology**: Node.js with Express and TypeScript
+- **Port**: 9201
+- **Features**:
+  - OTP authentication (send and verify)
+  - Guest token generation
+  - JWT refresh token management
+  - Hasura webhook authorization
+  - Rate limiting
+  - Error tracking with Sentry
+  - Logging with Winston
 
 ### Mobile App
 
 - **Framework**: React Native with Expo
 - **Platforms**: iOS and Android
-- **UI**: Modern, themeable component library
+- **UI Library**: React Native Paper
+- **Navigation**: Expo Router
+- **GraphQL Client**: Apollo Client
+- **Features**: Home, Schedule, Tasks, Announcements, Account screens
 
-### Web App
+### Hasura (GraphQL Engine)
 
-- **Framework**: React
-- **Styling**: Modern CSS framework
+- **Port**: 9203
+- **Admin Console**: http://localhost:9203/console (admin secret: `123`)
+- **Features**:
+  - GraphQL API with PostgreSQL
+  - Authentication via webhook to server
+  - Database migrations and metadata management
 
-### Hasura
+### PostgreSQL Database
 
-- **Purpose**: GraphQL engine
-- **Features**: Real-time subscriptions, role-based access control
+- **Port**: 9200
+- **Database Name**: unisync
+- **Schemas**:
+  - `user`: User sessions
+  - `platform`: OTP transactions and rate limiting
+  - `settings`: Application configuration
 
 ## Prerequisites
 

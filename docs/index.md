@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "Unisync"
   text: "Documentation"
-  tagline: Unified synchronization platform for modern applications
+  tagline: A full-stack application with mobile app, REST API, and GraphQL backend
   actions:
     - theme: brand
       text: Get Started
@@ -14,14 +14,14 @@ hero:
       link: /api/
 
 features:
-  - title: 🚀 Fast & Efficient
-    details: Built with modern technologies for optimal performance and scalability
-  - title: 🔐 Secure
-    details: Enterprise-grade security with authentication and authorization
-  - title: 📱 Multi-Platform
-    details: Support for web, mobile (iOS/Android), and server applications
-  - title: 🔄 Real-time Sync
-    details: Keep your data synchronized across all platforms in real-time
+  - title: 🔐 OTP Authentication
+    details: Secure authentication using One-Time Password verification via email or SMS
+  - title: 📱 Mobile App
+    details: React Native mobile application for iOS and Android built with Expo
+  - title: 🔌 REST + GraphQL API
+    details: Express REST API with Hasura GraphQL engine for data operations
+  - title: 🐘 PostgreSQL Database
+    details: Robust database with schemas for users, sessions, and application settings
 ---
 
 ## Quick Start
@@ -29,26 +29,27 @@ features:
 Get up and running with Unisync in minutes.
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/unisync.git
+# Start backend services (PostgreSQL + Hasura)
+docker-compose up -d
 
-# Navigate to the project
-cd unisync
-
-# Install dependencies
+# Start the API server
+cd server
 yarn install
-
-# Start the development server
 yarn dev
+
+# Start the mobile app
+cd mobile
+yarn install
+yarn start
 ```
 
 ## Project Structure
 
 Unisync is a monorepo containing:
 
-- **Server**: Node.js backend with Express and GraphQL
-- **Mobile**: React Native mobile application (iOS/Android)
-- **Web**: Web application
-- **Hasura**: GraphQL engine and database migrations
+- **Server**: Node.js REST API with Express and TypeScript
+- **Mobile**: React Native mobile application (iOS/Android) using Expo
+- **Hasura**: GraphQL engine with PostgreSQL database
+- **Docs**: VitePress documentation site
 
 For more information, check out the [Guide](/guide/) section.

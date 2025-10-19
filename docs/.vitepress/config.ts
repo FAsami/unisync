@@ -1,7 +1,7 @@
 import { defineConfig } from "vitepress";
 
 export default defineConfig({
-  title: "Unisync Documentation",
+  title: "Unisync Docs",
   description: "Documentation for the Unisync project",
   base: "/unisync/",
 
@@ -30,7 +30,7 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: "github", link: "https://github.com/yourusername/unisync" },
+      { icon: "github", link: "https://github.com/FASami/unisync" },
     ],
 
     footer: {

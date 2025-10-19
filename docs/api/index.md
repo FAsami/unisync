@@ -1,35 +1,13 @@
 # API Reference
 
-Unisync provides a GraphQL API powered by Hasura, along with REST endpoints for specific operations like authentication.
-
-## GraphQL API
-
-The main API is accessible at:
-
-```
-http://localhost:8080/v1/graphql
-```
-
-### GraphQL Playground
-
-You can explore the API interactively using the GraphQL playground:
-
-```
-http://localhost:8080/console
-```
-
-### Schema
-
-The GraphQL schema is automatically generated based on your database tables and relationships. You can view the complete schema in the Hasura Console.
+Unisync provides a REST API for authentication and OTP operations, along with a GraphQL API powered by Hasura for data operations.
 
 ## REST API
-
-The server provides REST endpoints for operations that don't fit the GraphQL model well:
 
 ### Base URL
 
 ```
-http://localhost:3000/api
+http://localhost:9201/api/v1
 ```
 
 ### Endpoints
@@ -37,93 +15,256 @@ http://localhost:3000/api
 #### Health Check
 
 ```http
-GET /health
+GET /api/v1/health
 ```
 
-Returns the server status.
+Returns the server status and uptime information.
 
 **Response:**
 
 ```json
 {
-  "status": "ok",
-  "timestamp": "2025-10-19T00:00:00.000Z"
+  "data": {
+    "status": "OK",
+    "uptime": 123.456,
+    "environment": "development",
+    "version": "1.0.0"
+  },
+  "meta": {
+    "message": "Server is healthy",
+    "timestamp": "2025-10-19T12:34:56.789Z",
+    "duration": 5
+  }
 }
 ```
 
-## Authentication
+#### Generate Guest Session
 
-See the [Authentication Guide](/api/authentication) for detailed information on authenticating with the API.
+```http
+POST /api/v1/auth/guest-session
+```
+
+Creates a guest session and returns access and refresh tokens.
+
+**Response:**
+
+```json
+{
+  "data": {
+    "session_id": "uuid",
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expires_at": "2025-10-19T13:34:56.789Z",
+    "user_type": "guest"
+  },
+  "meta": {
+    "message": "Guest session created successfully",
+    "timestamp": "2025-10-19T12:34:56.789Z"
+  }
+}
+```
+
+#### Refresh Tokens
+
+```http
+POST /api/v1/auth/refresh
+Content-Type: application/json
+Authorization: Bearer <refresh_token>
+
+{
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+Refreshes the access and refresh tokens.
+
+**Response:**
+
+```json
+{
+  "data": {
+    "session_id": "uuid",
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expires_at": "2025-10-19T13:34:56.789Z",
+    "user_type": "user"
+  },
+  "meta": {
+    "message": "Tokens refreshed successfully",
+    "timestamp": "2025-10-19T12:34:56.789Z"
+  }
+}
+```
+
+#### Send OTP
+
+```http
+POST /api/v1/otp/send
+Content-Type: application/json
+
+{
+  "input": {
+    "identifier": "user@example.com",
+    "identifierType": "EMAIL",
+    "purpose": "LOGIN"
+  }
+}
+```
+
+**Parameters:**
+
+- `identifier` (string): Email address or phone number
+- `identifierType` (string): Either "EMAIL" or "PHONE"
+- `purpose` (string): One of "LOGIN", "SIGNUP", or "PASSWORD_RESET"
+
+**Response:**
+
+```json
+{
+  "data": {
+    "message": "OTP sent successfully to email",
+    "otpId": "uuid",
+    "expiresAt": "2025-10-19T12:39:56.789Z"
+  },
+  "meta": {
+    "message": "OTP created successfully",
+    "timestamp": "2025-10-19T12:34:56.789Z"
+  }
+}
+```
+
+#### Verify OTP
+
+```http
+POST /api/v1/otp/verify
+Content-Type: application/json
+
+{
+  "input": {
+    "identifier": "user@example.com",
+    "otp": "123456",
+    "purpose": "LOGIN"
+  }
+}
+```
+
+**Parameters:**
+
+- `identifier` (string): Email address or phone number
+- `otp` (string): The 6-digit OTP code
+- `purpose` (string): One of "LOGIN", "SIGNUP", or "PASSWORD_RESET"
+
+**Response:**
+
+```json
+{
+  "data": {
+    "success": true,
+    "message": "OTP verified successfully",
+    "verified": true,
+    "identifier": "user@example.com",
+    "purpose": "LOGIN"
+  },
+  "meta": {
+    "message": "OTP verified successfully",
+    "timestamp": "2025-10-19T12:34:56.789Z"
+  }
+}
+```
+
+#### Hasura Authorization Webhook
+
+```http
+POST /api/v1/auth/webhook/authorize
+```
+
+Internal endpoint used by Hasura to authorize GraphQL requests. Not intended for direct use.
+
+## GraphQL API
+
+### Hasura Console
+
+The Hasura GraphQL API is accessible at:
+
+```
+http://localhost:9203/v1/graphql
+```
+
+### GraphQL Playground
+
+You can explore the API interactively using the Hasura Console:
+
+```
+http://localhost:9203/console
+```
+
+**Admin Secret:** `123`
+
+### Schema
+
+The GraphQL schema is automatically generated from the PostgreSQL database with the following schemas:
+
+- **user**: User sessions
+- **platform**: OTP transactions and rate limiting
+- **settings**: Application configuration
 
 ## Rate Limiting
 
-API requests are rate-limited to prevent abuse:
+OTP endpoints are rate-limited to prevent abuse:
 
-- **Authenticated requests**: 1000 requests per hour
-- **Unauthenticated requests**: 100 requests per hour
+- **Send OTP**: 3 requests per hour per identifier
+- **Send OTP (per IP)**: 10 requests per hour
+- **Verify OTP**: 5 requests per 15 minutes
 
 ## Error Handling
 
-All API errors follow a consistent format:
+All API responses follow a consistent format:
+
+### Success Response
+
+```json
+{
+  "data": {
+    /* response data */
+  },
+  "meta": {
+    "message": "Success message",
+    "timestamp": "2025-10-19T12:34:56.789Z",
+    "duration": 5
+  }
+}
+```
+
+### Error Response
 
 ```json
 {
   "error": {
-    "code": "ERROR_CODE",
     "message": "Human-readable error message",
-    "details": {}
+    "code": "ERROR_CODE",
+    "details": null
+  },
+  "meta": {
+    "timestamp": "2025-10-19T12:34:56.789Z",
+    "path": "/api/v1/otp/send",
+    "method": "POST"
   }
 }
 ```
 
 ### Common Error Codes
 
-- `UNAUTHORIZED`: Missing or invalid authentication token
-- `FORBIDDEN`: Insufficient permissions
-- `NOT_FOUND`: Resource not found
-- `VALIDATION_ERROR`: Invalid input data
-- `INTERNAL_ERROR`: Server error
-
-## Examples
-
-### Query with GraphQL
-
-```graphql
-query GetUser($id: uuid!) {
-  users_by_pk(id: $id) {
-    id
-    email
-    first_name
-    last_name
-    created_at
-  }
-}
-```
-
-### Mutation with GraphQL
-
-```graphql
-mutation UpdateUser($id: uuid!, $data: users_set_input!) {
-  update_users_by_pk(pk_columns: { id: $id }, _set: $data) {
-    id
-    email
-    first_name
-    last_name
-    updated_at
-  }
-}
-```
-
-## Client Libraries
-
-### JavaScript/TypeScript
-
-```bash
-yarn add @apollo/client graphql
-```
-
-See the mobile app's Apollo client configuration for an example implementation.
+- `INVALID_REQUEST`: Request format is invalid
+- `MISSING_FIELDS`: Required fields are missing
+- `INVALID_IDENTIFIER`: Email or phone number format is invalid
+- `INVALID_OTP`: OTP code is incorrect
+- `OTP_EXPIRED`: OTP has expired
+- `OTP_ALREADY_USED`: OTP has already been verified
+- `MAX_ATTEMPTS_REACHED`: Maximum verification attempts exceeded
+- `RATE_LIMIT_EXCEEDED`: Too many requests
+- `SESSION_NOT_FOUND`: Session does not exist
+- `SESSION_REVOKED`: Session has been revoked
 
 ## Next Steps
 
-- [Authentication](/api/authentication)
+- [Authentication Guide](/api/authentication)
