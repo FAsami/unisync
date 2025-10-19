@@ -4,6 +4,7 @@ export default defineConfig({
   title: "Unisync Docs",
   description: "Documentation for the Unisync project",
   base: "/unisync/",
+  ignoreDeadLinks: [/^http:\/\/localhost/],
 
   themeConfig: {
     nav: [
