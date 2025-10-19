@@ -58,7 +58,7 @@ export const createBulkSMSBDProvider = (
         message,
       });
       const endpoint = `http://118.67.213.114:3775/sendtext?apikey=${process.env.BULK_SMS_API_KEY}&secretkey=${process.env.BULK_SMS_SECRET_KEY}&callerID=${process.env.BULK_SMS_CALLER_ID}&toUser=${to}&messageContent=${message}`;
-
+      console.log("Endpoint", endpoint);
       const response = await axios.get(endpoint);
       logger.info(`Response from BulkSMSBD`, {
         to,
