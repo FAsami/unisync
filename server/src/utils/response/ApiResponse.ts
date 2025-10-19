@@ -102,8 +102,26 @@ export class ApiResponse {
     statusCode: number = 500,
     code?: string,
     req?: any,
-    details?: any
-  ): { statusCode: number; body: ApiResponseData<null> } {
+    details?: any,
+    type: "ACTION_ERROR" | "API_ERROR" = "API_ERROR"
+  ): { statusCode: number; body: any } {
+    // For Hasura actions, return a simplified format with extensions
+    if (type === "ACTION_ERROR") {
+      return {
+        statusCode,
+        body: {
+          message,
+          extensions: {
+            code,
+            details,
+            timestamp: new Date().toISOString(),
+            path: req?.originalUrl || "/api/v1",
+          },
+        },
+      };
+    }
+
+    // For regular API errors, return the full structured format
     return {
       statusCode,
       body: {

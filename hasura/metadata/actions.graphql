@@ -1,0 +1,42 @@
+type Mutation {
+  sendOTP(
+    identifier: String!
+    identifierType: IdentifierTypeEnum!
+    purpose: OTPPurposeEnum!
+  ): ApiResponse!
+}
+
+enum IdentifierTypeEnum {
+  EMAIL
+  PHONE
+}
+
+enum OTPPurposeEnum {
+  LOGIN
+  SIGNUP
+  PASSWORD_RESET
+}
+
+type ErrorObject {
+  message: String!
+  code: String
+  details: JSON
+}
+
+type MetaObject {
+  timestamp: String!
+  path: String!
+  method: String!
+  duration: Float
+  requestId: String
+}
+
+type ApiResponse {
+  success: Boolean!
+  data: JSON
+  message: String
+  error: ErrorObject
+  meta: MetaObject!
+}
+
+scalar JSON

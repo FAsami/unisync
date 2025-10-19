@@ -1,6 +1,38 @@
-actions: []
+actions:
+  - name: sendOTP
+    definition:
+      kind: synchronous
+      handler: '{{SERVER_URL}}/otp/send'
+      forward_client_headers: true
+      headers:
+        - name: SERVER-AUTH-SECRET
+          value_from_env: SERVER_AUTH_SECRET
+      timeout: 60
 custom_types:
-  enums: []
+  enums:
+    - name: IdentifierTypeEnum
+      values:
+        - description: null
+          is_deprecated: null
+          value: EMAIL
+        - description: null
+          is_deprecated: null
+          value: PHONE
+    - name: OTPPurposeEnum
+      values:
+        - description: null
+          is_deprecated: null
+          value: LOGIN
+        - description: null
+          is_deprecated: null
+          value: SIGNUP
+        - description: null
+          is_deprecated: null
+          value: PASSWORD_RESET
   input_objects: []
-  objects: []
-  scalars: []
+  objects:
+    - name: ErrorObject
+    - name: MetaObject
+    - name: ApiResponse
+  scalars:
+    - name: JSON

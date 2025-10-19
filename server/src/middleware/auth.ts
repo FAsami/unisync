@@ -108,7 +108,6 @@ export const authenticate = (options: AuthOptions = {}) => {
           );
       }
 
-      // Attach user info to request
       req.user = decoded;
       return next();
     } catch (error) {

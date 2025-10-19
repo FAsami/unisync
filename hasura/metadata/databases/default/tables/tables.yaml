@@ -1,1 +1,4 @@
+- "!include settings_config.yaml"
+- "!include user_otp_rate_limit.yaml"
+- "!include user_otp_transaction.yaml"
 - "!include user_session.yaml"
