@@ -184,3 +184,12 @@ export const INCREMENT_RATE_LIMIT = `
     }
   }
 `;
+
+export const GET_SETTING = `
+  query GET_SETTING($where: settings_config_bool_exp!) {
+  settings_config(where: $where) {
+    identifier
+    scope
+    value
+  }
+}`;

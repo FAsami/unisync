@@ -62,7 +62,6 @@ export const config = {
   TWILIO_FROM_NUMBER: process.env.TWILIO_FROM_NUMBER,
   AWS_SNS_REGION: process.env.AWS_SNS_REGION,
 } as const;
-console.log("[config]", config);
 
 export type Config = typeof config;
 
