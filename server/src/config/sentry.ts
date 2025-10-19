@@ -13,7 +13,7 @@ export const initSentry = () => {
       }
       event.tags = {
         ...event.tags,
-        service: "ping-class-server",
+        service: "unisync",
         version: process.env.npm_package_version || "1.0.0",
       };
 
