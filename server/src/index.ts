@@ -67,7 +67,7 @@ process.on("uncaughtException", (error) => {
 
 if (process.env.NODE_ENV !== "test") {
   app.listen(PORT, () => {
-    logger.info(`🚀 Server is running on port ${PORT}`);
+    logger.info(`🚀 Server is running on port:  ${PORT}`);
     logger.info(`Environment: ${process.env.NODE_ENV || "development"}`);
     logger.info(`🔗 API Endpoint: http://localhost:${PORT}/api/v1`);
   });
