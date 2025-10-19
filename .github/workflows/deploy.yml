@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - "server/**"
+      - "docs/**"
+      - "Dockerfile"
+      - ".github/workflows/deploy.yml"
   workflow_dispatch: # Allow manual triggers
 
 env:
@@ -24,13 +27,23 @@ jobs:
         with:
           node-version: "20"
           cache: "yarn"
-          cache-dependency-path: server/yarn.lock
+          cache-dependency-path: |
+            docs/yarn.lock
+            server/yarn.lock
 
-      - name: Install dependencies
+      - name: Install documentation dependencies
+        working-directory: ./docs
+        run: yarn install --frozen-lockfile
+
+      - name: Build documentation
+        working-directory: ./docs
+        run: yarn build
+
+      - name: Install server dependencies
         working-directory: ./server
         run: yarn install --frozen-lockfile
 
-      - name: Build application
+      - name: Build server
         working-directory: ./server
         run: yarn build
 
@@ -47,4 +60,20 @@ jobs:
         run: |
           echo "Waiting for deployment to be ready..."
           sleep 30
-          echo "Deployment completed successfully!"
+          curl -f https://unisync-api.fly.dev/api/v1/health || exit 1
+          curl -f https://unisync-api.fly.dev/docs || exit 1
+          echo "✅ Deployment completed successfully!"
+
+      - name: Deployment summary
+        run: |
+          echo "## 🚀 Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Your application is now live at:" >> $GITHUB_STEP_SUMMARY
+          echo "- 📚 **Documentation**: https://unisync-api.fly.dev/docs" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔗 **API**: https://unisync-api.fly.dev/api/v1" >> $GITHUB_STEP_SUMMARY
+          echo "- ❤️ **Health**: https://unisync-api.fly.dev/api/v1/health" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Deployment Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Actor**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY

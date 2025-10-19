@@ -44,6 +44,8 @@ COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=prod-deps --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/package.json ./package.json
 
+# Documentation will be copied during deployment
+
 # Create logs directory and set permissions
 RUN mkdir -p /app/logs && chown -R nodejs:nodejs /app/logs
 

@@ -98,3 +98,4 @@ jspm_packages/
 hasura/config.yaml
 
 _hasura/
+.cursor/

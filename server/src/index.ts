@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import express from "express";
 import compression from "compression";
 import morgan from "morgan";
+import path from "path";
 import { errorHandler } from "./middleware/errorHandler";
 import { notFoundHandler } from "./middleware/notFoundHandler";
 import { requestInfo } from "./middleware/requestInfo";
@@ -24,6 +25,20 @@ app.use(morgan("combined", { stream }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(requestInfo);
+
+const docsPath = path.join(__dirname, "../../docs/.vitepress/dist");
+app.use(
+  "/docs",
+  express.static(docsPath, {
+    maxAge: "1d",
+    etag: true,
+    lastModified: true,
+  })
+);
+
+app.get("/docs/*", (req, res) => {
+  res.sendFile(path.join(docsPath, "index.html"));
+});
 
 app.use("/api/v1", routes);
 
