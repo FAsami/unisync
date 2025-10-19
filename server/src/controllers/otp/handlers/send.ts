@@ -22,7 +22,6 @@ export const sendOTP = async (
   req: Request,
   res: Response
 ): Promise<ApiResponse> => {
-  console.log("SEND OTP REQUEST RECEIVED");
   try {
     const input: SendOTPInput = req.body.input;
 
@@ -85,19 +84,9 @@ export const sendOTP = async (
 
     const otp = generateOTP();
 
-    // Console output for development
-    console.log("\n" + "=".repeat(40));
-    console.log("🔐 OTP GENERATED");
-    console.log("=".repeat(40));
-    console.log(`📱 Phone: ${sanitizedIdentifier}`);
-    console.log(`🔑 Code:  ${otp}`);
-    console.log(`📋 Purpose: ${purpose}`);
-    console.log("=".repeat(40) + "\n");
-
     logger.info(`Generated OTP for ${identifierType}`, {
       identifier: sanitizedIdentifier,
       purpose,
-      otp, // Include OTP in logs
     });
 
     const otpHash = await hashOTP(otp);
@@ -135,7 +124,6 @@ export const sendOTP = async (
 
     try {
       if (identifierType === "PHONE") {
-        console.log("[phone ]");
         const smsProvider = await getSMSProvider();
         await smsProvider.send(sanitizedIdentifier, otp, purpose);
       }
