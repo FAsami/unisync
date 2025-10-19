@@ -3,7 +3,7 @@ import { defineConfig } from "vitepress";
 export default defineConfig({
   title: "Unisync Documentation",
   description: "Documentation for the Unisync project",
-  base: "/docs/",
+  base: "/unisync/",
 
   themeConfig: {
     nav: [
