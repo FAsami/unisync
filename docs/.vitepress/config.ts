@@ -22,6 +22,13 @@ export default defineConfig({
         ],
       },
       {
+        text: "Configuration",
+        items: [
+          { text: "Provider Setup Guide", link: "/guide/providers" },
+          { text: "Quick Reference", link: "/guide/provider-quick-reference" },
+        ],
+      },
+      {
         text: "API Reference",
         items: [
           { text: "Overview", link: "/api/" },

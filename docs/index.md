@@ -15,7 +15,7 @@ hero:
 
 features:
   - title: 🔐 OTP Authentication
-    details: Secure authentication using One-Time Password verification via email or SMS
+    details: Secure authentication using One-Time Password verification via SMS (email support coming soon)
   - title: 📱 Mobile App
     details: React Native mobile application for iOS and Android built with Expo
   - title: 🔌 REST + GraphQL API

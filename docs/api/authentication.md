@@ -318,23 +318,25 @@ export async function getAccessToken() {
 }
 ```
 
-## SMS Providers
+## OTP Delivery Providers
 
-The server supports multiple SMS providers (configured via `SMS_PROVIDER` environment variable):
+### SMS Providers
 
-- `console`: Logs OTP to console (development only)
-- `twilio`: Twilio SMS service
-- `sns`: AWS Simple Notification Service
-- `bulksmsbd`: BulkSMS Bangladesh
+The server supports SMS OTP delivery through database-configured providers:
 
-## Email Providers
+- **BulkSMS Bangladesh** (`bulksmsbd`): ✅ Fully implemented
 
-The server supports multiple email providers (configured via `EMAIL_PROVIDER` environment variable):
+For detailed configuration instructions, see the [Provider Configuration Guide](/guide/providers).
 
-- `console`: Logs OTP to console (development only)
-- `resend`: Resend email service
-- `sendgrid`: SendGrid email service
-- `ses`: AWS Simple Email Service
+### Email Providers
+
+Email OTP delivery is planned but not yet implemented. The system will:
+
+- ✅ Create and store OTP records
+- ✅ Validate and verify OTP codes
+- ⏳ Skip sending actual emails (coming soon)
+
+For more details about email provider implementation status and configuration, see the [Provider Configuration Guide](/guide/providers).
 
 ## Next Steps
 

@@ -59,11 +59,14 @@ OTP_EXPIRY_MINUTES=5
 OTP_MAX_ATTEMPTS=5
 OTP_LENGTH=6
 
-# Email Provider (console, resend, sendgrid, ses)
-EMAIL_PROVIDER=console
+# SMS Provider Configuration (via Database)
+# See Provider Configuration Guide for details
+BULK_SMS_API_KEY=your_api_key_here
+BULK_SMS_SECRET_KEY=your_secret_key_here
+BULK_SMS_CALLER_ID=your_sender_id
 
-# SMS Provider (console, twilio, sns, bulksmsbd)
-SMS_PROVIDER=console
+# Email Provider (not yet implemented)
+EMAIL_PROVIDER=console
 
 # Optional: Sentry Error Tracking
 SENTRY_DSN=
@@ -194,7 +197,16 @@ cd server
 yarn codegen
 ```
 
+## Configure OTP Providers
+
+To enable SMS OTP delivery, you'll need to configure a provider. See the [Provider Configuration Guide](/guide/providers) for detailed instructions on:
+
+- Setting up BulkSMS Bangladesh
+- Adding new SMS providers
+- Email provider implementation status
+
 ## Next Steps
 
+- [Provider Configuration](/guide/providers)
 - [API Reference](/api/)
 - [Authentication Guide](/api/authentication)

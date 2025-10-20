@@ -60,6 +60,20 @@ Before you begin, make sure you have the following installed:
 - Xcode (for iOS development)
 - Android Studio (for Android development)
 
+## Key Documentation
+
+### Installation & Setup
+
+- [Installation Guide](/guide/installation) - Complete setup instructions
+- [Provider Configuration](/guide/providers) - Configure SMS/Email OTP providers
+
+### API & Authentication
+
+- [Authentication Guide](/api/authentication) - JWT and OTP authentication flows
+- [API Reference](/api/) - Complete REST and GraphQL API documentation
+
 ## Next Steps
 
-- [Installation Guide](/guide/installation)
+1. [Install and configure](/guide/installation) the backend services
+2. [Set up SMS provider](/guide/providers) for OTP delivery
+3. Review the [authentication flow](/api/authentication) documentation
