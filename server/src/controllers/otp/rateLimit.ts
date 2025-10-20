@@ -294,7 +294,6 @@ export const incrementRateLimit = async (req: Request): Promise<void> => {
       identifier,
       actionType,
     });
-    // Don't throw - this shouldn't fail the main operation
   }
 };
 
