@@ -15,11 +15,13 @@ The Unisync project consists of the following components:
 - **Technology**: Node.js with Express and TypeScript
 - **Port**: 9201
 - **Features**:
-  - OTP authentication (send and verify)
-  - Guest token generation
-  - JWT refresh token management
+  - User registration with OTP verification
+  - Phone + password authentication
+  - Password reset with OTP
+  - Guest session generation
+  - JWT token management (access and refresh)
   - Hasura webhook authorization
-  - Rate limiting
+  - Rate limiting for OTP endpoints
   - Error tracking with Sentry
   - Logging with Winston
 

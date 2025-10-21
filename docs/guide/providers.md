@@ -381,26 +381,28 @@ OTP Code (development): 123456
 Create a test script:
 
 ```bash
-# Send OTP
+# Send OTP for registration
 curl -X POST http://localhost:9201/api/v1/otp/send \
   -H "Content-Type: application/json" \
   -d '{
     "input": {
       "identifier": "+8801712345678",
       "identifierType": "PHONE",
-      "purpose": "LOGIN"
+      "purpose": "SIGNUP"
     }
   }'
 
-# Verify OTP
-curl -X POST http://localhost:9201/api/v1/otp/verify \
+# Note: To verify OTP, use the appropriate auth endpoint:
+# - For registration: POST /api/v1/auth/register/verify
+# - For password reset: POST /api/v1/auth/reset-password/verify
+# - For login: Use POST /api/v1/auth/login with phone + password
+
+# Example: Verify registration OTP
+curl -X POST http://localhost:9201/api/v1/auth/register/verify \
   -H "Content-Type: application/json" \
   -d '{
-    "input": {
-      "identifier": "+8801712345678",
-      "otp": "123456",
-      "purpose": "LOGIN"
-    }
+    "phone": "+8801712345678",
+    "otp": "123456"
   }'
 ```
 

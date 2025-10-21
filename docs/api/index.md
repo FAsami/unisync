@@ -41,7 +41,7 @@ Returns the server status and uptime information.
 #### Generate Guest Session
 
 ```http
-POST /api/v1/auth/guest-session
+POST /api/v1/auth/session/guest
 ```
 
 Creates a guest session and returns access and refresh tokens.
@@ -67,7 +67,7 @@ Creates a guest session and returns access and refresh tokens.
 #### Refresh Tokens
 
 ```http
-POST /api/v1/auth/refresh
+POST /api/v1/auth/session/refresh
 Content-Type: application/json
 Authorization: Bearer <refresh_token>
 
@@ -133,41 +133,172 @@ Content-Type: application/json
 }
 ```
 
-#### Verify OTP
+**Note:** OTP verification is handled through specific authentication endpoints:
+
+- For registration: `/api/v1/auth/register/verify`
+- For password reset: `/api/v1/auth/reset-password/verify`
+- For login: Use `/api/v1/auth/login` with phone + password
+
+#### Register User
 
 ```http
-POST /api/v1/otp/verify
+POST /api/v1/auth/register
 Content-Type: application/json
 
 {
-  "input": {
-    "identifier": "user@example.com",
-    "otp": "123456",
-    "purpose": "LOGIN"
-  }
+  "phone": "+15555550123",
+  "password": "P@ssw0rd!",
+  "email": "user@example.com"  // optional
 }
 ```
 
-**Parameters:**
-
-- `identifier` (string): Email address or phone number
-- `otp` (string): The 6-digit OTP code
-- `purpose` (string): One of "LOGIN", "SIGNUP", or "PASSWORD_RESET"
+Creates a new user account. The password is hashed and stored. After registration, send an OTP using `/otp/send` with `purpose: "SIGNUP"`, then verify using the endpoint below.
 
 **Response:**
 
 ```json
 {
   "data": {
-    "success": true,
-    "message": "OTP verified successfully",
-    "verified": true,
-    "identifier": "user@example.com",
-    "purpose": "LOGIN"
+    "userId": "uuid"
   },
   "meta": {
-    "message": "OTP verified successfully",
-    "timestamp": "2025-10-19T12:34:56.789Z"
+    "message": "Registration initiated. Please verify OTP.",
+    "timestamp": "2025-10-21T12:34:56.789Z"
+  }
+}
+```
+
+#### Verify Registration
+
+```http
+POST /api/v1/auth/register/verify
+Content-Type: application/json
+
+{
+  "phone": "+15555550123",
+  "otp": "123456"
+}
+```
+
+Verifies the OTP code for registration and returns authentication tokens.
+
+**Response:**
+
+```json
+{
+  "data": {
+    "insert_user_session_one": {
+      "id": "session-uuid",
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "access_token_expires_at": "2025-10-21T13:34:56.789Z",
+      "refresh_token_expires_at": "2025-11-20T12:34:56.789Z"
+    }
+  },
+  "meta": {
+    "message": "Registration verified successfully",
+    "timestamp": "2025-10-21T12:34:56.789Z"
+  }
+}
+```
+
+#### Login
+
+```http
+POST /api/v1/auth/login
+Content-Type: application/json
+
+{
+  "phone": "+15555550123",
+  "password": "P@ssw0rd!"
+}
+```
+
+Authenticates a user with phone and password.
+
+**Response:**
+
+```json
+{
+  "data": {
+    "session_id": "uuid",
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "role": "consumer"
+  },
+  "meta": {
+    "message": "Login successful",
+    "timestamp": "2025-10-21T12:34:56.789Z"
+  }
+}
+```
+
+#### Logout
+
+```http
+POST /api/v1/auth/logout
+Authorization: Bearer <access_token>
+```
+
+Revokes the current session.
+
+**Response:**
+
+```json
+{
+  "meta": {
+    "message": "Logout successful",
+    "timestamp": "2025-10-21T12:34:56.789Z"
+  }
+}
+```
+
+#### Reset Password Request
+
+```http
+POST /api/v1/auth/reset-password
+Content-Type: application/json
+
+{
+  "phone": "+15555550123"
+}
+```
+
+Initiates a password reset by sending an OTP. Always returns success to prevent user enumeration.
+
+**Response:**
+
+```json
+{
+  "meta": {
+    "message": "If this phone number exists, an OTP has been sent",
+    "timestamp": "2025-10-21T12:34:56.789Z"
+  }
+}
+```
+
+#### Reset Password Verify
+
+```http
+POST /api/v1/auth/reset-password/verify
+Content-Type: application/json
+
+{
+  "phone": "+15555550123",
+  "otp": "123456",
+  "newPassword": "N3wP@ssw0rd!"
+}
+```
+
+Verifies the OTP and sets a new password. Revokes all existing sessions for the user.
+
+**Response:**
+
+```json
+{
+  "meta": {
+    "message": "Password reset successful",
+    "timestamp": "2025-10-21T12:34:56.789Z"
   }
 }
 ```
