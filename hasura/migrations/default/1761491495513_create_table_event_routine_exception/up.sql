@@ -1,0 +1,2 @@
+CREATE TABLE "event"."routine_exception" ("id" uuid NOT NULL DEFAULT gen_random_uuid(), "routine_id" uuid NOT NULL, "exception_date" date NOT NULL, "reason" text NOT NULL, "created_by" uuid NOT NULL, "created_at" timestamptz NOT NULL DEFAULT now(), PRIMARY KEY ("id") );COMMENT ON TABLE "event"."routine_exception" IS E'Skip dates for recurring routines (holidays).';
+CREATE EXTENSION IF NOT EXISTS pgcrypto;

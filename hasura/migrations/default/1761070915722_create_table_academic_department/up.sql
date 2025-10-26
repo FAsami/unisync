@@ -1,0 +1,1 @@
+CREATE TABLE "academic"."department" ("id" uuid NOT NULL, "code" text NOT NULL, "name" text NOT NULL, "description" text, "head_user_id" uuid, "is_active" boolean NOT NULL DEFAULT true, PRIMARY KEY ("id") , FOREIGN KEY ("head_user_id") REFERENCES "user"."account"("id") ON UPDATE set default ON DELETE set null, UNIQUE ("code"));

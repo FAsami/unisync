@@ -1,0 +1,2 @@
+CREATE TABLE "user"."profile" ("id" uuid NOT NULL DEFAULT gen_random_uuid(), "user_id" uuid NOT NULL, "student_id" text, "first_name" text NOT NULL, "last_name" text NOT NULL, "avatar" text, "data_of_birth" date, "gender" text, "blood_group" text, "address" text, "department_id" uuid NOT NULL, "batch_id" uuid, "section_id" uuid, PRIMARY KEY ("id") , FOREIGN KEY ("user_id") REFERENCES "user"."account"("id") ON UPDATE no action ON DELETE cascade, UNIQUE ("student_id"));
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
