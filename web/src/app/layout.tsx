@@ -1,5 +1,7 @@
+import "@ant-design/v5-patch-for-react-19";
 import type { Metadata } from "next";
 import { ApolloProvider } from "@/providers/Apollo";
+import { AntdRegistry } from "@ant-design/nextjs-registry";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,7 +17,9 @@ const RootLayout = ({
   return (
     <html lang='en'>
       <body>
-        <ApolloProvider>{children}</ApolloProvider>
+        <AntdRegistry>
+          <ApolloProvider>{children}</ApolloProvider>
+        </AntdRegistry>
       </body>
     </html>
   );

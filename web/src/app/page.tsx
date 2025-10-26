@@ -1,9 +1,11 @@
-import Image from "next/image";
+import { Button, Typography } from "antd";
+import { HomeOutlined } from "@ant-design/icons";
 
-export default function Home() {
+const Home = () => {
   return (
-    <div className='flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black'>
-      Hello Unisync
-    </div>
+    <Button type='primary' icon={<HomeOutlined />} key='home'>
+      Home
+    </Button>
   );
-}
+};
+export default Home;
