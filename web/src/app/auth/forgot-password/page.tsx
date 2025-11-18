@@ -1,7 +1,7 @@
-import ForgotPasswordForm from "./ForgotPasswordForm";
+import ForgotPasswordForm from './ForgotPasswordForm'
 
 const ForgotPasswordPage = () => {
-  return <ForgotPasswordForm />;
-};
+  return <ForgotPasswordForm />
+}
 
-export default ForgotPasswordPage;
+export default ForgotPasswordPage

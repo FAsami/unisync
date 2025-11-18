@@ -1,13 +1,13 @@
-"use client";
+'use client'
 
-import Image from "next/image";
-import type { ReactNode } from "react";
+import Image from 'next/image'
+import type { ReactNode } from 'react'
 
 interface AuthLayoutProps {
-  title?: string;
-  subtitle?: ReactNode;
-  footer?: ReactNode;
-  children: ReactNode;
+  title?: string
+  subtitle?: ReactNode
+  footer?: ReactNode
+  children: ReactNode
 }
 
 export default function AuthLayout({
@@ -16,7 +16,7 @@ export default function AuthLayout({
   footer,
   children,
 }: AuthLayoutProps) {
-  const hasHeaderContent = Boolean(title || subtitle);
+  const hasHeaderContent = Boolean(title || subtitle)
 
   return (
     <div className='min-h-screen flex items-center justify-center p-5 bg-linear-to-br from-blue-50 to-indigo-100'>
@@ -35,14 +35,10 @@ export default function AuthLayout({
           <div className='text-center text-gray-600 text-sm'>{subtitle}</div>
         ) : null}
 
-        <div className={hasHeaderContent ? "mt-8" : ""}>{children}</div>
+        <div className={hasHeaderContent ? 'mt-8' : ''}>{children}</div>
 
         {footer ? <div className='mt-8'>{footer}</div> : null}
       </div>
     </div>
-  );
+  )
 }
-
-
-
-

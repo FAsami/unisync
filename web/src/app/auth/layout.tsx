@@ -1,23 +1,23 @@
-"use client";
+'use client'
 
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import Image from 'next/image'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import type { ReactNode } from 'react'
 
 const authPageConfig: Record<
   string,
   {
-    title?: string;
-    subtitle?: ReactNode;
-    footer?: ReactNode;
+    title?: string
+    subtitle?: ReactNode
+    footer?: ReactNode
   }
 > = {
-  "/auth/login": {
-    title: "Welcome back",
+  '/auth/login': {
+    title: 'Welcome back',
     footer: (
       <p className='text-center text-gray-600 text-sm'>
-        Don't have an account?{" "}
+        Don't have an account?{' '}
         <Link
           href='/auth/register'
           className='text-blue-500 font-medium hover:underline'
@@ -27,11 +27,11 @@ const authPageConfig: Record<
       </p>
     ),
   },
-  "/auth/register": {
-    title: "Create your account",
+  '/auth/register': {
+    title: 'Create your account',
     footer: (
       <p className='text-center text-gray-600 text-sm'>
-        Already have an account?{" "}
+        Already have an account?{' '}
         <Link
           href='/auth/login'
           className='text-blue-500 font-medium hover:underline'
@@ -41,12 +41,12 @@ const authPageConfig: Record<
       </p>
     ),
   },
-  "/auth/forgot-password": {
-    title: "Forgot password",
-    subtitle: "Enter your phone number to receive reset instructions.",
+  '/auth/forgot-password': {
+    title: 'Forgot password',
+    subtitle: 'Enter your phone number to receive reset instructions.',
     footer: (
       <p className='text-center text-gray-600 text-sm'>
-        Remembered it?{" "}
+        Remembered it?{' '}
         <Link
           href='/auth/login'
           className='text-blue-500 font-medium hover:underline'
@@ -56,13 +56,13 @@ const authPageConfig: Record<
       </p>
     ),
   },
-};
+}
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const config = authPageConfig[pathname] || {};
-  const { title, subtitle, footer } = config;
-  const hasHeaderContent = Boolean(title || subtitle);
+  const pathname = usePathname()
+  const config = authPageConfig[pathname] || {}
+  const { title, subtitle, footer } = config
+  const hasHeaderContent = Boolean(title || subtitle)
 
   return (
     <div className='min-h-screen flex items-center justify-center p-5 bg-linear-to-br from-blue-50 to-indigo-100'>
@@ -81,10 +81,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           <div className='text-center text-gray-600 text-sm'>{subtitle}</div>
         ) : null}
 
-        <div className={hasHeaderContent ? "mt-8" : ""}>{children}</div>
+        <div className={hasHeaderContent ? 'mt-8' : ''}>{children}</div>
 
         {footer ? <div className='mt-8'>{footer}</div> : null}
       </div>
     </div>
-  );
+  )
 }

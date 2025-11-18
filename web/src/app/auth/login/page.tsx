@@ -1,41 +1,41 @@
-"use client";
+'use client'
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { Form, Input, Button } from "antd";
-import { LockOutlined } from "@ant-design/icons";
-import { PhoneInput } from "@/components/PhoneInput";
-import { apiClient } from "@/lib/axios";
-import Link from "next/link";
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { Form, Input, Button } from 'antd'
+import { LockOutlined } from '@ant-design/icons'
+import { PhoneInput } from '@/components/PhoneInput'
+import { apiClient } from '@/lib/axios'
+import Link from 'next/link'
 
 const LoginPage = () => {
-  const router = useRouter();
-  const [form] = Form.useForm();
-  const [isPending, startTransition] = useTransition();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const router = useRouter()
+  const [form] = Form.useForm()
+  const [isPending, startTransition] = useTransition()
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const onFinish = async (values: { phone: string; password: string }) => {
     startTransition(async () => {
       try {
-        setErrorMessage(null);
-        form.resetFields(["password"]);
+        setErrorMessage(null)
+        form.resetFields(['password'])
 
-        const { data } = await apiClient.post("/auth/login", values);
+        const { data } = await apiClient.post('/auth/login', values)
         if (data.success !== true) {
-          throw new Error(data?.error?.message || "Something went wrong");
+          throw new Error(data?.error?.message || 'Something went wrong')
         }
-        router.push("/");
+        router.push('/')
       } catch (error: any) {
-        setErrorMessage(error?.message || "Something went wrong!");
+        setErrorMessage(error?.message || 'Something went wrong!')
       }
-    });
-  };
+    })
+  }
 
   const onFinishFailed = ({ errorFields }: any) => {
     if (errorFields?.length) {
-      form.scrollToField(errorFields[0].name);
+      form.scrollToField(errorFields[0].name)
     }
-  };
+  }
 
   return (
     <>
@@ -63,10 +63,10 @@ const LoginPage = () => {
           label='Phone'
           name='phone'
           rules={[
-            { required: true, message: "Please enter your phone number" },
+            { required: true, message: 'Please enter your phone number' },
             {
               pattern: /^\+8801\d{9}$/,
-              message: "Please enter a valid Bangladeshi phone number",
+              message: 'Please enter a valid Bangladeshi phone number',
             },
           ]}
         >
@@ -76,7 +76,7 @@ const LoginPage = () => {
         <Form.Item
           label='Password'
           name='password'
-          rules={[{ required: true, message: "Please enter your password" }]}
+          rules={[{ required: true, message: 'Please enter your password' }]}
         >
           <Input.Password
             placeholder='Enter your password'
@@ -108,6 +108,6 @@ const LoginPage = () => {
         </Form.Item>
       </Form>
     </>
-  );
-};
-export default LoginPage;
+  )
+}
+export default LoginPage
