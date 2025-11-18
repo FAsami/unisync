@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { VerifyContext } from "@/lib/verifyContext";
-import AuthLayout from "@/components/AuthLayout";
 import RegisterVerifyForm from "./RegisterVerifyForm";
 import { decrypt } from "@/lib/encrypt";
 
@@ -19,20 +18,21 @@ export default async function RegisterVerifyPage({ searchParams }: Props) {
     }
   }
   if (!context) {
-    redirect("/register");
+    redirect("/auth/register");
   }
   const channel = context.identifierType === "EMAIL" ? "email" : "phone";
-  const subtitle = (
-    <>
-      We've sent an OTP to your{" "}
-      <span className='font-medium text-gray-900'>{context.identifier}</span>{" "}
-      {channel}. Please verify to complete your registration.
-    </>
-  );
 
   return (
-    <AuthLayout title='Verify your account' subtitle={subtitle}>
+    <>
+      <h1 className='text-3xl font-bold text-center text-gray-900 mb-2'>
+        Verify your account
+      </h1>
+      <div className='text-center text-gray-600 text-sm mb-8'>
+        We've sent an OTP to your{" "}
+        <span className='font-medium text-gray-900'>{context.identifier}</span>{" "}
+        {channel}. Please verify to complete your registration.
+      </div>
       <RegisterVerifyForm context={context} />
-    </AuthLayout>
+    </>
   );
 }

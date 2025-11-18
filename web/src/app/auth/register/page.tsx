@@ -4,9 +4,7 @@ import { useState, useTransition } from "react";
 import { Form, Input, Button } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
 import { PhoneInput } from "@/components/PhoneInput";
-import { registerAction } from "../actions/auth/register";
-import Link from "next/link";
-import AuthLayout from "@/components/AuthLayout";
+import { registerAction } from "@/actions/auth/register";
 
 export default function RegisterPage() {
   const [form] = Form.useForm();
@@ -38,20 +36,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <AuthLayout
-      title='Create your account'
-      footer={
-        <p className='text-center text-gray-600 text-sm'>
-          Already have an account?{" "}
-          <Link
-            href='/login'
-            className='text-blue-500 font-medium hover:underline'
-          >
-            Login
-          </Link>
-        </p>
-      }
-    >
+    <>
       {errorMessage ? (
         <div
           role='status'
@@ -141,6 +126,6 @@ export default function RegisterPage() {
           </Button>
         </Form.Item>
       </Form>
-    </AuthLayout>
+    </>
   );
 }

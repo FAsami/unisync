@@ -45,14 +45,14 @@ const Home = () => {
           <Button
             type='primary'
             icon={<LoginOutlined />}
-            onClick={() => router.push("/login")}
+            onClick={() => router.push("/auth/login")}
             style={{ marginRight: "16px" }}
           >
             Login
           </Button>
           <Button
             icon={<UserAddOutlined />}
-            onClick={() => router.push("/register")}
+            onClick={() => router.push("/auth/register")}
           >
             Register
           </Button>

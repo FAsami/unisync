@@ -42,7 +42,7 @@ const registerAction = async ({
       redirectTo: "/",
     };
     const encrypted = encrypt(JSON.stringify(context));
-    redirect(`/register/verify?ctx=${encodeURIComponent(encrypted)}`);
+    redirect(`/auth/register/verify?ctx=${encodeURIComponent(encrypted)}`);
   } else {
     return {
       success: false,

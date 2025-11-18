@@ -6,7 +6,6 @@ import { Form, Input, Button } from "antd";
 import { LockOutlined } from "@ant-design/icons";
 import { PhoneInput } from "@/components/PhoneInput";
 import { apiClient } from "@/lib/axios";
-import AuthLayout from "@/components/AuthLayout";
 import Link from "next/link";
 
 const LoginPage = () => {
@@ -39,19 +38,7 @@ const LoginPage = () => {
   };
 
   return (
-    <AuthLayout
-      footer={
-        <p className='text-center text-gray-600 text-sm'>
-          Don't have an account?{" "}
-          <Link
-            href='/register'
-            className='text-blue-500 font-medium hover:underline'
-          >
-            Register
-          </Link>
-        </p>
-      }
-    >
+    <>
       {errorMessage ? (
         <div
           role='status'
@@ -99,7 +86,7 @@ const LoginPage = () => {
 
         <div className='text-right mb-6 -mt-2'>
           <Link
-            href='/forgot-password'
+            href='/auth/forgot-password'
             className='text-blue-500 text-sm hover:underline'
           >
             Forgot password ?
@@ -120,7 +107,7 @@ const LoginPage = () => {
           </Button>
         </Form.Item>
       </Form>
-    </AuthLayout>
+    </>
   );
 };
 export default LoginPage;

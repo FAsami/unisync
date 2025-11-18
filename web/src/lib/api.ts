@@ -18,8 +18,3 @@ export interface AuthResponse {
     role: string;
   };
 }
-
-export {
-  loginAction as login,
-  registerAction as register,
-} from "@/app/actions/auth";
