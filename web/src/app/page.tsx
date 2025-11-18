@@ -1,11 +1,65 @@
-import { Button, Typography } from "antd";
-import { HomeOutlined } from "@ant-design/icons";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "antd";
+import {
+  HomeOutlined,
+  LoginOutlined,
+  UserAddOutlined,
+} from "@ant-design/icons";
+import { clearAuthTokens, isAuthenticated } from "@/lib/cookies";
 
 const Home = () => {
+  const router = useRouter();
+  const [authenticated, setAuthenticated] = useState(false);
+
+  useEffect(() => {
+    setAuthenticated(isAuthenticated());
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      clearAuthTokens();
+      setAuthenticated(false);
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
   return (
-    <Button type='primary' icon={<HomeOutlined />} key='home'>
-      Home
-    </Button>
+    <div style={{ padding: "40px", textAlign: "center" }}>
+      <h1>Welcome to Unisync</h1>
+
+      {authenticated ? (
+        <div>
+          <Button type='primary' icon={<HomeOutlined />}>
+            Home
+          </Button>
+          <Button danger onClick={handleLogout} style={{ marginLeft: "16px" }}>
+            Logout
+          </Button>
+        </div>
+      ) : (
+        <div>
+          <Button
+            type='primary'
+            icon={<LoginOutlined />}
+            onClick={() => router.push("/login")}
+            style={{ marginRight: "16px" }}
+          >
+            Login
+          </Button>
+          <Button
+            icon={<UserAddOutlined />}
+            onClick={() => router.push("/register")}
+          >
+            Register
+          </Button>
+        </div>
+      )}
+    </div>
   );
 };
+
 export default Home;
