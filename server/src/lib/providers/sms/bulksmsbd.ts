@@ -1,9 +1,9 @@
-import { SMSProvider } from "../interface";
+import { SMSProvider } from "../../../types";
 import { config } from "../../../config/environment";
 import logger from "../../../config/logger";
 import axios from "axios";
 
-interface ProviderConfig {
+interface BulkSMSProviderConfig {
   provider: {
     identifier: string;
     website: string;
@@ -26,13 +26,17 @@ interface ProviderConfig {
 }
 
 export const createBulkSMSBDProvider = (
-  providerConfig: ProviderConfig
+  providerConfig: BulkSMSProviderConfig
 ): SMSProvider => {
-  const requiredEnvVars = providerConfig.provider.endpoint.variables?.env || [];
-  for (const envVar of requiredEnvVars) {
-    if (!process.env[envVar]) {
-      throw new Error(`${envVar} is required for BulkSMSBD provider`);
-    }
+  // Validate required credentials
+  if (
+    !config.BULK_SMS_API_KEY ||
+    !config.BULK_SMS_SECRET_KEY ||
+    !config.BULK_SMS_CALLER_ID
+  ) {
+    throw new Error(
+      "BulkSMS credentials (BULK_SMS_API_KEY, BULK_SMS_SECRET_KEY, BULK_SMS_CALLER_ID) are required"
+    );
   }
 
   const getSMSMessage = (
@@ -53,7 +57,7 @@ export const createBulkSMSBDProvider = (
 
   const sendSMS = async (to: string, message: string): Promise<void> => {
     try {
-      const endpoint = `http://118.67.213.114:3775/sendtext?apikey=${process.env.BULK_SMS_API_KEY}&secretkey=${process.env.BULK_SMS_SECRET_KEY}&callerID=${process.env.BULK_SMS_CALLER_ID}&toUser=${to}&messageContent=${message}`;
+      const endpoint = `http://118.67.213.114:3775/sendtext?apikey=${config.BULK_SMS_API_KEY}&secretkey=${config.BULK_SMS_SECRET_KEY}&callerID=${config.BULK_SMS_CALLER_ID}&toUser=${to}&messageContent=${message}`;
       const response = await axios.get(endpoint);
       logger.info(`Response from BulkSMSBD`, {
         to,

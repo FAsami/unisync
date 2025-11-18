@@ -1,11 +1,8 @@
 import { Router } from "express";
-import { sendOTP } from "../controllers/otp/handlers/send";
-import { verifyOTP } from "../controllers/otp/handlers/verify";
-import { rateLimitOTP } from "../controllers/otp/rateLimit";
+import { sendOTP } from "../controllers/otp/sendOTP";
 
 const router = Router();
 
-router.post("/otp/send", rateLimitOTP.sendOTPLimit, sendOTP);
-router.post("/otp/verify", rateLimitOTP.verifyOTPLimit, verifyOTP);
+router.post("/otp/send", sendOTP);
 
 export { router as otpRouter };

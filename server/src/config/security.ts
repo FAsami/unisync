@@ -1,6 +1,7 @@
 import helmet from "helmet";
 import cors from "cors";
 import { Express } from "express";
+import { config, isDevelopment, isTest } from "./environment";
 
 export const corsOptions = {
   origin: (
@@ -9,7 +10,7 @@ export const corsOptions = {
   ) => {
     if (!origin) return callback(null, true);
 
-    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
+    const allowedOrigins = config.ALLOWED_ORIGINS || [
       "http://localhost:3000",
       "http://localhost:3001",
       "http://127.0.0.1:3000",
@@ -23,10 +24,7 @@ export const corsOptions = {
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      if (
-        process.env.NODE_ENV === "development" ||
-        process.env.NODE_ENV === "test"
-      ) {
+      if (isDevelopment || isTest) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));

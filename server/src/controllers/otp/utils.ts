@@ -1,6 +1,9 @@
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import { Request } from "express";
 import { config } from "../../config/environment";
+import { getGraphQLClient } from "../../lib/graphqlClient";
+import logger from "../../config/logger";
 
 /**
  * Generate a random numeric OTP based on configured length
@@ -49,4 +52,91 @@ export const getOTPExpiry = (): Date => {
  */
 export const isOTPExpired = (expiresAt: Date): boolean => {
   return new Date() > new Date(expiresAt);
+};
+
+/**
+ * GraphQL queries for rate limit tracking
+ */
+const INSERT_RATE_LIMIT = `
+  mutation InsertRateLimit($rate_limit: user_otp_rate_limit_insert_input!) {
+    insert_user_otp_rate_limit_one(
+      object: $rate_limit
+      on_conflict: {
+        constraint: otp_rate_limit_identifier_action_type_window_start_key
+        update_columns: [attempt_count]
+      }
+    ) {
+      id
+      identifier
+      action_type
+      attempt_count
+      window_start
+      ip_address
+    }
+  }
+`;
+
+const INCREMENT_RATE_LIMIT = `
+  mutation IncrementRateLimit($id: uuid!, $attempt_count: Int!) {
+    update_user_otp_rate_limit_by_pk(
+      pk_columns: { id: $id }
+      _set: { attempt_count: $attempt_count }
+    ) {
+      id
+      attempt_count
+    }
+  }
+`;
+
+/**
+ * Increment rate limit after successful OTP send
+ * This should be called after the OTP is successfully sent to track usage
+ */
+export const incrementRateLimit = async (req: Request): Promise<void> => {
+  if (!req.rateLimitData) {
+    logger.warn("No rate limit data found in request");
+    return;
+  }
+
+  const {
+    identifier,
+    identifierType,
+    actionType,
+    ipAddress,
+    currentWindowRecord,
+  } = req.rateLimitData;
+
+  try {
+    const graphqlClient = getGraphQLClient();
+
+    if (currentWindowRecord) {
+      await graphqlClient.request(INCREMENT_RATE_LIMIT, {
+        id: currentWindowRecord.id,
+        attempt_count: currentWindowRecord.attempt_count + 1,
+      });
+    } else {
+      await graphqlClient.request(INSERT_RATE_LIMIT, {
+        rate_limit: {
+          identifier,
+          action_type: actionType,
+          identifier_type: identifierType,
+          ip_address: ipAddress,
+          attempt_count: 1,
+          window_start: new Date().toISOString(),
+        },
+      });
+    }
+
+    logger.info("Rate limit incremented successfully", {
+      identifier,
+      actionType,
+      ipAddress,
+    });
+  } catch (error) {
+    logger.error("Failed to increment rate limit", {
+      error,
+      identifier,
+      actionType,
+    });
+  }
 };

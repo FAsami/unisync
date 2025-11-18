@@ -1,6 +1,7 @@
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 import path from "path";
+import { isDevelopment } from "./environment";
 
 const levels = {
   error: 0,
@@ -21,8 +22,6 @@ const colors = {
 winston.addColors(colors);
 
 const level = () => {
-  const env = process.env.NODE_ENV || "development";
-  const isDevelopment = env === "development";
   return isDevelopment ? "debug" : "warn";
 };
 

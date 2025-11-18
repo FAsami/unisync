@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import { AppError, ApiResponse } from "../utils";
+import { HttpError } from "../utils/errors";
+import { ZodError } from "zod";
+import logger from "../config/logger";
+import { isDevelopment } from "../config/environment";
 
 export const errorHandler = (
   err: Error,
@@ -7,45 +10,26 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ): void => {
-  let statusCode = 500;
-  let message = "Internal Server Error";
-  let code: string | undefined;
+  logger.error("ERROR_HANDLER:", {
+    error: err.message,
+    stack: err.stack,
+    path: req.path,
+    statusCode: err instanceof HttpError ? err.statusCode : 500,
+  });
 
-  if (err instanceof AppError) {
-    statusCode = err.statusCode;
-    message = err.message;
-    code = err.code;
+  if (err instanceof HttpError) {
+    res.error(err.message, err.statusCode, err.code, err.details, err.type);
+    return;
   }
 
-  if (err.name === "ValidationError") {
-    statusCode = 422;
-    message = err.message;
-    code = "VALIDATION_ERROR";
+  if (err instanceof ZodError) {
+    res.error("Validation failed", 400, "VALIDATION_ERROR", err.issues);
+    return;
   }
-
-  if (err.name === "CastError") {
-    statusCode = 400;
-    message = "Invalid resource ID";
-    code = "INVALID_ID";
-  }
-
-  if (err.name === "MongoError" && (err as any).code === 11000) {
-    statusCode = 409;
-    message = "Resource already exists";
-    code = "DUPLICATE_KEY";
-  }
-
-  const errorResponse = ApiResponse.error(
-    message,
-    statusCode,
-    code,
-    req,
-    err.stack
+  res.error(
+    "Internal Server Error",
+    500,
+    "INTERNAL_ERROR",
+    isDevelopment ? err.stack : undefined
   );
-
-  if (req.startTime) {
-    errorResponse.body.meta.duration = Date.now() - req.startTime;
-  }
-
-  res.status(errorResponse.statusCode).json(errorResponse.body);
 };

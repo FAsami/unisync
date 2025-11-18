@@ -7,22 +7,28 @@ import { notFoundHandler } from "./middleware/notFoundHandler";
 import { requestInfo } from "./middleware/requestInfo";
 import { initSentry } from "./config/sentry";
 import { applySecurityMiddleware } from "./config/security";
-import { applyRateLimiting } from "./config/rateLimit";
+import { applyRateLimiting } from "./config/rate-limits";
 import logger, { stream } from "./config/logger";
 import { routes } from "./routes";
+import { installResponseExtensions } from "./utils/response/responseExtensions";
+import { config, validateConfig, isTest } from "./config/environment";
 
 dotenv.config();
 
+// Validate configuration on startup
+validateConfig();
+
 const app = express();
-const PORT = process.env.PORT || 9201;
+
+installResponseExtensions();
 
 initSentry();
 applySecurityMiddleware(app);
-applyRateLimiting(app);
 app.use(compression() as any);
 app.use(morgan("combined", { stream }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+applyRateLimiting(app);
 app.use(requestInfo);
 
 app.use("/api/v1", routes);
@@ -50,11 +56,11 @@ process.on("uncaughtException", (error) => {
   process.exit(1);
 });
 
-if (process.env.NODE_ENV !== "test") {
-  app.listen(PORT, () => {
-    logger.info(`🚀 Server is running on port  ${PORT}`);
-    logger.info(`Environment: ${process.env.NODE_ENV || "development"}`);
-    logger.info(`🔗 API Endpoint: http://localhost:${PORT}/api/v1`);
+if (!isTest) {
+  app.listen(config.PORT, () => {
+    logger.info(`🚀 Server is running on port ${config.PORT}`);
+    logger.info(`Environment: ${config.NODE_ENV}`);
+    logger.info(`🔗 API Endpoint: http://localhost:${config.PORT}/api/v1`);
   });
 }
 
