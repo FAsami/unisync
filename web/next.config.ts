@@ -1,14 +1,14 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   transpilePackages: [
-    "@ant-design",
-    "antd",
-    "rc-util",
-    "rc-pagination",
-    "rc-picker",
-    "rc-input",
+    '@ant-design',
+    'antd',
+    'rc-util',
+    'rc-pagination',
+    'rc-picker',
+    'rc-input',
   ],
-};
+}
 
-export default nextConfig;
+export default nextConfig

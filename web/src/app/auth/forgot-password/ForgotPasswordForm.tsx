@@ -1,32 +1,32 @@
-"use client";
+'use client'
 
-import { useTransition, useState } from "react";
-import { Form, Button } from "antd";
-import { PhoneInput } from "@/components/PhoneInput";
-import { resetPasswordAction } from "@/actions/auth/resetPassword";
+import { useTransition, useState } from 'react'
+import { Form, Button } from 'antd'
+import { PhoneInput } from '@/components/PhoneInput'
+import { resetPasswordAction } from '@/actions/auth/resetPassword'
 
 const ForgotPasswordForm = () => {
-  const [form] = Form.useForm();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [form] = Form.useForm()
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   const onFinish = async (values: { phone: string }) => {
     startTransition(async () => {
-      const { success, message } = await resetPasswordAction(values);
+      const { success, message } = await resetPasswordAction(values)
       if (!success) {
-        setErrorMessage(message || "Failed to send OTP");
+        setErrorMessage(message || 'Failed to send OTP')
         form.setFields([
-          { name: "phone", errors: [message || "Failed to send OTP"] },
-        ]);
+          { name: 'phone', errors: [message || 'Failed to send OTP'] },
+        ])
       }
-    });
-  };
+    })
+  }
 
   const onFinishFailed = ({ errorFields }: any) => {
     if (errorFields?.length) {
-      form.scrollToField(errorFields[0].name);
+      form.scrollToField(errorFields[0].name)
     }
-  };
+  }
 
   return (
     <>
@@ -54,10 +54,10 @@ const ForgotPasswordForm = () => {
           label='Phone'
           name='phone'
           rules={[
-            { required: true, message: "Please enter your phone number" },
+            { required: true, message: 'Please enter your phone number' },
             {
               pattern: /^\+8801\d{9}$/,
-              message: "Please enter a valid Bangladeshi phone number",
+              message: 'Please enter a valid Bangladeshi phone number',
             },
           ]}
         >
@@ -79,7 +79,7 @@ const ForgotPasswordForm = () => {
         </Form.Item>
       </Form>
     </>
-  );
-};
+  )
+}
 
-export default ForgotPasswordForm;
+export default ForgotPasswordForm

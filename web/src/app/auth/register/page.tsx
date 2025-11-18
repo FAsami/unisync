@@ -1,39 +1,39 @@
-"use client";
+'use client'
 
-import { useState, useTransition } from "react";
-import { Form, Input, Button } from "antd";
-import { MailOutlined, LockOutlined } from "@ant-design/icons";
-import { PhoneInput } from "@/components/PhoneInput";
-import { registerAction } from "@/actions/auth/register";
+import { useState, useTransition } from 'react'
+import { Form, Input, Button } from 'antd'
+import { MailOutlined, LockOutlined } from '@ant-design/icons'
+import { PhoneInput } from '@/components/PhoneInput'
+import { registerAction } from '@/actions/auth/register'
 
 export default function RegisterPage() {
-  const [form] = Form.useForm();
-  const [isPending, startTransition] = useTransition();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [form] = Form.useForm()
+  const [isPending, startTransition] = useTransition()
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const onFinish = async (values: {
-    phone: string;
-    password: string;
-    email?: string;
+    phone: string
+    password: string
+    email?: string
   }) => {
     startTransition(async () => {
-      setErrorMessage(null);
-      form.resetFields(["password"]);
-      const { success, message } = await registerAction(values);
+      setErrorMessage(null)
+      form.resetFields(['password'])
+      const { success, message } = await registerAction(values)
       if (!success) {
-        setErrorMessage(message || "Failed to register");
+        setErrorMessage(message || 'Failed to register')
         form.setFields([
-          { name: "phone", errors: [message || "Failed to register"] },
-        ]);
+          { name: 'phone', errors: [message || 'Failed to register'] },
+        ])
       }
-    });
-  };
+    })
+  }
 
   const onFinishFailed = ({ errorFields }: any) => {
     if (errorFields?.length) {
-      form.scrollToField(errorFields[0].name);
+      form.scrollToField(errorFields[0].name)
     }
-  };
+  }
 
   return (
     <>
@@ -62,10 +62,10 @@ export default function RegisterPage() {
           name='phone'
           required
           rules={[
-            { required: true, message: "Please enter your phone number" },
+            { required: true, message: 'Please enter your phone number' },
             {
               pattern: /^\+8801\d{9}$/,
-              message: "Please enter a valid Bangladesh phone number",
+              message: 'Please enter a valid Bangladesh phone number',
             },
           ]}
         >
@@ -85,24 +85,24 @@ export default function RegisterPage() {
           name='password'
           required
           rules={[
-            { required: true, message: "Please enter your password" },
-            { min: 8, message: "Must be at least 8 characters" },
-            { max: 128, message: "Must not exceed 128 characters" },
+            { required: true, message: 'Please enter your password' },
+            { min: 8, message: 'Must be at least 8 characters' },
+            { max: 128, message: 'Must not exceed 128 characters' },
             {
               pattern: /[A-Z]/,
-              message: "Must contain at least one uppercase letter",
+              message: 'Must contain at least one uppercase letter',
             },
             {
               pattern: /[a-z]/,
-              message: "Must contain at least one lowercase letter",
+              message: 'Must contain at least one lowercase letter',
             },
             {
               pattern: /[0-9]/,
-              message: "Must contain at least one number",
+              message: 'Must contain at least one number',
             },
             {
               pattern: /[^A-Za-z0-9]/,
-              message: "Must contain at least one special character",
+              message: 'Must contain at least one special character',
             },
           ]}
         >
@@ -127,5 +127,5 @@ export default function RegisterPage() {
         </Form.Item>
       </Form>
     </>
-  );
+  )
 }
