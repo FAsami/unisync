@@ -16,7 +16,13 @@ import { config, validateConfig, isTest } from "./config/environment";
 dotenv.config();
 
 // Validate configuration on startup
-validateConfig();
+try {
+  validateConfig();
+} catch (error) {
+  console.error("Configuration validation failed:", error);
+  logger.error("Configuration validation failed:", error);
+  process.exit(1);
+}
 
 const app = express();
 
