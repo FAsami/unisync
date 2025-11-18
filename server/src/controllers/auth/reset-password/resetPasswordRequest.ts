@@ -7,7 +7,7 @@ import { INSERT_OTP } from "../../otp/gql";
 import { asyncHandler } from "../../../utils/response";
 import { ValidationError } from "../../../utils/errors";
 import logger from "../../../config/logger";
-import { getSMSProvider } from "@/lib/providers/sms";
+import { getSMSProvider } from "../../../lib/providers/sms";
 
 export const resetPasswordRequest = asyncHandler(
   async (req: Request, res: Response) => {
