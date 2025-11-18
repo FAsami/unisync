@@ -19,8 +19,12 @@ dotenv.config();
 try {
   validateConfig();
 } catch (error) {
-  console.error("Configuration validation failed:", error);
-  logger.error("Configuration validation failed:", error);
+  console.error("❌ Configuration validation failed:");
+  console.error(error);
+  if (error instanceof Error) {
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+  }
   process.exit(1);
 }
 
