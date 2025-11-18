@@ -1,4 +1,4 @@
-CREATE TABLE "event"."event_room" ("id" uuid NOT NULL DEFAULT gen_random_uuid(), "event_id" uuid NOT NULL, "room_id" uuid NOT NULL, "metadata" jsonb NOT NULL, "created_at" timestamptz NOT NULL DEFAULT now(), "updated_at" timestamptz NOT NULL DEFAULT now(), PRIMARY KEY ("id") );COMMENT ON TABLE "event"."event_room" IS E'Room assignments for events (supports multi-room events).';
+CREATE TABLE "event"."event_room" ("id" uuid NOT NULL DEFAULT gen_random_uuid(), "event_id" uuid NOT NULL, "room_id" uuid NOT NULL, "capacity" integer, "is_primary_room" boolean DEFAULT false, "room_notes" text, "created_at" timestamptz NOT NULL DEFAULT now(), "updated_at" timestamptz NOT NULL DEFAULT now(), PRIMARY KEY ("id") );COMMENT ON TABLE "event"."event_room" IS E'Room assignments for events (supports multi-room events).';
 CREATE OR REPLACE FUNCTION "event"."set_current_timestamp_updated_at"()
 RETURNS TRIGGER AS $$
 DECLARE

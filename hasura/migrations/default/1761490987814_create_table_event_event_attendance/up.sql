@@ -1,4 +1,4 @@
-CREATE TABLE "event"."event_attendance" ("id" uuid NOT NULL DEFAULT gen_random_uuid(), "event_id" uuid NOT NULL, "user_id" uuid NOT NULL, "marked_at" timestamptz NOT NULL, "status" text NOT NULL DEFAULT 'pending', "marked_by" uuid NOT NULL, "notes" text NOT NULL, "created_at" timestamptz NOT NULL DEFAULT now(), "updated_at" timestamptz NOT NULL DEFAULT now(), PRIMARY KEY ("id") );COMMENT ON TABLE "event"."event_attendance" IS E'Attendance tracking for regular lectures (without participant records).';
+CREATE TABLE "event"."event_attendance" ("id" uuid NOT NULL DEFAULT gen_random_uuid(), "event_id" uuid NOT NULL, "user_id" uuid NOT NULL, "marked_at" timestamptz NOT NULL, "status" text NOT NULL DEFAULT 'pending', "marked_by" uuid NOT NULL, "notes" text, "created_at" timestamptz NOT NULL DEFAULT now(), "updated_at" timestamptz NOT NULL DEFAULT now(), PRIMARY KEY ("id") );COMMENT ON TABLE "event"."event_attendance" IS E'Attendance tracking for regular lectures (without participant records).';
 CREATE OR REPLACE FUNCTION "event"."set_current_timestamp_updated_at"()
 RETURNS TRIGGER AS $$
 DECLARE
