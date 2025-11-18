@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { VerifyContext } from "@/lib/verifyContext";
-import AuthLayout from "@/components/AuthLayout";
 import ForgotPasswordVerifyForm from "./ForgotPasswordVerifyForm";
 import { decrypt } from "@/lib/encrypt";
 
@@ -21,20 +20,21 @@ export default async function ForgotPasswordVerifyPage({
     }
   }
   if (!context) {
-    redirect("/forgot-password");
+    redirect("/auth/forgot-password");
   }
-  const channel = context.identifierType === "EMAIL" ? "email" : "phone";
-  const subtitle = (
-    <>
-      We've sent an OTP to your{" "}
-      <span className='font-medium text-gray-900'>{context.identifier}</span>{" "}
-      {channel}. Then choose a new password.
-    </>
-  );
 
   return (
-    <AuthLayout title='Reset your password' subtitle={subtitle}>
+    <>
+      <h1 className='text-3xl font-bold text-center text-gray-900 mb-2'>
+        Reset your password
+      </h1>
+      <div className='text-center text-gray-600 text-sm mb-8'>
+        We've sent an OTP to your{" "}
+        <span className='font-medium text-gray-900'>{context.identifier}</span>{" "}
+        {context.identifierType === "EMAIL" ? "email" : "phone"}. Then choose a
+        new password.
+      </div>
       <ForgotPasswordVerifyForm context={context} />
-    </AuthLayout>
+    </>
   );
 }

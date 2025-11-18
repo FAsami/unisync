@@ -2,10 +2,8 @@
 
 import { useTransition, useState } from "react";
 import { Form, Button } from "antd";
-import Link from "next/link";
 import { PhoneInput } from "@/components/PhoneInput";
-import AuthLayout from "@/components/AuthLayout";
-import { resetPasswordAction } from "../actions/auth/resetPassword";
+import { resetPasswordAction } from "@/actions/auth/resetPassword";
 
 const ForgotPasswordForm = () => {
   const [form] = Form.useForm();
@@ -31,21 +29,7 @@ const ForgotPasswordForm = () => {
   };
 
   return (
-    <AuthLayout
-      title='Forgot password'
-      subtitle='Enter your phone number to receive reset instructions.'
-      footer={
-        <p className='text-center text-gray-600 text-sm'>
-          Remembered it?{" "}
-          <Link
-            href='/login'
-            className='text-blue-500 font-medium hover:underline'
-          >
-            Back to login
-          </Link>
-        </p>
-      }
-    >
+    <>
       {errorMessage ? (
         <div
           role='status'
@@ -94,7 +78,7 @@ const ForgotPasswordForm = () => {
           </Button>
         </Form.Item>
       </Form>
-    </AuthLayout>
+    </>
   );
 };
 

@@ -11,10 +11,10 @@ const resetPasswordAction = async ({ phone }: { phone: string }) => {
       identifier: phone,
       identifierType: "PHONE",
       purpose: "PASSWORD_RESET",
-      redirectTo: "/login",
+      redirectTo: "/auth/login",
     };
     const encrypted = encrypt(JSON.stringify(context));
-    redirect(`/forgot-password/verify?ctx=${encodeURIComponent(encrypted)}`);
+    redirect(`/auth/forgot-password/verify?ctx=${encodeURIComponent(encrypted)}`);
   } else {
     return {
       success: false,

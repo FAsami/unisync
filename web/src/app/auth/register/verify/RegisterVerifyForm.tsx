@@ -3,50 +3,24 @@
 import { useCallback, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Form, Input, Button } from "antd";
-import { KeyOutlined, LockOutlined } from "@ant-design/icons";
+import { KeyOutlined } from "@ant-design/icons";
 import { apiClient } from "@/lib/axios";
 import {
   clearVerifyContext,
   saveVerifyContext,
   VerifyContext,
 } from "@/lib/verifyContext";
-import { resendOtpAction } from "@/app/actions/auth/resendOtp";
+import { resendOtpAction } from "@/actions/auth/resendOtp";
 
 type VerifyFormValues = {
   otp: string;
-  password: string;
-  confirmPassword: string;
 };
-
-const passwordRules = [
-  { required: true, message: "Please enter your new password" },
-  { min: 8, message: "Must be at least 8 characters" },
-  { max: 128, message: "Must not exceed 128 characters" },
-  {
-    pattern: /[A-Z]/,
-    message: "Must contain at least one uppercase letter",
-  },
-  {
-    pattern: /[a-z]/,
-    message: "Must contain at least one lowercase letter",
-  },
-  {
-    pattern: /[0-9]/,
-    message: "Must contain at least one number",
-  },
-  {
-    pattern: /[^A-Za-z0-9]/,
-    message: "Must contain at least one special character",
-  },
-];
 
 type Props = {
   context: VerifyContext;
 };
 
-export default function ForgotPasswordVerifyForm({
-  context: initialContext,
-}: Props) {
+export default function RegisterVerifyForm({ context: initialContext }: Props) {
   const router = useRouter();
   const savedRef = useRef(false);
 
@@ -95,14 +69,7 @@ export default function ForgotPasswordVerifyForm({
         }
 
         setErrorMessage(null);
-        form.setFields([
-          { name: "otp", errors: [] },
-          { name: "password", errors: [] },
-          { name: "confirmPassword", errors: [] },
-        ]);
-
-        const identifierKey =
-          context.identifierType === "EMAIL" ? "email" : "phone";
+        form.setFields([{ name: "otp", errors: [] }]);
 
         let identifier = context.identifier.trim();
 
@@ -121,10 +88,9 @@ export default function ForgotPasswordVerifyForm({
           }
         }
 
-        const response = await apiClient.post("/auth/reset-password/verify", {
-          [identifierKey]: identifier,
+        const response = await apiClient.post("/auth/register/verify", {
+          phone: identifier,
           otp: values.otp,
-          newPassword: values.password,
         });
 
         const { status, data } = response;
@@ -148,16 +114,11 @@ export default function ForgotPasswordVerifyForm({
 
         clearVerifyContext();
         setContext(null as any);
-        router.push(context.redirectTo || "/login");
+        router.push(context.redirectTo || "/");
       } catch (error: any) {
         const message = error?.message || "Verification failed";
         setErrorMessage(message);
-
-        form.setFields([
-          { name: "otp", errors: [message] },
-          { name: "password", errors: [message] },
-          { name: "confirmPassword", errors: [message] },
-        ]);
+        form.setFields([{ name: "otp", errors: [message] }]);
       }
     });
   };
@@ -181,6 +142,7 @@ export default function ForgotPasswordVerifyForm({
       </button>
     </p>
   );
+
   return (
     <>
       {errorMessage ? (
@@ -221,34 +183,6 @@ export default function ForgotPasswordVerifyForm({
           />
         </Form.Item>
 
-        <Form.Item label='New Password' name='password' rules={passwordRules}>
-          <Input.Password
-            placeholder='Enter new password'
-            prefix={<LockOutlined className='text-gray-400' />}
-          />
-        </Form.Item>
-        <Form.Item
-          label='Confirm Password'
-          name='confirmPassword'
-          dependencies={["password"]}
-          rules={[
-            { required: true, message: "Please confirm your password" },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value || getFieldValue("password") === value) {
-                  return Promise.resolve();
-                }
-                return Promise.reject(new Error("Passwords do not match"));
-              },
-            }),
-          ]}
-        >
-          <Input.Password
-            placeholder='Confirm new password'
-            prefix={<LockOutlined className='text-gray-400' />}
-          />
-        </Form.Item>
-
         <Form.Item className='mb-0'>
           <Button
             type='primary'
@@ -260,7 +194,7 @@ export default function ForgotPasswordVerifyForm({
             className='text-base font-medium'
             disabled={!context}
           >
-            Reset Password
+            Verify Account
           </Button>
         </Form.Item>
       </Form>
