@@ -1,12 +1,5 @@
 import { Request } from "express";
-
-export interface RequestInfo {
-  requestId: string;
-  method: string;
-  path: string;
-  startTime: number;
-  duration?: number;
-}
+import { RequestInfo } from "../../types";
 
 export const getRequestInfo = (req: Request): RequestInfo => {
   const startTime = req.startTime || Date.now();

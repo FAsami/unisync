@@ -1,0 +1,1 @@
+CREATE TABLE "venue"."room" ("id" uuid NOT NULL, "building_id" uuid NOT NULL, "room_number" text NOT NULL, "floor" text NOT NULL, "capacity" integer, "facility" jsonb, "room_name" text NOT NULL, PRIMARY KEY ("id") , FOREIGN KEY ("building_id") REFERENCES "venue"."building"("id") ON UPDATE restrict ON DELETE cascade, UNIQUE ("building_id", "room_number"));

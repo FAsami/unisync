@@ -1,21 +1,28 @@
 import * as Sentry from "@sentry/node";
+import { config, isProduction, isDevelopment, isTest } from "./environment";
 
 export const initSentry = () => {
   Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.NODE_ENV || "development",
-    release: process.env.APP_VERSION || "1.0.0",
-    tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
-    debug: process.env.NODE_ENV === "development",
-    integrations: [Sentry.contextLinesIntegration({ frameContextLines: 0 })],
-    beforeSend(event, hint) {
-      if (process.env.NODE_ENV === "test") {
+    dsn: config.SENTRY_DSN,
+    environment: config.NODE_ENV,
+    release: config.APP_VERSION,
+    tracesSampleRate: isProduction ? 0.1 : 1.0,
+    debug: isDevelopment,
+    integrations: [
+      Sentry.contextLinesIntegration({ frameContextLines: 0 }),
+      Sentry.requestDataIntegration(),
+      Sentry.httpIntegration(),
+      Sentry.expressIntegration(),
+      Sentry.graphqlIntegration(),
+    ],
+    beforeSend(event) {
+      if (isTest || isDevelopment) {
         return null;
       }
       event.tags = {
         ...event.tags,
         service: "unisync",
-        version: process.env.npm_package_version || "1.0.0",
+        version: config.APP_VERSION,
       };
 
       return event;

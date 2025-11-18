@@ -1,0 +1,1 @@
+INSERT INTO "academic"."department"("id", "code", "name", "description", "head_user_id", "is_active", "created_at", "updated_at") VALUES (E'de0db911-4659-461c-b06e-536b02bf2b14', E'CSE', E'Computer Science and Engineering', null, null, true, E'2025-10-26T10:38:12.393234+00:00', E'2025-10-26T10:38:12.393234+00:00');

@@ -8,16 +8,16 @@ Unisync uses JWT (JSON Web Tokens) for authentication with OTP (One-Time Passwor
 
 For users who don't need to authenticate, you can create a guest session.
 
-### 2. OTP Authentication (User Login)
+### 2. Phone + Password Authentication (Users)
 
-For authenticated users, use the OTP flow to verify identity via email or SMS.
+For authenticated users, registration is validated by OTP, then users login with phone + password. OTP is also used for password reset. The generic OTP route only sends OTPs.
 
 ## Guest Session Flow
 
 Create a guest session to get access tokens without authentication:
 
 ```http
-POST /api/v1/auth/guest-session
+POST /api/v1/auth/session/guest
 ```
 
 **Response:**
@@ -38,11 +38,11 @@ POST /api/v1/auth/guest-session
 }
 ```
 
-## OTP Authentication Flow
+## OTP (send-only)
 
-The OTP authentication process consists of two steps:
+Use for registration verification and password reset.
 
-### Step 1: Send OTP
+### Send OTP
 
 Request an OTP to be sent to the user's email or phone:
 
@@ -81,48 +81,91 @@ Content-Type: application/json
 }
 ```
 
-### Step 2: Verify OTP
+Note: Verification is handled by the dedicated auth endpoints below, not by an OTP route.
 
-Verify the OTP code sent to the user:
+## Registration
+
+### Start registration
 
 ```http
-POST /api/v1/otp/verify
+POST /api/v1/auth/register
 Content-Type: application/json
 
 {
-  "input": {
-    "identifier": "user@example.com",
-    "otp": "123456",
-    "purpose": "LOGIN"
-  }
+  "phone": "+15555550123",
+  "password": "P@ssw0rd!",
+  "email": "student@example.edu" // optional
 }
 ```
 
-**Parameters:**
+Response: 201 Created. Server stores hashed password and expects you to send an OTP using `/otp/send` with `purpose=SIGNUP`.
 
-- `identifier` (string, required): The same identifier used in send request
-- `otp` (string, required): The 6-digit OTP code
-- `purpose` (string, required): The same purpose used in send request
+### Verify registration
 
-**Response:**
+```http
+POST /api/v1/auth/register/verify
+Content-Type: application/json
 
-```json
 {
-  "data": {
-    "success": true,
-    "message": "OTP verified successfully",
-    "verified": true,
-    "identifier": "user@example.com",
-    "purpose": "LOGIN"
-  },
-  "meta": {
-    "message": "OTP verified successfully",
-    "timestamp": "2025-10-19T12:34:56.789Z"
-  }
+  "phone": "+15555550123",
+  "otp": "123456"
 }
 ```
 
-**Note:** The current implementation verifies the OTP but does not automatically create a session. After successful OTP verification, you should implement your own session creation logic based on your application's requirements.
+Response: 200 OK with `access_token` and `refresh_token`.
+
+## Login
+
+```http
+POST /api/v1/auth/login
+Content-Type: application/json
+
+{
+  "phone": "+15555550123",
+  "password": "P@ssw0rd!"
+}
+```
+
+Response: 200 OK with `access_token`, `refresh_token`, and `session_id`.
+
+## Reset password
+
+### Request reset (send OTP)
+
+```http
+POST /api/v1/auth/reset-password
+Content-Type: application/json
+
+{
+  "phone": "+15555550123"
+}
+```
+
+Always returns 200 to avoid enumeration.
+
+### Verify reset (set new password)
+
+```http
+POST /api/v1/auth/reset-password/verify
+Content-Type: application/json
+
+{
+  "phone": "+15555550123",
+  "otp": "123456",
+  "newPassword": "N3wP@ssw0rd!"
+}
+```
+
+Response: 200 OK and revokes existing sessions.
+
+## Logout
+
+```http
+POST /api/v1/auth/logout
+Authorization: Bearer <access_token>
+```
+
+Response: 200 OK and revokes the current session.
 
 ## Using JWT Tokens
 
@@ -152,7 +195,7 @@ Authorization: Bearer <access_token>
 When the access token expires, use the refresh token to get new tokens:
 
 ```http
-POST /api/v1/auth/refresh
+POST /api/v1/auth/session/refresh
 Content-Type: application/json
 Authorization: Bearer <refresh_token>
 
@@ -249,7 +292,7 @@ const API_URL = "http://localhost:9201/api/v1";
 
 // Create guest session
 export async function createGuestSession() {
-  const response = await axios.post(`${API_URL}/auth/guest-session`);
+  const response = await axios.post(`${API_URL}/auth/session/guest`);
   const { access_token, refresh_token } = response.data.data;
 
   await SecureStore.setItemAsync("accessToken", access_token);
@@ -274,19 +317,47 @@ export async function sendOTP(
   return response.data.data;
 }
 
-// Verify OTP
-export async function verifyOTP(
-  identifier: string,
-  otp: string,
-  purpose: "LOGIN" | "SIGNUP" | "PASSWORD_RESET"
-) {
-  const response = await axios.post(`${API_URL}/otp/verify`, {
-    input: {
-      identifier,
-      otp,
-      purpose,
-    },
+// Login with phone and password
+export async function login(phone: string, password: string) {
+  const response = await axios.post(`${API_URL}/auth/login`, {
+    phone,
+    password,
   });
+
+  const { access_token, refresh_token } = response.data.data;
+
+  await SecureStore.setItemAsync("accessToken", access_token);
+  await SecureStore.setItemAsync("refreshToken", refresh_token);
+
+  return response.data.data;
+}
+
+// Register new user
+export async function register(
+  phone: string,
+  password: string,
+  email?: string
+) {
+  const response = await axios.post(`${API_URL}/auth/register`, {
+    phone,
+    password,
+    email,
+  });
+  return response.data.data;
+}
+
+// Verify registration with OTP
+export async function verifyRegistration(phone: string, otp: string) {
+  const response = await axios.post(`${API_URL}/auth/register/verify`, {
+    phone,
+    otp,
+  });
+
+  const { access_token, refresh_token } = response.data.data;
+
+  await SecureStore.setItemAsync("accessToken", access_token);
+  await SecureStore.setItemAsync("refreshToken", refresh_token);
+
   return response.data.data;
 }
 
@@ -295,7 +366,7 @@ export async function refreshTokens() {
   const refreshToken = await SecureStore.getItemAsync("refreshToken");
 
   const response = await axios.post(
-    `${API_URL}/auth/refresh`,
+    `${API_URL}/auth/session/refresh`,
     { refresh_token: refreshToken },
     {
       headers: {

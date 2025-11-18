@@ -29,6 +29,29 @@ export default defineConfig({
         ],
       },
       {
+        text: "Event Management",
+        items: [
+          {
+            text: "Managing Events and Schedules",
+            link: "/guide/managing-events",
+          },
+        ],
+      },
+      {
+        text: "Architecture",
+        items: [
+          { text: "Database Schema", link: "/architecture/database-schema" },
+          {
+            text: "Event Management System",
+            link: "/architecture/event-system",
+          },
+          {
+            text: "Notification System",
+            link: "/architecture/notification-system",
+          },
+        ],
+      },
+      {
         text: "API Reference",
         items: [
           { text: "Overview", link: "/api/" },

@@ -1,16 +1,6 @@
 import jwt from "jsonwebtoken";
 import { config } from "../config/environment";
-
-export interface TokenPayload {
-  sessionId: string;
-  userId: string | null;
-  role: "guest-consumer" | "consumer";
-}
-
-export interface DecodedToken extends TokenPayload {
-  iat: number;
-  exp: number;
-}
+import { TokenPayload, DecodedToken } from "../types";
 
 export class JWTService {
   static generateAccessToken(payload: TokenPayload): string {

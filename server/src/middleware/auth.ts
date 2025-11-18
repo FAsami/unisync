@@ -1,20 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { JWTService, DecodedToken } from "../utils/jwt";
+import { JWTService } from "../utils/jwt";
 import { ApiResponse } from "../utils/response/ApiResponse";
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: DecodedToken;
-    }
-  }
-}
-
-export interface AuthOptions {
-  requireAuth?: boolean;
-  allowGuest?: boolean;
-  requireUser?: boolean;
-}
+import { AuthOptions } from "../types";
 
 export const authenticate = (options: AuthOptions = {}) => {
   const {

@@ -1,0 +1,1 @@
+INSERT INTO "academic"."batch"("id", "departmant_id", "name", "current_semester", "year", "semester_count", "start_date", "end_date", "is_active", "created_at", "updated_at") VALUES (E'c0590723-b9aa-429a-8ca5-7dc2c349700b', E'de0db911-4659-461c-b06e-536b02bf2b14', E'62', 1, 3, 8, E'2025-06-01', null, true, E'2025-10-26T10:42:45.961563+00:00', E'2025-10-26T10:42:45.961563+00:00');
