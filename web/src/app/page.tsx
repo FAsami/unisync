@@ -24,10 +24,10 @@ const Home = () => {
   }
 
   return (
-    <div style={{ padding: '40px', textAlign: 'center' }}>
+    <div>
       <h1>Welcome to Unisync</h1>
 
-      {authenticated ? (
+      {/* {authenticated ? (
         <div>
           <Button type='primary' icon={<HomeOutlined />}>
             Home
@@ -53,7 +53,7 @@ const Home = () => {
             Register
           </Button>
         </div>
-      )}
+      )} */}
     </div>
   )
 }

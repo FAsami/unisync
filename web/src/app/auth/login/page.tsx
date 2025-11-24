@@ -1,18 +1,27 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useTransition, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Form, Input, Button } from 'antd'
 import { LockOutlined } from '@ant-design/icons'
 import { PhoneInput } from '@/components/PhoneInput'
 import { apiClient } from '@/lib/axios'
+import { setAuthTokens } from '@/lib/cookies'
 import Link from 'next/link'
 
 const LoginPage = () => {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [form] = Form.useForm()
   const [isPending, startTransition] = useTransition()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    const error = searchParams.get('error')
+    if (error) {
+      setErrorMessage(decodeURIComponent(error))
+    }
+  }, [searchParams])
 
   const onFinish = async (values: { phone: string; password: string }) => {
     startTransition(async () => {
@@ -24,7 +33,16 @@ const LoginPage = () => {
         if (data.success !== true) {
           throw new Error(data?.error?.message || 'Something went wrong')
         }
-        router.push('/')
+
+        // Set tokens if provided in response
+        if (data.data?.access_token && data.data?.refresh_token) {
+          setAuthTokens(data.data.access_token, data.data.refresh_token)
+        }
+
+        // Redirect to original destination or home
+        const redirect = searchParams.get('redirect') || '/'
+        router.push(redirect)
+        router.refresh()
       } catch (error: any) {
         setErrorMessage(error?.message || 'Something went wrong!')
       }

@@ -34,11 +34,12 @@ const authorizeRequest = asyncHandler(async (req: Request, res: Response) => {
       401
     );
   }
+  console.log("==> decodedToken", decodedToken);
 
   // Return Hasura session variables
   res.status(200).json({
     "X-Hasura-User-Id": decodedToken.userId || "",
-    "X-Hasura-Role": decodedToken.role,
+    "X-Hasura-Role": "admin", // TODO: Change to the actual role of the user
     "X-Hasura-Session-Id": decodedToken.sessionId,
   });
 });
