@@ -84,7 +84,10 @@ const GET_SECTIONS = gql`
 
 const GET_USERS = gql`
   query GetUsers {
-    user_account(where: { is_active: { _eq: true } }, order_by: { created_at: desc }) {
+    user_account(
+      where: { is_active: { _eq: true } }
+      order_by: { created_at: desc }
+    ) {
       id
       phone
       email
@@ -183,12 +186,33 @@ const ClassRepresentativeList = () => {
   const [form] = Form.useForm()
   const [selectedBatch, setSelectedBatch] = useState<string | null>(null)
 
-  const { data: repsData, loading: repsLoading, refetch } = useQuery<{
+  const {
+    data: repsData,
+    loading: repsLoading,
+    refetch,
+  } = useQuery<{
     academic_class_representative: ClassRepresentative[]
   }>(GET_CLASS_REPRESENTATIVES)
-  const { data: batchesData } = useQuery(GET_BATCHES)
-  const { data: sectionsData } = useQuery(GET_SECTIONS)
-  const { data: usersData } = useQuery(GET_USERS)
+  const { data: batchesData } = useQuery<{
+    academic_batch: Array<{ id: string; name: string }>
+  }>(GET_BATCHES)
+  const { data: sectionsData } = useQuery<{
+    academic_section: Array<{ id: string; name: string; batch_id: string }>
+  }>(GET_SECTIONS)
+  const { data: usersData } = useQuery<{
+    user_account: Array<{
+      id: string
+      phone: string
+      email: string
+      role: string
+      profiles?: Array<{
+        id: string
+        first_name: string
+        last_name: string
+        student_id: string | null
+      }>
+    }>
+  }>(GET_USERS)
   const [createRep] = useMutation(CREATE_CLASS_REPRESENTATIVE)
   const [updateRep] = useMutation(UPDATE_CLASS_REPRESENTATIVE)
   const [deleteRep] = useMutation(DELETE_CLASS_REPRESENTATIVE)
@@ -274,7 +298,9 @@ const ClassRepresentativeList = () => {
   }
 
   const filteredSections = selectedBatch
-    ? sectionsData?.academic_section.filter((s: any) => s.batch_id === selectedBatch)
+    ? sectionsData?.academic_section.filter(
+        (s: any) => s.batch_id === selectedBatch
+      )
     : sectionsData?.academic_section
 
   const columns = [
@@ -286,7 +312,11 @@ const ClassRepresentativeList = () => {
         if (profile) {
           return `${profile.first_name} ${profile.last_name}${profile.student_id ? ` (${profile.student_id})` : ''}`
         }
-        return record.account?.email || record.account?.phone || record.user_id.substring(0, 8) + '...'
+        return (
+          record.account?.email ||
+          record.account?.phone ||
+          record.user_id.substring(0, 8) + '...'
+        )
       },
     },
     {
@@ -404,7 +434,9 @@ const ClassRepresentativeList = () => {
               placeholder='Select user'
               showSearch
               filterOption={(input, option) =>
-                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                String(option?.label ?? '')
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
               }
             >
               {usersData?.user_account.map((user: any) => {
@@ -413,7 +445,11 @@ const ClassRepresentativeList = () => {
                   ? `${profile.first_name} ${profile.last_name}${profile.student_id ? ` (${profile.student_id})` : ''}`
                   : user.email || user.phone
                 return (
-                  <Select.Option key={user.id} value={user.id} label={displayName}>
+                  <Select.Option
+                    key={user.id}
+                    value={user.id}
+                    label={displayName}
+                  >
                     {displayName} - {user.email || user.phone}
                   </Select.Option>
                 )
@@ -444,10 +480,7 @@ const ClassRepresentativeList = () => {
             label='Section'
             rules={[{ required: true, message: 'Please select a section' }]}
           >
-            <Select
-              placeholder='Select section'
-              disabled={!selectedBatch}
-            >
+            <Select placeholder='Select section' disabled={!selectedBatch}>
               {filteredSections?.map((section: any) => (
                 <Select.Option key={section.id} value={section.id}>
                   {section.name}
@@ -473,4 +506,3 @@ const ClassRepresentativeList = () => {
 }
 
 export default ClassRepresentativeList
-

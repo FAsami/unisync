@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Form, Input, Button } from 'antd'
 import { LockOutlined } from '@ant-design/icons'
@@ -9,7 +9,7 @@ import { apiClient } from '@/lib/axios'
 import { setAuthTokens } from '@/lib/cookies'
 import Link from 'next/link'
 
-const LoginPage = () => {
+const LoginForm = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [form] = Form.useForm()
@@ -34,12 +34,10 @@ const LoginPage = () => {
           throw new Error(data?.error?.message || 'Something went wrong')
         }
 
-        // Set tokens if provided in response
         if (data.data?.access_token && data.data?.refresh_token) {
           setAuthTokens(data.data.access_token, data.data.refresh_token)
         }
 
-        // Redirect to original destination or home
         const redirect = searchParams.get('redirect') || '/'
         router.push(redirect)
         router.refresh()
@@ -128,4 +126,13 @@ const LoginPage = () => {
     </>
   )
 }
+
+const LoginPage = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
 export default LoginPage

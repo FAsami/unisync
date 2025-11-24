@@ -134,9 +134,9 @@ const SectionList = () => {
   } = useQuery<{
     academic_section: Section[]
   }>(GET_SECTIONS)
-  const { data: batchesData } = useQuery<{ academic_batch: Batch[] }>(
-    GET_BATCHES
-  )
+  const { data: batchesData } = useQuery<{
+    academic_batch: Batch[]
+  }>(GET_BATCHES)
   const [createSection] = useMutation(CREATE_SECTION)
   const [updateSection] = useMutation(UPDATE_SECTION)
   const [deleteSection] = useMutation(DELETE_SECTION)

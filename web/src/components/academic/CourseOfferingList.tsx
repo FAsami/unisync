@@ -174,10 +174,29 @@ const CourseOfferingList = () => {
   const { data: offeringsData, loading: offeringsLoading, refetch } = useQuery<{
     academic_course_offering: CourseOffering[]
   }>(GET_COURSE_OFFERINGS)
-  const { data: coursesData } = useQuery(GET_COURSES)
-  const { data: batchesData } = useQuery(GET_BATCHES)
-  const { data: sectionsData } = useQuery(GET_SECTIONS)
-  const { data: usersData } = useQuery(GET_USERS)
+  const { data: coursesData } = useQuery<{
+    academic_course: Array<{ id: string; code: string; name: string }>
+  }>(GET_COURSES)
+  const { data: batchesData } = useQuery<{
+    academic_batch: Array<{ id: string; name: string }>
+  }>(GET_BATCHES)
+  const { data: sectionsData } = useQuery<{
+    academic_section: Array<{ id: string; name: string; batch_id: string }>
+  }>(GET_SECTIONS)
+  const { data: usersData } = useQuery<{
+    user_account: Array<{
+      id: string
+      phone: string
+      email: string
+      role: string
+      profiles?: Array<{
+        id: string
+        first_name: string
+        last_name: string
+        student_id: string | null
+      }>
+    }>
+  }>(GET_USERS)
   const [createOffering] = useMutation(CREATE_COURSE_OFFERING)
   const [updateOffering] = useMutation(UPDATE_COURSE_OFFERING)
   const [deleteOffering] = useMutation(DELETE_COURSE_OFFERING)
@@ -421,7 +440,7 @@ const CourseOfferingList = () => {
               placeholder='Select teacher'
               showSearch
               filterOption={(input, option) =>
-                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
               }
             >
               {usersData?.user_account

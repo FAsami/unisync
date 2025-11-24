@@ -188,8 +188,39 @@ const UserEnrollmentList = () => {
   const { data: enrollmentsData, loading: enrollmentsLoading, refetch } = useQuery<{
     academic_user_enrollment: UserEnrollment[]
   }>(GET_USER_ENROLLMENTS)
-  const { data: offeringsData } = useQuery(GET_COURSE_OFFERINGS)
-  const { data: usersData } = useQuery(GET_USERS)
+  const { data: offeringsData } = useQuery<{
+    academic_course_offering: Array<{
+      id: string
+      academic_year: string
+      course?: {
+        id: string
+        code: string
+        name: string
+      }
+      batch?: {
+        id: string
+        name: string
+      }
+      section?: {
+        id: string
+        name: string
+      }
+    }>
+  }>(GET_COURSE_OFFERINGS)
+  const { data: usersData } = useQuery<{
+    user_account: Array<{
+      id: string
+      phone: string
+      email: string
+      role: string
+      profiles?: Array<{
+        id: string
+        first_name: string
+        last_name: string
+        student_id: string | null
+      }>
+    }>
+  }>(GET_USERS)
   const [createEnrollment] = useMutation(CREATE_USER_ENROLLMENT)
   const [updateEnrollment] = useMutation(UPDATE_USER_ENROLLMENT)
   const [deleteEnrollment] = useMutation(DELETE_USER_ENROLLMENT)
@@ -407,7 +438,7 @@ const UserEnrollmentList = () => {
               placeholder='Select user'
               showSearch
               filterOption={(input, option) =>
-                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
               }
             >
               {usersData?.user_account.map((user: any) => {
