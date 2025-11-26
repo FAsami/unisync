@@ -10,3 +10,4 @@ export async function isServerAuthenticated(): Promise<boolean> {
   const token = await getServerSession()
   return !!token
 }
+

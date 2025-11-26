@@ -3,7 +3,7 @@
 import { Layout, Menu } from 'antd'
 import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
-import { BookOutlined, BuildOutlined } from '@ant-design/icons'
+import { BookOutlined, BuildOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons'
 
 const { Sider } = Layout
 
@@ -26,6 +26,10 @@ const DashboardSidebar = ({
       router.push('/dashboard/venue')
     } else if (key === 'academic') {
       router.push('/dashboard/academic')
+    } else if (key === 'routine') {
+      router.push('/dashboard/routine')
+    } else if (key === 'instructor') {
+      router.push('/dashboard/instructor')
     }
   }
 
@@ -39,6 +43,16 @@ const DashboardSidebar = ({
       key: 'venue',
       icon: <BuildOutlined />,
       label: 'Building & Rooms',
+    },
+    {
+      key: 'routine',
+      icon: <CalendarOutlined />,
+      label: 'Routine Management',
+    },
+    {
+      key: 'instructor',
+      icon: <UserOutlined />,
+      label: 'Instructor Management',
     },
   ]
 
@@ -92,7 +106,11 @@ const DashboardSidebar = ({
             ? ['venue']
             : pathname?.includes('/academic')
               ? ['academic']
-              : []
+              : pathname?.includes('/routine')
+                ? ['routine']
+                : pathname?.includes('/instructor')
+                  ? ['instructor']
+                  : []
         }
         items={menuItems}
         onClick={handleMenuClick}
