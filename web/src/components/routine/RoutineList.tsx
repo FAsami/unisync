@@ -118,6 +118,20 @@ const DELETE_ROUTINE = gql`
   }
 `
 
+interface CourseOffering {
+    id: string
+    course: {
+        code: string
+        name: string
+    }
+    section: {
+        name: string
+    }
+    batch: {
+        name: string
+    }
+}
+
 interface Routine {
     id: string
     name: string
@@ -174,7 +188,9 @@ const RoutineList = () => {
     const { data, loading, refetch } = useQuery<{ event_routine: Routine[] }>(
         GET_ROUTINES
     )
-    const { data: courseOfferingsData } = useQuery(GET_COURSE_OFFERINGS)
+    const { data: courseOfferingsData } = useQuery<{
+        academic_course_offering: CourseOffering[]
+    }>(GET_COURSE_OFFERINGS)
     const [createRoutine] = useMutation(CREATE_ROUTINE)
     const [updateRoutine] = useMutation(UPDATE_ROUTINE)
     const [deleteRoutine] = useMutation(DELETE_ROUTINE)

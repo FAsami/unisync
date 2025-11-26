@@ -100,6 +100,17 @@ const DELETE_ROUTINE_EXCEPTION = gql`
   }
 `
 
+interface Routine {
+    id: string
+    name: string
+    course_offering?: {
+        course: {
+            code: string
+            name: string
+        }
+    }
+}
+
 interface RoutineException {
     id: string
     routine_id: string
@@ -130,7 +141,9 @@ const RoutineExceptionList = () => {
     const { data, loading, refetch } = useQuery<{
         event_routine_exception: RoutineException[]
     }>(GET_ROUTINE_EXCEPTIONS)
-    const { data: routinesData } = useQuery(GET_ROUTINES)
+    const { data: routinesData } = useQuery<{
+        event_routine: Routine[]
+    }>(GET_ROUTINES)
     const [createException] = useMutation(CREATE_ROUTINE_EXCEPTION)
     const [updateException] = useMutation(UPDATE_ROUTINE_EXCEPTION)
     const [deleteException] = useMutation(DELETE_ROUTINE_EXCEPTION)
