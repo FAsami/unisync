@@ -655,7 +655,8 @@ Event Instructor 1:
 - [Installation Guide](./installation.md)
 - [Managing Events](./managing-events.md)
 - [API Reference](../api/)
-- [Architecture Documentation](../architecture/)
+- [Database Schema](../architecture/database-schema.md)
+- [Event System Architecture](../architecture/event-system.md)
 
 ## Support
 
