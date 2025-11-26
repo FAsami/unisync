@@ -19,6 +19,7 @@ export default defineConfig({
         items: [
           { text: "Getting Started", link: "/guide/" },
           { text: "Installation", link: "/guide/installation" },
+          { text: "Admin Dashboard Guide", link: "/guide/admin-dashboard-guide" },
         ],
       },
       {

@@ -69,6 +69,10 @@ Before you begin, make sure you have the following installed:
 - [Installation Guide](/guide/installation) - Complete setup instructions
 - [Provider Configuration](/guide/providers) - Configure SMS/Email OTP providers
 
+### Admin Dashboard
+
+- [Admin Dashboard Guide](/guide/admin-dashboard-guide) - Manage instructors, routines, and exam schedules
+
 ### API & Authentication
 
 - [Authentication Guide](/api/authentication) - JWT and OTP authentication flows
