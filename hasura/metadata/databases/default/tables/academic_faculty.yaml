@@ -1,0 +1,13 @@
+table:
+  name: faculty
+  schema: academic
+array_relationships:
+  - name: departments
+    using:
+      manual_configuration:
+        column_mapping:
+          id: faculty_id
+        insertion_order: null
+        remote_table:
+          name: department
+          schema: academic

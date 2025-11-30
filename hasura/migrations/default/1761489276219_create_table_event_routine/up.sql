@@ -16,3 +16,4 @@ EXECUTE PROCEDURE "event"."set_current_timestamp_updated_at"();
 COMMENT ON TRIGGER "set_event_routine_updated_at" ON "event"."routine"
 IS 'trigger to set value of column "updated_at" to current timestamp on row update';
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+alter table "event"."event" add constraint "event_routine_id_fkey" foreign key ("routine_id") references "event"."routine"("id") on delete set null;

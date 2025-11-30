@@ -1,0 +1,1 @@
+INSERT INTO "academic"."faculty"("id", "name", "description", "created_at", "updated_at") VALUES (E'db6d1428-87db-45e3-8b31-cfd926d852a2', E'Faculty of Arts and Social Science', null, E'2025-11-30T07:07:46.676064+00:00', E'2025-11-30T07:07:46.676064+00:00');

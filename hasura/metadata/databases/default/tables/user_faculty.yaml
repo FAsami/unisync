@@ -1,0 +1,22 @@
+table:
+  name: faculty
+  schema: user
+object_relationships:
+  - name: department
+    using:
+      manual_configuration:
+        column_mapping:
+          department_id: id
+        insertion_order: null
+        remote_table:
+          name: department
+          schema: academic
+  - name: faculty
+    using:
+      manual_configuration:
+        column_mapping:
+          faculty_id: id
+        insertion_order: null
+        remote_table:
+          name: faculty
+          schema: academic

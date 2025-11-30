@@ -1,3 +1,38 @@
 table:
   name: course_offering
   schema: academic
+object_relationships:
+  - name: account
+    using:
+      foreign_key_constraint_on: teacher_id
+  - name: batch
+    using:
+      foreign_key_constraint_on: batch_id
+  - name: course
+    using:
+      foreign_key_constraint_on: course_id
+  - name: section
+    using:
+      foreign_key_constraint_on: section_id
+array_relationships:
+  - name: events
+    using:
+      foreign_key_constraint_on:
+        column: course_offering_id
+        table:
+          name: event
+          schema: event
+  - name: routines
+    using:
+      foreign_key_constraint_on:
+        column: course_offering_id
+        table:
+          name: routine
+          schema: event
+  - name: user_enrollments
+    using:
+      foreign_key_constraint_on:
+        column: course_offering_id
+        table:
+          name: user_enrollment
+          schema: academic

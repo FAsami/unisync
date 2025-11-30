@@ -1,3 +1,22 @@
 table:
   name: section
   schema: academic
+object_relationships:
+  - name: batch
+    using:
+      foreign_key_constraint_on: batch_id
+array_relationships:
+  - name: class_representatives
+    using:
+      foreign_key_constraint_on:
+        column: section_id
+        table:
+          name: class_representative
+          schema: academic
+  - name: course_offerings
+    using:
+      foreign_key_constraint_on:
+        column: section_id
+        table:
+          name: course_offering
+          schema: academic
