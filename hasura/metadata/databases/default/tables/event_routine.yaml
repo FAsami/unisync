@@ -4,12 +4,10 @@ table:
 object_relationships:
   - name: course_offering
     using:
-      foreign_key_constraint_on: course_offering_id
-array_relationships:
-  - name: events
-    using:
-      foreign_key_constraint_on:
-        column: routine_id
-        table:
-          name: event
-          schema: event
+      manual_configuration:
+        column_mapping:
+          course_offering_id: id
+        insertion_order: null
+        remote_table:
+          name: course_offering
+          schema: academic

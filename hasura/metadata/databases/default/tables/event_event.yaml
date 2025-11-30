@@ -2,15 +2,9 @@ table:
   name: event
   schema: event
 object_relationships:
-  - name: account
-    using:
-      foreign_key_constraint_on: created_by
   - name: course_offering
     using:
       foreign_key_constraint_on: course_offering_id
-  - name: routine
-    using:
-      foreign_key_constraint_on: routine_id
 array_relationships:
   - name: event_targets
     using:
