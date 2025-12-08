@@ -1,9 +1,10 @@
-import { View, StyleSheet, ScrollView } from 'react-native'
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
+import { useAuth } from '@/contexts/Auth'
 import { ThemedText } from '@/components/ThemedText'
-import { ThemedView } from '@/components/ThemedView'
 import { AppColors } from '@/constants/Colors'
 
 const HomeScreen = () => {
+  const { logout } = useAuth()
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -14,6 +15,9 @@ const HomeScreen = () => {
           <ThemedText style={styles.subtitle}>
             Your university synchronization platform
           </ThemedText>
+          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+            <ThemedText style={styles.logoutText}>Logout</ThemedText>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.content}>
@@ -112,6 +116,18 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     marginBottom: 8,
+    fontSize: 14,
+  },
+  logoutButton: {
+    marginTop: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: AppColors.primary,
+    borderRadius: 20,
+  },
+  logoutText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
     fontSize: 14,
   },
 })

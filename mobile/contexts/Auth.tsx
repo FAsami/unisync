@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useState,
 } from 'react'
+import { AppState } from 'react-native'
 import {
   getGuestSessionToken,
   isAuthenticated,
@@ -12,6 +13,8 @@ import {
   authEventEmitter,
   handleSessionRevocation,
 } from '@/lib/auth'
+import { clearStoredTokens } from '@/utils/token'
+import { axiosClient } from '@/lib/axios'
 
 interface AuthContextType {
   isLoading: boolean
@@ -20,6 +23,7 @@ interface AuthContextType {
   isSessionRevoked: boolean
   refreshAuth: () => Promise<void>
   handleRevocation: () => Promise<void>
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -32,9 +36,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [hasValidToken, setHasValidToken] = useState(false)
   const [isSessionRevoked, setIsSessionRevoked] = useState(false)
 
-  const checkAuthStatus = async () => {
+  const checkAuthStatus = async (showLoading = true) => {
     try {
-      setIsLoading(true)
+      if (showLoading) setIsLoading(true)
 
       const [networkStatus, authStatus] = await Promise.all([
         getNetworkStatus(),
@@ -46,7 +50,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     } catch (error) {
       setHasValidToken(false)
     } finally {
-      setIsLoading(false)
+      if (showLoading) setIsLoading(false)
     }
   }
 
@@ -65,15 +69,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       await handleSessionRevocation()
       setIsSessionRevoked(false)
       setHasValidToken(false)
-      await checkAuthStatus()
+      await checkAuthStatus(true)
     } catch (error) {
       // Handle silently
     }
   }
 
+  const logout = async () => {
+    try {
+      await axiosClient.post('/auth/logout')
+      await clearStoredTokens()
+      setHasValidToken(false)
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+  }
+
   useEffect(() => {
-    checkAuthStatus()
-    const interval = setInterval(checkAuthStatus, 30000) // Every 30 seconds
+    checkAuthStatus(true)
+
+    const handleAppStateChange = (state: string) => {
+      if (state === 'active') {
+        checkAuthStatus(false)
+      }
+    }
+
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange
+    )
+
     const handleSessionRevokedEvent = () => {
       setIsSessionRevoked(true)
       setHasValidToken(false)
@@ -92,7 +117,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     authEventEmitter.on('AUTH_ERROR', handleAuthErrorEvent)
 
     return () => {
-      clearInterval(interval)
+      subscription.remove()
       authEventEmitter.off('SESSION_REVOKED', handleSessionRevokedEvent)
       authEventEmitter.off('SESSION_EXPIRED', handleSessionExpiredEvent)
       authEventEmitter.off('AUTH_ERROR', handleAuthErrorEvent)
@@ -106,6 +131,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     isSessionRevoked,
     refreshAuth,
     handleRevocation,
+    logout,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

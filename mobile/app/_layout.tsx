@@ -15,15 +15,56 @@ import {
   Inter_900Black,
   useFonts,
 } from '@expo-google-fonts/inter'
-import { Stack } from 'expo-router'
+import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import React, { useEffect } from 'react'
 import 'react-native-reanimated'
 import { PaperProvider } from 'react-native-paper'
 
 import { useColorScheme } from '@/hooks/useColorScheme'
-import { AuthProvider } from '@/contexts/Auth'
+import { AuthProvider, useAuth } from '@/contexts/Auth'
 import { GraphQLProvider } from '@/contexts/Apollo'
 import { lightTheme, darkTheme } from '@/constants/Theme'
+
+const AuthGuard = ({ children }: { children: React.ReactNode }) => {
+  const { hasValidToken, isLoading } = useAuth()
+  const segments = useSegments()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (isLoading) return
+
+    const inAuthGroup =
+      segments[0] === 'login' ||
+      segments[0] === 'register' ||
+      segments[0] === 'forgot-password' ||
+      segments[0] === 'verify-otp' ||
+      segments[0] === 'reset-password'
+
+    if (!hasValidToken && !inAuthGroup) {
+      router.replace('/login')
+    } else if (hasValidToken && inAuthGroup) {
+      router.replace('/(tabs)')
+    }
+  }, [hasValidToken, segments, isLoading])
+
+  if (isLoading) {
+    return null
+  }
+
+  const inAuthGroup =
+    segments[0] === 'login' ||
+    segments[0] === 'register' ||
+    segments[0] === 'forgot-password' ||
+    segments[0] === 'verify-otp' ||
+    segments[0] === 'reset-password'
+
+  if (!hasValidToken && !inAuthGroup) {
+    return null
+  }
+
+  return <>{children}</>
+}
 
 const RootLayout = () => {
   const colorScheme = useColorScheme()
@@ -51,10 +92,29 @@ const RootLayout = () => {
       <AuthProvider>
         <GraphQLProvider>
           <ThemeProvider value={navigationTheme}>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
-            </Stack>
+            <AuthGuard>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="login" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="register"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="verify-otp"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="forgot-password"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="reset-password"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+            </AuthGuard>
             <StatusBar style="auto" />
           </ThemeProvider>
         </GraphQLProvider>

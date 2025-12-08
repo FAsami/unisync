@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { axiosClient } from './axios'
 import { jwtDecode } from 'jwt-decode'
 import NetInfo from '@react-native-community/netinfo'
+import { getSessionToken } from '@/utils/token'
 
 type AuthEventType = 'SESSION_REVOKED' | 'SESSION_EXPIRED' | 'AUTH_ERROR'
 type AuthEventListener = (data?: any) => void
@@ -76,7 +77,7 @@ const isTokenValid = (token: string): boolean => {
   try {
     const decoded: any = jwtDecode(token)
     const now = Date.now() / 1000
-    return decoded.exp && decoded.exp > now + 30 // 30 second buffer
+    return decoded.exp && decoded.exp > now + 30
   } catch {
     return false
   }
@@ -115,7 +116,7 @@ const checkNetworkConnectivity = async (): Promise<boolean> => {
     return netInfo.isConnected ?? false
   } catch (error) {
     console.warn('Failed to check network connectivity:', error)
-    return true // Assume connected if check fails
+    return true
   }
 }
 
@@ -128,9 +129,12 @@ const attemptTokenRefresh = async (
       return null
     }
 
-    const response = await axiosClient.post<ApiResponse>('/auth/session/refresh', {
-      refresh_token: refreshToken,
-    })
+    const response = await axiosClient.post<ApiResponse>(
+      '/auth/session/refresh',
+      {
+        refresh_token: refreshToken,
+      }
+    )
 
     if (response.data.success && response.data.data) {
       await handleTokenStorage(response.data.data)
@@ -239,7 +243,7 @@ export const clearAuthData = async (): Promise<void> => {
 
 export const isAuthenticated = async (): Promise<boolean> => {
   try {
-    const token = await getGuestSessionToken()
+    const token = await getSessionToken()
     return !!token
   } catch {
     return false
