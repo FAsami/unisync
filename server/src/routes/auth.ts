@@ -8,20 +8,13 @@ import { logoutRouter } from "./auth/logout";
 
 const router = Router();
 
-// Session routes
 router.use("/auth/session", sessionRouter);
-
-// Authentication routes
 router.use("/auth/login", loginRouter);
 router.use("/auth/logout", logoutRouter);
-
-// Registration routes
 router.use("/auth/register", registerRouter);
-
-// Password reset routes
 router.use("/auth/reset-password", resetPasswordRouter);
 
-/** Webhook - authorize request used by hasura */
+/**For Hasura */
 router.post("/auth/webhook/authorize", authorizeRequest);
 
 export { router as authRouter };

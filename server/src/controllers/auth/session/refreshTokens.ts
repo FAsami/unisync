@@ -29,12 +29,10 @@ export const refreshTokens = asyncHandler(
       );
     }
 
-    // Verify session ID matches the decoded token
     if (session.id !== decoded.sessionId) {
       throw new UnauthorizedError("Session mismatch", "SESSION_MISMATCH");
     }
 
-    // Generate new tokens
     const newAccessToken = JWTService.generateAccessToken({
       sessionId: decoded.sessionId,
       userId: decoded.userId,
@@ -50,7 +48,6 @@ export const refreshTokens = asyncHandler(
     const accessTokenExpires = JWTService.getTokenExpiration(newAccessToken);
     const refreshTokenExpires = JWTService.getTokenExpiration(newRefreshToken);
 
-    // Update session in database
     const result = await graphqlClient.request<{
       update_user_session_by_pk: SessionData | null;
     }>(UPDATE_SESSION, {
