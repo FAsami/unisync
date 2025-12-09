@@ -26,11 +26,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 const loginSchema = z.object({
   phoneNumber: z
     .string()
-    .min(14, { message: 'Please input a valid phone number' })
+    .min(14, { message: 'Please enter a valid phone number' })
     .refine((value) => value.startsWith('+880'), {
-      message: 'Please input a valid phone number',
+      message: 'Phone number must start with +880',
     }),
-  password: z.string().min(6, { message: 'Please input a valid password' }),
+  password: z
+    .string()
+    .min(6, { message: 'Password must be at least 6 characters' }),
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
@@ -39,6 +41,7 @@ const Login = () => {
   const router = useRouter()
   const theme = useTheme()
   const [showPassword, setShowPassword] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
 
   const {
     control,
@@ -53,23 +56,35 @@ const Login = () => {
   })
 
   const onSubmit = async (data: LoginFormValues) => {
+    setApiError(null)
     try {
       const response = await axiosClient.post('/auth/login', {
         phone: data.phoneNumber,
         password: data.password,
       })
-      if (response.data.data.access_token) {
-        AsyncStorage.setItem(
+
+      if (response.data?.data?.access_token) {
+        await AsyncStorage.setItem(
           'iam_access_token',
           response.data.data.access_token
         )
-        AsyncStorage.setItem(
+        await AsyncStorage.setItem(
           'iam_refresh_token',
           response.data.data.refresh_token
         )
         router.replace('/(tabs)')
+      } else {
+        setApiError(
+          response?.data?.error?.message ||
+            'Something went wrong. Please try again.'
+        )
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response?.data?.error?.code === 'INVALID_CREDENTIALS') {
+        setApiError(error.response.data.error.message)
+      } else {
+        setApiError('Something went wrong. Please try again.')
+      }
       console.log(error)
     }
   }
@@ -102,7 +117,10 @@ const Login = () => {
                     <TextInput
                       label="Phone Number"
                       value={value}
-                      onChangeText={onChange}
+                      onChangeText={(text) => {
+                        onChange(text)
+                        if (apiError) setApiError(null)
+                      }}
                       onBlur={onBlur}
                       mode="outlined"
                       keyboardType="phone-pad"
@@ -125,7 +143,10 @@ const Login = () => {
                     <TextInput
                       label="Password"
                       value={value}
-                      onChangeText={onChange}
+                      onChangeText={(text) => {
+                        onChange(text)
+                        if (apiError) setApiError(null)
+                      }}
                       onBlur={onBlur}
                       mode="outlined"
                       secureTextEntry={!showPassword}
@@ -155,6 +176,18 @@ const Login = () => {
                   Forgot Password?
                 </Button>
               </View>
+
+              {apiError && (
+                <View style={styles.errorContainer}>
+                  <HelperText
+                    type="error"
+                    visible={!!apiError}
+                    style={styles.errorText}
+                  >
+                    {apiError}
+                  </HelperText>
+                </View>
+              )}
 
               <Button
                 mode="contained"
@@ -237,6 +270,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  errorContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  errorText: {
+    textAlign: 'center',
+    fontSize: 14,
   },
 })
 
