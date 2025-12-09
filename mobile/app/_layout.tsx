@@ -1,3 +1,4 @@
+import codePush from '@revopush/react-native-code-push'
 import {
   DarkTheme,
   DefaultTheme,
@@ -122,4 +123,4 @@ const RootLayout = () => {
     </PaperProvider>
   )
 }
-export default RootLayout
+export default codePush ? codePush(RootLayout) : RootLayout
