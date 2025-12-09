@@ -264,8 +264,8 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: 4,
     backgroundColor: '#fff',
-    letterSpacing: 4,
     fontSize: 20,
+    letterSpacing: 2,
   },
   verifyButton: {
     borderRadius: 8,
