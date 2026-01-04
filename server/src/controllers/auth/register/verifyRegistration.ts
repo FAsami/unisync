@@ -26,6 +26,7 @@ export const verifyRegistration = asyncHandler(
         id: string;
         phone_verified_at: string | null;
         is_active: boolean;
+        role: string;
       }>;
     }>(GET_USER_BY_PHONE, { phone });
 
@@ -66,7 +67,11 @@ export const verifyRegistration = asyncHandler(
     const payload = {
       sessionId: crypto.randomUUID(),
       userId: update.update_user_account_by_pk.id,
-      role: "consumer" as const,
+      role: user.role as
+        | "student"
+        | "teacher"
+        | "admin"
+        | "class_representative",
     };
     const accessToken = JWTService.generateAccessToken(payload);
     const refreshToken = JWTService.generateRefreshToken(payload);

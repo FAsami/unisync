@@ -3,7 +3,13 @@
  * JWT, session, and auth-related type definitions
  */
 
-export type UserRole = "guest-consumer" | "consumer";
+export type UserRole =
+  | "guest-consumer"
+  | "consumer"
+  | "student"
+  | "teacher"
+  | "admin"
+  | "class_representative";
 
 export interface TokenPayload {
   sessionId: string;
