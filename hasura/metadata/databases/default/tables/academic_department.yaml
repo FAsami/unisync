@@ -2,9 +2,6 @@ table:
   name: department
   schema: academic
 object_relationships:
-  - name: account
-    using:
-      foreign_key_constraint_on: head_user_id
   - name: faculty
     using:
       manual_configuration:
@@ -14,6 +11,9 @@ object_relationships:
         remote_table:
           name: faculty
           schema: academic
+  - name: head_of_department
+    using:
+      foreign_key_constraint_on: head_user_id
 array_relationships:
   - name: batches
     using:
@@ -29,3 +29,28 @@ array_relationships:
         table:
           name: course
           schema: academic
+select_permissions:
+  - role: guest-consumer
+    permission:
+      columns:
+        - code
+        - description
+        - id
+        - is_active
+        - name
+      filter: {}
+    comment: ""
+  - role: student
+    permission:
+      columns:
+        - is_active
+        - code
+        - description
+        - name
+        - created_at
+        - updated_at
+        - faculty_id
+        - head_user_id
+        - id
+      filter: {}
+    comment: ""

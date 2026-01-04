@@ -20,3 +20,25 @@ array_relationships:
         table:
           name: course_offering
           schema: academic
+select_permissions:
+  - role: guest-consumer
+    permission:
+      columns:
+        - batch_id
+        - id
+        - is_active
+        - name
+      filter: {}
+    comment: ""
+  - role: student
+    permission:
+      columns:
+        - is_active
+        - capacity
+        - name
+        - created_at
+        - updated_at
+        - batch_id
+        - id
+      filter: {}
+    comment: ""

@@ -1,3 +1,57 @@
 table:
   name: profile
   schema: user
+object_relationships:
+  - name: batch
+    using:
+      manual_configuration:
+        column_mapping:
+          batch_id: id
+        insertion_order: null
+        remote_table:
+          name: batch
+          schema: academic
+  - name: department
+    using:
+      manual_configuration:
+        column_mapping:
+          department_id: id
+        insertion_order: null
+        remote_table:
+          name: department
+          schema: academic
+  - name: section
+    using:
+      manual_configuration:
+        column_mapping:
+          section_id: id
+        insertion_order: null
+        remote_table:
+          name: section
+          schema: academic
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+select_permissions:
+  - role: student
+    permission:
+      columns:
+        - date_of_birth
+        - address
+        - avatar
+        - blood_group
+        - first_name
+        - gender
+        - last_name
+        - student_id
+        - created_at
+        - updated_at
+        - batch_id
+        - department_id
+        - id
+        - section_id
+        - user_id
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+    comment: ""

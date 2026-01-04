@@ -13,3 +13,21 @@ array_relationships:
         table:
           name: course_offering
           schema: academic
+select_permissions:
+  - role: student
+    permission:
+      columns:
+        - is_active
+        - semester
+        - credit_hours
+        - code
+        - course_type
+        - description
+        - name
+        - syllabus_url
+        - created_at
+        - updated_at
+        - department_id
+        - id
+      filter: {}
+    comment: ""

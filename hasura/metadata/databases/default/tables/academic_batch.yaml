@@ -27,3 +27,30 @@ array_relationships:
         table:
           name: section
           schema: academic
+select_permissions:
+  - role: guest-consumer
+    permission:
+      columns:
+        - departmant_id
+        - id
+        - is_active
+        - name
+        - year
+      filter: {}
+    comment: ""
+  - role: student
+    permission:
+      columns:
+        - is_active
+        - end_date
+        - start_date
+        - current_semester
+        - semester_count
+        - year
+        - name
+        - created_at
+        - updated_at
+        - departmant_id
+        - id
+      filter: {}
+    comment: ""

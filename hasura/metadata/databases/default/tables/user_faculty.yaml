@@ -20,3 +20,12 @@ object_relationships:
         remote_table:
           name: faculty
           schema: academic
+  - name: user
+    using:
+      manual_configuration:
+        column_mapping:
+          user_id: id
+        insertion_order: null
+        remote_table:
+          name: account
+          schema: user

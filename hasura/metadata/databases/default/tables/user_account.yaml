@@ -1,7 +1,38 @@
 table:
   name: account
   schema: user
+object_relationships:
+  - name: faculties
+    using:
+      manual_configuration:
+        column_mapping:
+          id: user_id
+        insertion_order: null
+        remote_table:
+          name: faculty
+          schema: user
 array_relationships:
+  - name: class_representatives
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: class_representative
+          schema: academic
+  - name: course_offerings
+    using:
+      foreign_key_constraint_on:
+        column: teacher_id
+        table:
+          name: course_offering
+          schema: academic
+  - name: departments
+    using:
+      foreign_key_constraint_on:
+        column: head_user_id
+        table:
+          name: department
+          schema: academic
   - name: profiles
     using:
       foreign_key_constraint_on:
@@ -9,3 +40,35 @@ array_relationships:
         table:
           name: profile
           schema: user
+  - name: sessions
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: session
+          schema: user
+  - name: user_enrollments
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: user_enrollment
+          schema: academic
+select_permissions:
+  - role: student
+    permission:
+      columns:
+        - created_at
+        - email
+        - email_verified_at
+        - id
+        - is_active
+        - phone
+        - phone_verified_at
+        - role
+        - updated_at
+      filter:
+        id:
+          _eq: X-Hasura-User-Id
+      limit: 1
+    comment: ""

@@ -11,3 +11,23 @@ object_relationships:
         remote_table:
           name: course_offering
           schema: academic
+select_permissions:
+  - role: student
+    permission:
+      columns:
+        - is_active
+        - effective_from
+        - effective_to
+        - day_of_week
+        - metadata
+        - event_type
+        - name
+        - created_at
+        - updated_at
+        - end_time
+        - start_time
+        - course_offering_id
+        - facultyId
+        - id
+      filter: {}
+    comment: ""
