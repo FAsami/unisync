@@ -27,7 +27,6 @@ select_permissions:
         - end_time
         - start_time
         - course_offering_id
-        - facultyId
         - id
       filter: {}
     comment: ""
