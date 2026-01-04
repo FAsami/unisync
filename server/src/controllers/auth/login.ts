@@ -34,7 +34,6 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     throw new InvalidCredentialsError();
   }
 
-  // Verify password
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
     throw new InvalidCredentialsError();

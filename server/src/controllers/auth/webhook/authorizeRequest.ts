@@ -8,7 +8,7 @@ const authorizeRequest = asyncHandler(async (req: Request, res: Response) => {
   const hdrs = (req.body && req.body.headers) || {};
   const accessToken = (hdrs["x-hasura-access-token"] ||
     hdrs["X-hasura-access-token"]) as string;
-
+  console.log("==> accessToken", accessToken);
   if (!accessToken) {
     throw new ActionError(
       "Access token is required",
@@ -18,7 +18,6 @@ const authorizeRequest = asyncHandler(async (req: Request, res: Response) => {
     );
   }
 
-  // Verify token - catch JWT errors and convert to ActionError
   let decodedToken: DecodedToken;
   try {
     decodedToken = JWTService.verifyAccessToken(accessToken);
@@ -36,10 +35,9 @@ const authorizeRequest = asyncHandler(async (req: Request, res: Response) => {
   }
   console.log("==> decodedToken", decodedToken);
 
-  // Return Hasura session variables
   res.status(200).json({
     "X-Hasura-User-Id": decodedToken.userId || "",
-    "X-Hasura-Role": "admin", // TODO: Change to the actual role of the user
+    "X-Hasura-Role": decodedToken.role,
     "X-Hasura-Session-Id": decodedToken.sessionId,
   });
 });

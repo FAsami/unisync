@@ -55,7 +55,10 @@ export const INSERT_USER = /* GraphQL */ `
 
 export const UPDATE_USER_VERIFIED = /* GraphQL */ `
   mutation UpdateUserVerified($id: uuid!) {
-    update_user_account_by_pk(pk_columns: { id: $id }, _set: { phone_verified_at: "now()" }) {
+    update_user_account_by_pk(
+      pk_columns: { id: $id }
+      _set: { phone_verified_at: "now()" }
+    ) {
       id
       phone_verified_at
     }
@@ -64,7 +67,10 @@ export const UPDATE_USER_VERIFIED = /* GraphQL */ `
 
 export const UPDATE_USER_PASSWORD = /* GraphQL */ `
   mutation UpdateUserPassword($id: uuid!, $password: String!) {
-    update_user_account_by_pk(pk_columns: { id: $id }, _set: { password: $password }) {
+    update_user_account_by_pk(
+      pk_columns: { id: $id }
+      _set: { password: $password }
+    ) {
       id
     }
   }
@@ -72,8 +78,28 @@ export const UPDATE_USER_PASSWORD = /* GraphQL */ `
 
 export const REVOKE_USER_SESSIONS = /* GraphQL */ `
   mutation RevokeUserSessions($user_id: uuid!) {
-    update_user_session(where: { user_id: { _eq: $user_id }, revoked: { _eq: false } }, _set: { revoked: true }) {
+    update_user_session(
+      where: { user_id: { _eq: $user_id }, revoked: { _eq: false } }
+      _set: { revoked: true }
+    ) {
       affected_rows
+    }
+  }
+`;
+
+export const INSERT_FACULTY_PROFILE = /* GraphQL */ `
+  mutation InsertFacultyProfile($object: user_faculty_insert_input!) {
+    insert_user_faculty_one(object: $object) {
+      id
+      user_id
+    }
+  }
+`;
+
+export const DELETE_USER = /* GraphQL */ `
+  mutation DeleteUser($id: uuid!) {
+    delete_user_account_by_pk(id: $id) {
+      id
     }
   }
 `;
