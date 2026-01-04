@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Primary Brand Colors - Blue */
+    --color-primary-0: 245 251 255; /* #f5fbff */
+    --color-primary-50: 238 247 255; /* #eef7ff */
+    --color-primary-100: 217 237 255; /* #d9edff */
+    --color-primary-200: 188 224 255; /* #bce0ff */
+    --color-primary-300: 142 202 255; /* #8ecaff */
+    --color-primary-400: 89 173 255; /* #59adff */
+    --color-primary-500: 36 145 255; /* #2491ff - Main Brand */
+    --color-primary-600: 0 119 230; /* #0077e6 */
+    --color-primary-700: 0 95 184; /* #005fb8 */
+    --color-primary-800: 0 80 153; /* #005099 */
+    --color-primary-900: 0 66 122; /* #00427a */
+    --color-primary-950: 0 41 82; /* #002952 */
+
+    /* Success Colors - Green */
+    --color-success-50: 236 253 245; /* #ECFDF5 */
+    --color-success-100: 209 250 229; /* #D1FAE5 */
+    --color-success-200: 167 243 208; /* #A7F3D0 */
+    --color-success-300: 110 231 183; /* #6EE7B7 */
+    --color-success-400: 52 211 153; /* #34D399 */
+    --color-success-500: 16 185 129; /* #10B981 - Main Success */
+    --color-success-600: 5 150 105; /* #059669 */
+    --color-success-700: 4 120 87; /* #047857 */
+    --color-success-800: 6 95 70; /* #065F46 */
+    --color-success-900: 6 78 59; /* #064E3B */
+
+    /* Info Colors - Blue */
+    --color-info-50: 239 246 255; /* #EFF6FF */
+    --color-info-100: 219 234 254; /* #DBEAFE */
+    --color-info-200: 191 219 254; /* #BFDBFE */
+    --color-info-300: 147 197 253; /* #93C5FD */
+    --color-info-400: 96 165 250; /* #60A5FA */
+    --color-info-500: 59 130 246; /* #3B82F6 - Main Info */
+    --color-info-600: 37 99 235; /* #2563EB */
+    --color-info-700: 29 78 216; /* #1D4ED8 */
+    --color-info-800: 30 64 175; /* #1E40AF */
+    --color-info-900: 30 58 138; /* #1E3A8A */
+
+    /* Error Colors - Red */
+    --color-error-50: 254 242 242; /* #FEF2F2 */
+    --color-error-100: 254 226 226; /* #FEE2E2 */
+    --color-error-200: 254 202 202; /* #FECACA */
+    --color-error-300: 252 165 165; /* #FCA5A5 */
+    --color-error-400: 248 113 113; /* #F87171 */
+    --color-error-500: 239 68 68; /* #EF4444 - Main Error */
+    --color-error-600: 220 38 38; /* #DC2626 */
+    --color-error-700: 185 28 28; /* #B91C1C */
+    --color-error-800: 153 27 27; /* #991B1B */
+    --color-error-900: 127 29 29; /* #7F1D1D */
+
+    /* Warning Colors - Orange */
+    --color-warning-50: 255 251 235; /* #FFFBEB */
+    --color-warning-100: 254 243 199; /* #FEF3C7 */
+    --color-warning-200: 253 230 138; /* #FDE68A */
+    --color-warning-300: 252 211 77; /* #FCD34D */
+    --color-warning-400: 251 191 36; /* #FBBF24 */
+    --color-warning-500: 245 158 11; /* #F59E0B - Main Warning */
+    --color-warning-600: 217 119 6; /* #D97706 */
+    --color-warning-700: 180 83 9; /* #B45309 */
+    --color-warning-800: 146 64 14; /* #92400E */
+    --color-warning-900: 120 53 15; /* #78350F */
+    --color-warning-950: 69 26 3; /* #451A03 */
+
+    /* Tertiary Colors - Violet/Purple */
+    --color-tertiary-50: 245 243 255; /* #F5F3FF */
+    --color-tertiary-100: 237 233 254; /* #EDE9FE */
+    --color-tertiary-200: 221 214 254; /* #DDD6FE */
+    --color-tertiary-300: 196 181 253; /* #C4B5FD */
+    --color-tertiary-400: 167 139 250; /* #A78BFA */
+    --color-tertiary-500: 139 92 246; /* #8B5CF6 - Main Tertiary */
+    --color-tertiary-600: 124 58 237; /* #7C3AED */
+    --color-tertiary-700: 109 40 217; /* #6D28D9 */
+    --color-tertiary-800: 91 33 182; /* #5B21B6 */
+    --color-tertiary-900: 76 29 149; /* #4C1D95 */
+    --color-tertiary-950: 46 16 101; /* #2E1065 */
+
+    /*Typography - Slate for Light Mode */
+    --color-typography-50: 248 250 252; /* #F8FAFC */
+    --color-typography-100: 241 245 249; /* #F1F5F9 */
+    --color-typography-200: 226 232 240; /* #E2E8F0 */
+    --color-typography-300: 203 213 225; /* #CBD5E1 */
+    --color-typography-400: 148 163 184; /* #94A3B8 */
+    --color-typography-500: 100 116 139; /* #64748B */
+    --color-typography-600: 71 85 105; /* #475569 */
+    --color-typography-700: 51 65 85; /* #334155 */
+    --color-typography-800: 30 41 59; /* #1E293B */
+    --color-typography-900: 15 23 42; /* #0F172A */
+
+    /* Outline/Border */
+    --color-outline-200: 226 232 240; /* #E2E8F0 */
+    --color-outline-300: 203 213 225; /* #CBD5E1 */
+
+    /* Background */
+    --color-background-0: 255 255 255; /* #FFFFFF */
+    --color-background-50: 248 250 252; /* #F8FAFC */
+    --color-background-100: 241 245 249; /* #F1F5F9 */
+  }
+
+  .dark {
+    /* Primary stays same for dark mode */
+
+    /* Typography - Inverted for Dark Mode */
+    --color-typography-50: 15 23 42; /* #0F172A (swapped) */
+    --color-typography-100: 30 41 59; /* #1E293B */
+    --color-typography-200: 51 65 85; /* #334155 */
+    --color-typography-300: 71 85 105; /* #475569 */
+    --color-typography-400: 100 116 139; /* #64748B */
+    --color-typography-500: 148 163 184; /* #94A3B8 */
+    --color-typography-600: 203 213 225; /* #CBD5E1 */
+    --color-typography-700: 226 232 240; /* #E2E8F0 */
+    --color-typography-800: 241 245 249; /* #F1F5F9 */
+    --color-typography-900: 248 250 252; /* #F8FAFC (swapped) */
+
+    /* Outline/Border for Dark */
+    --color-outline-200: 51 65 85; /* #334155 */
+    --color-outline-300: 71 85 105; /* #475569 */
+
+    /* Background for Dark */
+    --color-background-0: 15 23 42; /* #0F172A */
+    --color-background-50: 30 41 59; /* #1E293B */
+    --color-background-100: 51 65 85; /* #334155 */
+  }
+
+  /* Base Styles */
+  * {
+    @apply border-outline-200;
+  }
+
+  body {
+    @apply bg-background-0 text-typography-900;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+      sans-serif;
+  }
+
+  /* Rounded Design Utilities */
+  .rounded-button {
+    @apply rounded-lg; /* 12px for buttons */
+  }
+
+  .rounded-input {
+    @apply rounded-xl; /* 16px for inputs */
+  }
+
+  .rounded-card {
+    @apply rounded-xl; /* 16px for cards */
+  }
+
+  .rounded-modal {
+    @apply rounded-2xl; /* 20px for modals */
+  }
+
+  .rounded-pill {
+    @apply rounded-full; /* Full rounded for badges/pills */
+  }
+}

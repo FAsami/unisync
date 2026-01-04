@@ -1,18 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import {
-  View,
-  StyleSheet,
-  RefreshControl,
-  ScrollView,
-  Dimensions,
-} from 'react-native'
-import {
-  Text,
-  ActivityIndicator,
-  useTheme,
-  Surface,
-  Avatar,
-} from 'react-native-paper'
+import { RefreshControl, ScrollView } from 'react-native'
 import { useQuery } from '@apollo/client'
 import {
   GET_EVENT_ROUTINES,
@@ -21,8 +8,20 @@ import {
 } from '@/lib/graphql-operations'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { format, getDay } from 'date-fns'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useAuth } from '@/contexts/Auth'
+import { Ionicons } from '@expo/vector-icons'
 
-const screenWidth = Dimensions.get('window').width
+import { Text } from '@/components/ui/text'
+import { Heading } from '@/components/ui/heading'
+import { Box } from '@/components/ui/box'
+import { VStack } from '@/components/ui/vstack'
+import { HStack } from '@/components/ui/hstack'
+import { Spinner } from '@/components/ui/spinner'
+import { Badge, BadgeText } from '@/components/ui/badge'
+import { Card } from '@/components/ui/card'
+import { useTheme } from '@/contexts/ThemeContext'
+import { Icon } from '@/components/ui/icon'
 
 const ClassCard = ({
   item,
@@ -41,98 +40,84 @@ const ClassCard = ({
   const formattedEndTime = item.end_time ? item.end_time.substring(0, 5) : 'N/A'
 
   return (
-    <View style={styles.cardWrapper}>
-      <View style={styles.cardHeaderRow}>
-        <Text variant="titleMedium" style={styles.sectionTitle}>
+    <Box className="mb-6 rounded-xl overflow-hidden shadow-sm">
+      <HStack className="justify-between items-center mb-3 px-1">
+        <Text className="text-xs font-bold uppercase tracking-widest text-typography-500">
           {title}
         </Text>
-      </View>
+      </HStack>
 
-      <View style={[styles.cardContainer, { backgroundColor }]}>
-        <View style={styles.cardContent}>
-          <View style={styles.topRow}>
-            <View style={{ flex: 1 }}>
+      <LinearGradient
+        colors={[backgroundColor, accentColor]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ borderRadius: 16, padding: 16 }}
+      >
+        <VStack space="md">
+          <HStack className="justify-between items-start">
+            <VStack className="flex-1">
               <Text
-                variant="titleMedium"
-                style={[styles.cardText]}
+                className="text-white text-lg font-bold mb-1"
                 numberOfLines={2}
               >
                 {item.name}
               </Text>
 
-              <View style={styles.metaRow}>
-                <View style={styles.eventTypePill}>
-                  <Text
-                    variant="labelSmall"
-                    style={{
-                      color: backgroundColor,
-                      fontWeight: 'bold',
-                      textTransform: 'uppercase',
-                    }}
-                  >
+              <HStack className="flex-wrap gap-2 mt-2">
+                <Box className="bg-white/20 px-2 py-0.5 rounded-full">
+                  <Text className="text-white text-xs font-bold uppercase">
                     {item.event_type}
                   </Text>
-                </View>
+                </Box>
 
                 {item.course_offering?.section && (
-                  <View style={styles.batchPill}>
-                    <Text
-                      variant="labelSmall"
-                      style={{ color: backgroundColor, fontWeight: 'bold' }}
-                    >
+                  <Box className="bg-white/20 px-2 py-0.5 rounded-full">
+                    <Text className="text-white text-xs font-bold">
                       {item.course_offering.section.batch?.name
                         ? `Batch ${item.course_offering.section.batch.name} • `
                         : ''}
                       Section {item.course_offering.section.name}
                     </Text>
-                  </View>
+                  </Box>
                 )}
-              </View>
-            </View>
-            {/* <View
-              style={[styles.iconPlaceholder, { backgroundColor: accentColor }]}
-            >
-              <Text
-                style={{ fontSize: 24, fontWeight: 'bold', color: 'white' }}
-              >
-                {item.name.charAt(0)}
-              </Text>
-            </View> */}
-          </View>
+              </HStack>
+            </VStack>
+          </HStack>
 
-          <View style={styles.timeContainer}>
-            <Text
-              variant="bodyLarge"
-              style={[styles.cardText, { fontWeight: 'bold' }]}
-            >
-              {formattedStartTime} - {formattedEndTime}
-            </Text>
-          </View>
+          <Box className="border-t border-white/20 pt-4 mt-2">
+            <HStack className="items-center space-x-2">
+              <Icon
+                as={Ionicons}
+                name="time-outline"
+                size="sm"
+                className="text-white"
+              />
+              <Text className="text-white font-bold text-lg">
+                {formattedStartTime} - {formattedEndTime}
+              </Text>
+            </HStack>
+          </Box>
 
           {item.course_offering?.course && (
-            <Text
-              variant="bodySmall"
-              style={[styles.cardText, { opacity: 0.7, marginTop: 4 }]}
-            >
+            <Text className="text-white/80 text-xs mt-1">
               {item.course_offering.course.code} •{' '}
               {item.course_offering.course.name}
             </Text>
           )}
-        </View>
-      </View>
-    </View>
+        </VStack>
+      </LinearGradient>
+    </Box>
   )
 }
 
 const HomeScreen = () => {
-  const theme = useTheme()
+  const { currentMode } = useTheme()
+  const { userRole } = useAuth()
   const { loading, error, data, refetch } =
     useQuery<GetEventRoutinesData>(GET_EVENT_ROUTINES)
   const [now, setNow] = useState(new Date())
-
-  // Update time every minute
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 60000)
+    const timer = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
 
@@ -170,49 +155,56 @@ const HomeScreen = () => {
 
   if (loading && !data) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" />
-      </View>
+      <Box className="flex-1 justify-center items-center bg-background-0 dark:bg-background-950">
+        <Spinner size="large" />
+      </Box>
     )
   }
 
   if (error) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={{ color: theme.colors.error }}>
+      <Box className="flex-1 justify-center items-center bg-background-0 dark:bg-background-950 p-4">
+        <Text className="text-error-500 text-center">
           Error loading routines: {error.message}
         </Text>
-      </View>
+      </Box>
     )
   }
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <SafeAreaView className="flex-1 bg-white dark:bg-background-950">
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{ padding: 16 }}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={refetch} />
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={refetch}
+            tintColor={currentMode === 'dark' ? '#fff' : '#000'}
+          />
         }
       >
-        <View style={styles.header}>
-          <Text variant="headlineLarge" style={styles.greeting}>
-            Today
-          </Text>
-          <Text
-            variant="titleMedium"
-            style={{ color: theme.colors.secondary, marginTop: 4 }}
-          >
-            {format(now, 'EEEE, MMMM do')}
-          </Text>
-        </View>
+        <HStack className="justify-between items-start mb-6">
+          <VStack>
+            <Heading size="xl" className="font-extrabold text-typography-900">
+              Today
+            </Heading>
+            <HStack className="items-center space-x-2 mt-1">
+              <Text className="text-typography-500 font-medium text-sm">
+                {format(now, 'EEEE, MMMM do')}
+              </Text>
+              <Box className="w-1 h-1 rounded-full bg-typography-300" />
+              <Text className="text-primary-500 font-bold text-sm">
+                {format(now, 'h:mm:ss a')}
+              </Text>
+            </HStack>
+          </VStack>
+        </HStack>
 
         {currentClass ? (
           <ClassCard
             item={currentClass}
             title="Current Class"
-            backgroundColor="#2563EB" // A nice vibrant blue
+            backgroundColor="#2563EB"
             accentColor="#60A5FA"
           />
         ) : null}
@@ -221,249 +213,114 @@ const HomeScreen = () => {
           <ClassCard
             item={nextClass}
             title="Next Class"
-            backgroundColor={currentClass ? '#059669' : '#2563EB'} // Green if current exists, otherwise Blue (primary)
+            backgroundColor={currentClass ? '#059669' : '#2563EB'}
             accentColor={currentClass ? '#34D399' : '#60A5FA'}
           />
         ) : (
           !currentClass && (
-            <View style={styles.emptyContainer}>
-              <View
-                style={[
-                  styles.emptyIcon,
-                  { backgroundColor: theme.colors.surfaceVariant },
-                ]}
+            <Box className="mb-6">
+              <LinearGradient
+                colors={
+                  currentMode === 'dark'
+                    ? ['#1e293b', '#0f172a']
+                    : ['#f8fafc', '#f1f5f9']
+                }
+                style={{
+                  borderRadius: 16,
+                  padding: 32,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: 200,
+                  borderWidth: 1,
+                  borderColor: currentMode === 'dark' ? '#334155' : '#e2e8f0',
+                }}
               >
-                <Text style={{ fontSize: 40 }}>☕️</Text>
-              </View>
-              <Text
-                variant="titleMedium"
-                style={{ marginTop: 16, fontWeight: 'bold' }}
-              >
-                No classes right now
-              </Text>
-              <Text
-                variant="bodyMedium"
-                style={{ color: 'gray', textAlign: 'center', marginTop: 8 }}
-              >
-                Enjoy your free time! Check back later for upcoming sessions.
-              </Text>
-            </View>
+                <Box className="bg-primary-500/10 p-4 rounded-full mb-4">
+                  <Text className="text-4xl">☕</Text>
+                </Box>
+                <Heading
+                  size="md"
+                  className="text-center font-bold text-typography-900 mb-2"
+                >
+                  No classes right now
+                </Heading>
+                <Text className="text-center text-typography-500">
+                  Enjoy your free time! Check back later for upcoming sessions.
+                </Text>
+              </LinearGradient>
+            </Box>
           )
         )}
 
         {allClassesToday.length > 0 && (
-          <View style={styles.allClassesContainer}>
-            <Text variant="titleMedium" style={styles.sectionTitle}>
-              Schedule
+          <VStack className="mt-4">
+            <Text className="text-xs font-bold uppercase tracking-widest text-typography-500 mb-4 px-1">
+              Full Schedule
             </Text>
-            {allClassesToday.map((routine, index) => {
-              const isCurrent = currentClass?.id === routine.id
-              const isNext = nextClass?.id === routine.id
 
-              return (
-                <View key={routine.id} style={styles.simpleRow}>
-                  <View style={styles.timeColumn}>
-                    <Text variant="titleSmall" style={{ fontWeight: 'bold' }}>
-                      {routine.start_time.substring(0, 5)}
-                    </Text>
-                    <Text variant="bodySmall" style={{ color: 'gray' }}>
-                      {routine.end_time.substring(0, 5)}
-                    </Text>
-                  </View>
-                  <View
-                    style={[styles.infoColumn, isCurrent && styles.activeRow]}
+            <VStack className="bg-white dark:bg-background-900 rounded-2xl p-4 border border-outline-100 dark:border-outline-800">
+              {allClassesToday.map((routine, index) => {
+                const isCurrent = currentClass?.id === routine.id
+                const isNext = nextClass?.id === routine.id
+                const isLast = index === allClassesToday.length - 1
+
+                return (
+                  <HStack
+                    key={routine.id}
+                    className={`items-start py-4 ${
+                      !isLast
+                        ? 'border-b border-outline-100 dark:border-outline-800'
+                        : ''
+                    }`}
                   >
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        variant="bodyLarge"
-                        style={{
-                          fontWeight: isCurrent ? 'bold' : '500',
-                          color: isCurrent
-                            ? theme.colors.primary
-                            : theme.colors.onSurface,
-                        }}
-                      >
-                        {routine.name}
+                    <VStack className="w-16 mr-3 pt-0.5">
+                      <Text className="font-bold text-typography-900 text-sm">
+                        {routine.start_time.substring(0, 5)}
                       </Text>
-                      <Text
-                        variant="bodySmall"
-                        style={{ color: theme.colors.outline }}
-                      >
-                        {routine.course_offering?.section?.name} •{' '}
-                        {routine.event_type}
+                      <Text className="text-typography-400 text-xs">
+                        {routine.end_time.substring(0, 5)}
                       </Text>
-                    </View>
-                    {(isCurrent || isNext) && (
-                      <View
-                        style={[
-                          styles.statusBadge,
-                          {
-                            backgroundColor: isCurrent
-                              ? theme.colors.primaryContainer
-                              : theme.colors.secondaryContainer,
-                          },
-                        ]}
-                      >
-                        <Text
-                          variant="labelSmall"
-                          style={{
-                            color: isCurrent
-                              ? theme.colors.onPrimaryContainer
-                              : theme.colors.onSecondaryContainer,
-                          }}
-                        >
-                          {isCurrent ? 'NOW' : 'NEXT'}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              )
-            })}
-          </View>
+                    </VStack>
+
+                    <VStack className="flex-1">
+                      <HStack className="justify-between items-start">
+                        <VStack className="flex-1 pr-2">
+                          <Text
+                            className={`font-semibold text-base mb-0.5 ${
+                              isCurrent
+                                ? 'text-primary-600 dark:text-primary-400'
+                                : 'text-typography-900'
+                            }`}
+                          >
+                            {routine.name}
+                          </Text>
+                          <Text className="text-typography-500 text-xs">
+                            {routine.course_offering?.section?.name} •{' '}
+                            {routine.event_type}
+                          </Text>
+                        </VStack>
+
+                        {(isCurrent || isNext) && (
+                          <Badge
+                            size="sm"
+                            variant="solid"
+                            action={isCurrent ? 'info' : 'success'}
+                            className="rounded-md"
+                          >
+                            <BadgeText>{isCurrent ? 'NOW' : 'NEXT'}</BadgeText>
+                          </Badge>
+                        )}
+                      </HStack>
+                    </VStack>
+                  </HStack>
+                )
+              })}
+            </VStack>
+          </VStack>
         )}
       </ScrollView>
     </SafeAreaView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollContent: {
-    padding: 16,
-  },
-  header: {
-    marginBottom: 24,
-  },
-  greeting: {
-    fontWeight: '800',
-  },
-  cardWrapper: {
-    marginBottom: 24,
-  },
-  cardHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  cardContainer: {
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  cardContent: {
-    padding: 16,
-  },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  iconPlaceholder: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 12,
-  },
-  batchPill: {
-    backgroundColor: 'white',
-    paddingVertical: 2,
-    paddingHorizontal: 6,
-    borderRadius: 999,
-    alignSelf: 'flex-start',
-    opacity: 0.95,
-  },
-  eventTypePill: {
-    backgroundColor: 'white',
-    paddingVertical: 2,
-    paddingHorizontal: 6,
-    borderRadius: 999,
-    alignSelf: 'flex-start',
-    opacity: 0.95,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 8,
-    flexWrap: 'wrap',
-  },
-  sectionTitle: {
-    fontWeight: '700',
-    opacity: 0.6,
-    textTransform: 'uppercase',
-    fontSize: 12,
-    letterSpacing: 1,
-  },
-  cardText: {
-    color: 'white',
-  },
-  className: {
-    fontWeight: '800',
-    marginBottom: 4,
-    lineHeight: 32,
-  },
-  timeContainer: {
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.2)',
-  },
-  emptyContainer: {
-    padding: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.02)',
-    borderRadius: 24,
-  },
-  emptyIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  allClassesContainer: {
-    marginTop: 16,
-  },
-  simpleRow: {
-    flexDirection: 'row',
-    marginBottom: 20,
-    alignItems: 'flex-start',
-  },
-  timeColumn: {
-    width: 60,
-    marginRight: 16,
-    paddingTop: 4,
-  },
-  infoColumn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  activeRow: {
-    // Optional highlight style
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginLeft: 8,
-  },
-})
 
 export default HomeScreen

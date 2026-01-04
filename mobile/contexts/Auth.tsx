@@ -15,12 +15,21 @@ import {
 } from '@/lib/auth'
 import { clearStoredTokens } from '@/utils/token'
 import { axiosClient } from '@/lib/axios'
+import { getCurrentUserFromToken } from '@/utils/getUserFromToken'
+
+interface User {
+  id: string
+  role: string
+}
 
 interface AuthContextType {
   isLoading: boolean
   isOnline: boolean
   hasValidToken: boolean
   isSessionRevoked: boolean
+  user: User | null
+  userId: string | null
+  userRole: string | null
   refreshAuth: () => Promise<void>
   handleRevocation: () => Promise<void>
   logout: () => Promise<void>
@@ -35,6 +44,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [isOnline, setIsOnline] = useState(true)
   const [hasValidToken, setHasValidToken] = useState(false)
   const [isSessionRevoked, setIsSessionRevoked] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
 
   const checkAuthStatus = async (showLoading = true) => {
     try {
@@ -47,8 +57,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
       setIsOnline(networkStatus)
       setHasValidToken(authStatus)
+
+      if (authStatus) {
+        const userData = await getCurrentUserFromToken()
+        if (userData) {
+          setUser({ id: userData.id, role: userData.role })
+        } else {
+          setUser(null)
+        }
+      } else {
+        setUser(null)
+      }
     } catch (error) {
       setHasValidToken(false)
+      setUser(null)
     } finally {
       if (showLoading) setIsLoading(false)
     }
@@ -80,6 +102,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       await axiosClient.post('/auth/logout')
       await clearStoredTokens()
       setHasValidToken(false)
+      setUser(null)
     } catch (error) {
       console.error('Logout failed:', error)
     }
@@ -129,6 +152,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     isOnline,
     hasValidToken,
     isSessionRevoked,
+    user,
+    userId: user?.id || null,
+    userRole: user?.role || null,
     refreshAuth,
     handleRevocation,
     logout,

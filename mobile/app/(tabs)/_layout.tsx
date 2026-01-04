@@ -8,10 +8,14 @@ import TabBarBackground from '@/components/ui/TabBarBackground'
 import { Colors, AppColors } from '@/constants/Colors'
 import { useColorScheme } from '@/hooks/useColorScheme'
 import { Fonts } from '@/constants/Fonts'
+import { useAuth } from '@/contexts/Auth'
+import { canManage } from '@/constants/Permissions'
 
 const TabLayout = () => {
   const colorScheme = useColorScheme()
   const insets = useSafeAreaInsets()
+  const { userRole } = useAuth()
+  const showManageTab = canManage(userRole)
 
   return (
     <Tabs
@@ -42,11 +46,51 @@ const TabLayout = () => {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
+          title: 'HOME',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               size={22}
               name={focused ? 'grid' : 'grid-outline'}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="schedule"
+        options={{
+          title: 'SCHEDULE',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              size={22}
+              name={focused ? 'calendar' : 'calendar-outline'}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="manage"
+        options={{
+          href: showManageTab ? undefined : null,
+          title: 'MANAGE',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              size={22}
+              name={focused ? 'construct' : 'construct-outline'}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'SETTINGS',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              size={22}
+              name={focused ? 'settings' : 'settings-outline'}
               color={color}
             />
           ),
