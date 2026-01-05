@@ -29,3 +29,18 @@ object_relationships:
         remote_table:
           name: account
           schema: user
+select_permissions:
+  - role: class_representative
+    permission:
+      columns:
+        - created_at
+        - department_id
+        - description
+        - designation
+        - faculty_id
+        - first_name
+        - id
+        - last_name
+        - updated_at
+      filter: {}
+    comment: ""

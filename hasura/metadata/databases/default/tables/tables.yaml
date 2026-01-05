@@ -20,6 +20,7 @@
 - "!include event_routine_exception.yaml"
 - "!include settings_config.yaml"
 - "!include user_account.yaml"
+- "!include user_device.yaml"
 - "!include user_faculty.yaml"
 - "!include user_otp_rate_limit.yaml"
 - "!include user_otp_transaction.yaml"
