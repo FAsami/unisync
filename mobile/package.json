@@ -8,7 +8,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "generate-types": "graphql-codegen"
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
@@ -74,10 +75,15 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@graphql-codegen/cli": "^6.1.0",
+    "@graphql-codegen/typescript": "^5.0.7",
+    "@graphql-codegen/typescript-operations": "^5.0.7",
+    "@graphql-codegen/typescript-react-apollo": "^4.3.4",
     "@react-native-community/cli": "latest",
     "@types/react": "~19.0.10",
     "@types/react-native-vector-icons": "^6.4.18",
     "babel-plugin-module-resolver": "^5.0.2",
+    "dotenv": "^17.2.3",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
     "prettier-plugin-tailwindcss": "^0.5.14",

@@ -228,9 +228,9 @@ export const CREATE_USER = gql`
     $studentId: String
     $gender: String
     $bloodGroup: String
-    $department: String
-    $batch: String
-    $section: String
+    $department: uuid
+    $batch: uuid
+    $section: uuid
   ) {
     insert_user_account_one(
       object: {
@@ -246,9 +246,9 @@ export const CREATE_USER = gql`
             student_id: $studentId
             gender: $gender
             blood_group: $bloodGroup
-            department: $department
-            batch: $batch
-            section: $section
+            department_id: $department
+            batch_id: $batch
+            section_id: $section
           }
         }
       }
@@ -930,12 +930,12 @@ export const GET_ROUTINES_BY_SECTION = gql`
           code
           credit_hours
         }
-        account {
+        faculty {
           id
-          email
-          faculties {
-            first_name
-            last_name
+          first_name
+          last_name
+          user {
+            email
           }
         }
       }
@@ -1148,3 +1148,131 @@ export const DEACTIVATE_DEVICE = gql`
     }
   }
 `
+
+// ===== SCHEDULE EXCEPTIONS =====
+export const CREATE_ROUTINE_EXCEPTION = gql`
+  mutation CreateRoutineException($object: event_routine_exception_insert_input!) {
+    insert_event_routine_exception_one(object: $object) {
+      id
+      routine_id
+      exception_date
+      reason
+      type
+    }
+  }
+`
+
+export const GET_ROUTINE_EXCEPTIONS = gql`
+  query GetRoutineExceptions($startDate: date!, $endDate: date!) {
+    event_routine_exception(
+      where: {
+        exception_date: { _gte: $startDate, _lte: $endDate }
+      }
+    ) {
+      id
+      routine_id
+      exception_date
+      reason
+      type
+    }
+  }
+`
+
+export interface RoutineException {
+  id: string
+  routine_id?: string
+  exception_date: string
+  reason: string
+  type: string
+}
+
+// ===== EXAMS =====
+export const GET_EXAMS = gql`
+  query GetExams($sectionId: uuid!, $startDate: date!, $endDate: date!) {
+    event_event(
+      where: {
+        event_type: { _eq: "exam" }
+        date: { _gte: $startDate, _lte: $endDate }
+        event_targets: {
+          target_type: { _eq: "section" }
+          target_id: { _eq: $sectionId }
+        }
+      }
+      order_by: { date: asc, start_time: asc }
+    ) {
+      id
+      title
+      description
+      date
+      start_time
+      end_time
+      status
+      metadata
+      course_offering {
+        course {
+          code
+          name
+        }
+      }
+    }
+  }
+`
+
+export interface Exam {
+  id: string
+  title: string
+  description?: string
+  date: string
+  start_time: string
+  end_time: string
+  status: string
+  metadata?: any
+  course_offering?: {
+    course?: {
+      code: string
+      name: string
+    }
+  }
+}
+
+// ===== CUSTOM NOTIFICATIONS =====
+export const SEND_CUSTOM_NOTIFICATION = gql`
+  mutation SendCustomNotification($object: notification_log_insert_input!) {
+    insert_notification_log_one(object: $object) {
+      id
+      title
+      status
+    }
+  }
+`
+
+export const GET_MY_SENT_NOTIFICATIONS = gql`
+  query GetMySentNotifications {
+    notification_log(
+      order_by: { created_at: desc }
+      limit: 50
+    ) {
+      id
+      title
+      body
+      target_type
+      status
+      sent_count
+      created_at
+    }
+  }
+`
+
+export interface NotificationLog {
+  id: string
+  title: string
+  body: string
+  target_type: string
+  status: string
+  sent_count: number
+  created_at: string
+}
+
+export interface GetMySentNotificationsData {
+  notification_log: NotificationLog[]
+}
