@@ -18,6 +18,7 @@
 - "!include event_group_assignment.yaml"
 - "!include event_routine.yaml"
 - "!include event_routine_exception.yaml"
+- "!include notification_log.yaml"
 - "!include settings_config.yaml"
 - "!include user_account.yaml"
 - "!include user_device.yaml"

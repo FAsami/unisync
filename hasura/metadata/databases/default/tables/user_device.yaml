@@ -2,6 +2,23 @@ table:
   name: device
   schema: user
 insert_permissions:
+  - role: class_representative
+    permission:
+      check:
+        user_id:
+          _eq: X-Hasura-User-Id
+      columns:
+        - is_active
+        - device_id
+        - platform
+        - provider
+        - token
+        - created_at
+        - last_used_at
+        - updated_at
+        - id
+        - user_id
+    comment: ""
   - role: student
     permission:
       check:
@@ -22,6 +39,23 @@ insert_permissions:
         - user_id
     comment: ""
 select_permissions:
+  - role: class_representative
+    permission:
+      columns:
+        - is_active
+        - device_id
+        - platform
+        - provider
+        - token
+        - created_at
+        - last_used_at
+        - updated_at
+        - id
+        - user_id
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+    comment: ""
   - role: student
     permission:
       columns:
@@ -36,6 +70,45 @@ select_permissions:
         - id
         - user_id
       filter:
+        is_active:
+          _eq: true
+        user_id:
+          _eq: X-Hasura-User-Id
+    comment: ""
+update_permissions:
+  - role: class_representative
+    permission:
+      columns:
+        - is_active
+        - device_id
+        - platform
+        - provider
+        - token
+        - created_at
+        - last_used_at
+        - updated_at
+        - id
+        - user_id
+      filter: {}
+      check:
+        user_id:
+          _eq: X-Hasura-User-Id
+    comment: ""
+  - role: student
+    permission:
+      columns:
+        - is_active
+        - device_id
+        - platform
+        - provider
+        - token
+        - created_at
+        - last_used_at
+        - updated_at
+        - id
+        - user_id
+      filter: {}
+      check:
         is_active:
           _eq: true
         user_id:

@@ -1,0 +1,79 @@
+table:
+  name: log
+  schema: notification
+insert_permissions:
+  - role: class_representative
+    permission:
+      check:
+        target_type:
+          _eq: section
+      set:
+        created_by: x-hasura-user-id
+      columns:
+        - body
+        - data
+        - target_id
+        - target_type
+        - title
+    comment: ""
+  - role: teacher
+    permission:
+      check: {}
+      set:
+        created_by: x-hasura-User-Id
+      columns:
+        - body
+        - data
+        - image_url
+        - target_id
+        - target_type
+        - title
+    comment: ""
+select_permissions:
+  - role: class_representative
+    permission:
+      columns:
+        - body
+        - created_at
+        - data
+        - id
+        - sent_count
+        - status
+        - target_id
+        - target_type
+        - title
+      filter:
+        created_by:
+          _eq: X-Hasura-User-Id
+    comment: ""
+  - role: teacher
+    permission:
+      columns:
+        - body
+        - created_at
+        - data
+        - failed_count
+        - id
+        - sent_count
+        - status
+        - target_id
+        - target_type
+        - title
+      filter:
+        created_by:
+          _eq: X-Hasura-User-Id
+    comment: ""
+event_triggers:
+  - name: sendNotification
+    definition:
+      enable_manual: false
+      insert:
+        columns: '*'
+    retry_conf:
+      interval_sec: 10
+      num_retries: 3
+      timeout_sec: 60
+    webhook: '{{SERVER_URL}}/webhook/events/send-notification'
+    headers:
+      - name: SERVER-AUTH-SECRET
+        value_from_env: SERVER_AUTH_SECRET
