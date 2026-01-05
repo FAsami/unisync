@@ -5,6 +5,9 @@ export const generalLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    return req.path === "/api/v1/auth/webhook/authorize";
+  },
   handler: (req, res) => {
     res.error(
       "Too many requests from this IP, please try again later",
