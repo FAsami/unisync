@@ -1,7 +1,7 @@
 import * as admin from "firebase-admin";
 import * as path from "path";
 import * as fs from "fs";
-import logger from "@/config/logger";
+import logger from "../config/logger";
 
 const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || "";
 const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || "";

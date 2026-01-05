@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
-import { sendNotificationToUsers } from "@/utils/notification";
-import logger from "@/config/logger";
+import { sendNotificationToUsers } from "../utils/notification";
+import logger from "../config/logger";
 
 const sendNotificationSchema = z
   .object({

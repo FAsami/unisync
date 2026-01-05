@@ -1,10 +1,10 @@
-import { messaging, isFirebaseInitialized } from "@/lib/firebase";
-import { gqlClient } from "@/lib/graphqlClient";
+import { messaging, isFirebaseInitialized } from "../lib/firebase";
+import { gqlClient } from "../lib/graphqlClient";
 import {
   SendNotificationPayload,
   NotificationResult,
-} from "@/types/notification";
-import logger from "@/config/logger";
+} from "../types/notification";
+import logger from "../config/logger";
 
 const GET_USER_TOKENS = `
   query GetUserTokens($user_ids: [uuid!]!, $provider: String!) {
