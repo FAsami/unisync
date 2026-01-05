@@ -99,3 +99,5 @@ hasura/config.yaml
 
 _hasura/
 .cursor/
+
+server/service-account.json

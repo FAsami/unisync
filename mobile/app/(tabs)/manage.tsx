@@ -1,8 +1,9 @@
 import React from 'react'
-import { ScrollView } from 'react-native'
+import { ScrollView, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter, Href } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import { useQuery } from '@apollo/client'
 
 import { Text } from '@/components/ui/text'
 import { Heading } from '@/components/ui/heading'
@@ -13,7 +14,8 @@ import { Icon } from '@/components/ui/icon'
 import { Card } from '@/components/ui/card'
 import { useAuth } from '@/contexts/Auth'
 import { PermissionGate } from '@/components/manage/PermissionGate'
-import { PERMISSIONS, hasPermission } from '@/constants/Permissions'
+import { PERMISSIONS, hasPermission, ROLES } from '@/constants/Permissions'
+import { GET_USER_SECTION } from '@/lib/graphql-operations'
 
 const ManagementCard = ({
   icon,
@@ -60,6 +62,62 @@ const ManagementCard = ({
         </VStack>
       </Card>
     </Pressable>
+  )
+}
+
+const ClassRepresentativeSection = () => {
+  const router = useRouter()
+  const { user } = useAuth()
+
+  const { data: userSectionData, loading } = useQuery(GET_USER_SECTION, {
+    variables: { userId: user?.id },
+    skip: !user?.id,
+  })
+
+  const sectionId = userSectionData?.user_profile?.[0]?.section_id
+
+  if (loading) {
+    return (
+      <VStack className="items-center py-8">
+        <ActivityIndicator size="small" color="#8B5CF6" />
+      </VStack>
+    )
+  }
+
+  if (!sectionId) {
+    return (
+      <VStack className="items-center py-8 bg-white dark:bg-background-900 rounded-xl border border-outline-100 dark:border-outline-800">
+        <Text className="text-4xl mb-4">⚠️</Text>
+        <Text className="text-center text-typography-500 px-4">
+          No section assigned. Contact your administrator.
+        </Text>
+      </VStack>
+    )
+  }
+
+  return (
+    <VStack space="md">
+      <Text className="text-xs font-bold uppercase tracking-widest text-typography-400">
+        Management
+      </Text>
+      <Box className="flex-row flex-wrap justify-between">
+        <ManagementCard
+          icon="book"
+          title="Offerings"
+          description="Course Offerings"
+          route={`/manage/sections/offerings?id=${sectionId}` as Href}
+          color="#8B5CF6"
+        />
+        <ManagementCard
+          icon="calendar"
+          title="Schedule"
+          description="Class Schedule"
+          route={`/manage/sections/routine?id=${sectionId}` as Href}
+          color="#059669"
+        />
+        <Box className="w-[31%]" />
+      </Box>
+    </VStack>
   )
 }
 
@@ -164,34 +222,14 @@ const ManageScreen = () => {
             </VStack>
           </PermissionGate>
 
-          {/* CR Features */}
-          <PermissionGate permission={PERMISSIONS.MANAGE_SECTION_ATTENDANCE}>
-            <VStack space="md">
-              <Text className="text-xs font-bold uppercase tracking-widest text-typography-400">
-                Section
-              </Text>
-              <Box className="flex-row flex-wrap justify-between">
-                <ManagementCard
-                  icon="checkbox"
-                  title="Attendance"
-                  description="Track daily"
-                  route={'/manage/attendance' as Href}
-                  color="#059669"
-                />
-                <ManagementCard
-                  icon="megaphone"
-                  title="Notices"
-                  description="Announcements"
-                  route={'/manage/announcements' as Href}
-                  color="#DC2626"
-                />
-                <Box className="w-[31%]" />
-              </Box>
-            </VStack>
-          </PermissionGate>
+          {/* Class Representative Features - Direct Access to Offerings & Schedule */}
+          {userRole === ROLES.CLASS_REPRESENTATIVE && (
+            <ClassRepresentativeSection />
+          )}
           {!hasPermission(userRole, PERMISSIONS.MANAGE_USERS) &&
             !hasPermission(userRole, PERMISSIONS.MANAGE_OWN_COURSES) &&
-            !hasPermission(userRole, PERMISSIONS.MANAGE_SECTION_ATTENDANCE) && (
+            !hasPermission(userRole, PERMISSIONS.MANAGE_SECTION_ATTENDANCE) &&
+            userRole !== ROLES.CLASS_REPRESENTATIVE && (
               <VStack className="items-center justify-center py-16 bg-white dark:bg-background-900 rounded-3xl border border-outline-100 dark:border-outline-800">
                 <Text className="text-6xl mb-6">🔒</Text>
                 <Heading

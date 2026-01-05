@@ -92,24 +92,21 @@ const CourseOfferingsScreen = () => {
       skip: !sectionId,
     }
   )
-  console.log('====>', offeringsData, error)
-
   const { data: coursesData, loading: coursesLoading } =
     useQuery(GET_ALL_COURSES)
 
-  const { data: facultiesData, loading: facultiesLoading } = useQuery(
-    GET_ALL_FACULTIES_LIST
-  )
+  const {
+    data: facultiesData,
+    loading: facultiesLoading,
+    error: facultiesError,
+  } = useQuery(GET_ALL_FACULTIES_LIST)
 
-  const [createOffering, { loading: createLoading }] = useMutation(
-    CREATE_COURSE_OFFERING
-  )
-  const [updateOffering, { loading: updateLoading }] = useMutation(
-    UPDATE_COURSE_OFFERING
-  )
-  const [deleteOffering, { loading: deleteLoading }] = useMutation(
-    DELETE_COURSE_OFFERING
-  )
+  const [createOffering, { loading: createLoading, error: createError }] =
+    useMutation(CREATE_COURSE_OFFERING)
+  const [updateOffering, { loading: updateLoading, error: updateError }] =
+    useMutation(UPDATE_COURSE_OFFERING)
+  const [deleteOffering, { loading: deleteLoading, error: deleteError }] =
+    useMutation(DELETE_COURSE_OFFERING)
 
   const {
     control,
@@ -398,8 +395,8 @@ const CourseOfferingsScreen = () => {
                         color="#64748B"
                       />
                       <Text className="text-typography-600 text-xs ml-1">
-                        {offering.teacher?.faculties?.[0]
-                          ? `${offering.teacher.faculties[0].first_name} ${offering.teacher.faculties[0].last_name}`
+                        {offering.faculty?.first_name
+                          ? `${offering.faculty.first_name} ${offering.faculty.last_name}`
                           : offering.teacher?.email}
                       </Text>
                     </HStack>
@@ -636,9 +633,9 @@ const CourseOfferingsScreen = () => {
         items={facultiesData?.user_faculty || []}
         loading={facultiesLoading}
         onSelect={(item: any) => {
-          setValue('teacher_id', item.user_id, { shouldValidate: true })
+          setValue('teacher_id', item.id, { shouldValidate: true })
         }}
-        keyExtractor={(item) => item.user_id}
+        keyExtractor={(item) => item.id}
         searchPlaceholder="Search by name or designation"
         renderItem={(item: any, isSelected) => (
           <VStack>
@@ -656,9 +653,7 @@ const CourseOfferingsScreen = () => {
             </Text>
           </VStack>
         )}
-        selectedItem={
-          watchedTeacherId ? { user_id: watchedTeacherId } : undefined
-        }
+        selectedItem={watchedTeacherId ? { id: watchedTeacherId } : undefined}
       />
     </SafeAreaView>
   )

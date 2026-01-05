@@ -1,4 +1,5 @@
 import Expo
+import FirebaseCore
 import React
 // @generated begin revopush-updates-header - expo prebuild (DO NOT MODIFY) sync-1ba9c8bf0aed4942895f95d6664fec89eb587603
 import CodePush
@@ -23,6 +24,8 @@ public class AppDelegate: ExpoAppDelegate {
     reactNativeDelegate = delegate
     reactNativeFactory = factory
     bindReactNativeFactory(factory)
+
+    FirebaseApp.configure()
 
 #if os(iOS) || os(tvOS)
     window = UIWindow(frame: UIScreen.main.bounds)

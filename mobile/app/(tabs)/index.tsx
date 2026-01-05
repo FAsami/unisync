@@ -40,7 +40,7 @@ const ClassCard = ({
   const formattedEndTime = item.end_time ? item.end_time.substring(0, 5) : 'N/A'
 
   return (
-    <Box className="mb-6 rounded-xl overflow-hidden shadow-sm">
+    <Box className="mb-6 rounded-xl overflow-hidden">
       <HStack className="justify-between items-center mb-3 px-1">
         <Text className="text-xs font-bold uppercase tracking-widest text-typography-500">
           {title}
@@ -112,20 +112,36 @@ const ClassCard = ({
 
 const HomeScreen = () => {
   const { currentMode } = useTheme()
-  const { userRole } = useAuth()
-  const { loading, error, data, refetch } =
-    useQuery<GetEventRoutinesData>(GET_EVENT_ROUTINES)
+  const { userId } = useAuth()
+  const { loading, error, data, refetch } = useQuery<GetEventRoutinesData>(
+    GET_EVENT_ROUTINES,
+    {
+      variables: { userId },
+      skip: !userId,
+    }
+  )
   const [now, setNow] = useState(new Date())
+  const [refreshing, setRefreshing] = useState(false)
+
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
 
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    try {
+      await refetch()
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   const { currentClass, nextClass, allClassesToday } = useMemo(() => {
     if (!data?.event_routine)
       return { currentClass: null, nextClass: null, allClassesToday: [] }
 
-    const currentDayOfWeek = getDay(now) // 0 for Sunday, 1 for Monday, etc.
+    const currentDayOfWeek = getDay(now)
     const currentTimeStr = format(now, 'HH:mm:ss')
 
     const todaysRoutines = data.event_routine
@@ -177,8 +193,8 @@ const HomeScreen = () => {
         contentContainerStyle={{ padding: 16 }}
         refreshControl={
           <RefreshControl
-            refreshing={loading}
-            onRefresh={refetch}
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
             tintColor={currentMode === 'dark' ? '#fff' : '#000'}
           />
         }

@@ -86,9 +86,9 @@ const isTokenValid = (token: string): boolean => {
 const handleTokenStorage = async (tokenData: TokenResponse) => {
   try {
     await Promise.all([
-      AsyncStorage.setItem('iam_access_token', tokenData.access_token),
-      AsyncStorage.setItem('iam_refresh_token', tokenData.refresh_token),
-      AsyncStorage.setItem('iam_session_id', tokenData.session_id),
+      AsyncStorage.setItem('guest_access_token', tokenData.access_token),
+      AsyncStorage.setItem('guest_refresh_token', tokenData.refresh_token),
+      AsyncStorage.setItem('guest_session_id', tokenData.session_id),
     ])
     cacheToken(tokenData.access_token)
   } catch (error) {
@@ -100,9 +100,9 @@ const handleTokenStorage = async (tokenData: TokenResponse) => {
 const clearStoredTokens = async () => {
   try {
     await Promise.all([
-      AsyncStorage.removeItem('iam_access_token'),
-      AsyncStorage.removeItem('iam_refresh_token'),
-      AsyncStorage.removeItem('iam_session_id'),
+      AsyncStorage.removeItem('guest_access_token'),
+      AsyncStorage.removeItem('guest_refresh_token'),
+      AsyncStorage.removeItem('guest_session_id'),
     ])
     clearTokenCache()
   } catch (error) {
@@ -209,8 +209,8 @@ export const getGuestSessionToken = async (
       return tokenCache.token
     }
 
-    let accessToken = await AsyncStorage.getItem('access_token')
-    let refreshToken = await AsyncStorage.getItem('refresh_token')
+    let accessToken = await AsyncStorage.getItem('guest_access_token')
+    let refreshToken = await AsyncStorage.getItem('guest_refresh_token')
 
     if (!forceRefresh && accessToken && isTokenValid(accessToken)) {
       cacheToken(accessToken)
@@ -244,7 +244,6 @@ export const clearAuthData = async (): Promise<void> => {
 export const isAuthenticated = async (): Promise<boolean> => {
   try {
     const token = await getSessionToken()
-    console.log('token', token)
     return !!token
   } catch {
     return false
@@ -253,7 +252,7 @@ export const isAuthenticated = async (): Promise<boolean> => {
 
 export const refreshTokenIfNeeded = async (): Promise<string | null> => {
   try {
-    const accessToken = await AsyncStorage.getItem('iam_access_token')
+    const accessToken = await AsyncStorage.getItem('guest_access_token')
     if (!accessToken || !isTokenValid(accessToken)) {
       return await getGuestSessionToken(true)
     }
@@ -265,7 +264,7 @@ export const refreshTokenIfNeeded = async (): Promise<string | null> => {
 
 export const getOfflineToken = async (): Promise<string | null> => {
   try {
-    const accessToken = await AsyncStorage.getItem('iam_access_token')
+    const accessToken = await AsyncStorage.getItem('guest_access_token')
     if (accessToken && isTokenValid(accessToken)) {
       return accessToken
     }
@@ -285,7 +284,7 @@ export const validateSessionWithServer = async (): Promise<{
   reason?: string
 }> => {
   try {
-    const token = await AsyncStorage.getItem('iam_access_token')
+    const token = await AsyncStorage.getItem('guest_access_token')
     if (!token) {
       return { isValid: false, isRevoked: false, reason: 'No token found' }
     }

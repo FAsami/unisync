@@ -28,7 +28,6 @@ const FacultyListScreen = () => {
   const { data, loading, refetch, error } = useQuery(GET_ALL_FACULTIES_LIST, {
     fetchPolicy: 'cache-and-network',
   })
-  console.log('====>p[data', data, error)
 
   const faculties = data?.user_faculty || []
 

@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/toast'
 import { Icon } from '@/components/ui/icon'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useAuth } from '@/contexts/Auth'
 
 const verifySchema = z.object({
   otp: z
@@ -54,6 +55,7 @@ const VerifyOTPScreen = () => {
   const router = useRouter()
   const navigation = useNavigation()
   const { currentMode } = useTheme()
+  const auth = useAuth()
   const params = useLocalSearchParams<{ phone: string; purpose: string }>()
   const toast = useToast()
 
@@ -160,13 +162,13 @@ const VerifyOTPScreen = () => {
         otp: data.otp,
       })
 
-      console.log('Verify Response', response.data)
-
       if (response.data.success) {
         const { access_token, refresh_token } =
           response.data.data.insert_user_session_one
         await setToken(access_token)
         await setRefreshToken(refresh_token)
+
+        await auth.login()
 
         showToast('Success', 'Verification successful', 'success')
 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "293173907659",
+    "project_id": "unisync-cityu",
+    "storage_bucket": "unisync-cityu.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:293173907659:android:00a0fd6421d9d38483cb4e",
+        "android_client_info": {
+          "package_name": "com.pibyi.unisync"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9F-92mz7VDkqn8NVCUOfIb6vjleQHN5Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

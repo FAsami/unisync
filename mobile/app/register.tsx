@@ -198,7 +198,6 @@ const Register = () => {
             purpose: 'SIGNUP',
           })
 
-          console.log('Registration successful, OTP sent')
           showToast('Account Created', 'OTP sent to your phone', 'success')
 
           router.push({

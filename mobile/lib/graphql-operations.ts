@@ -51,7 +51,7 @@ export interface GetUserSessionsData {
 }
 
 export const GET_EVENT_ROUTINES = gql`
-  query GetEventRoutines {
+  query GetEventRoutines($userId: uuid) {
     event_routine(where: { is_active: { _eq: true } }) {
       id
       name
@@ -334,7 +334,6 @@ export const GET_ALL_FACULTIES_LIST = gql`
   query GetAllFaculties {
     user_faculty(order_by: { created_at: desc }) {
       id
-      user_id
       first_name
       last_name
       designation
@@ -356,7 +355,6 @@ export const GET_FACULTY = gql`
   query GetFaculty($userId: uuid!) {
     user_faculty(where: { user_id: { _eq: $userId } }) {
       id
-      user_id
       first_name
       last_name
       faculty_id
@@ -639,6 +637,14 @@ export const GET_ALL_SECTIONS = gql`
   }
 `
 
+export const GET_USER_SECTION = gql`
+  query GetUserSection($userId: uuid!) {
+    user_profile(where: { user_id: { _eq: $userId } }) {
+      section_id
+    }
+  }
+`
+
 export const GET_SECTION = gql`
   query GetSection($id: uuid!) {
     academic_section_by_pk(id: $id) {
@@ -769,14 +775,10 @@ export const GET_COURSE_OFFERINGS_BY_SECTION = gql`
           code
         }
       }
-      account {
+      faculty {
         id
-        email
-        faculties {
-          first_name
-          last_name
-          designation
-        }
+        first_name
+        last_name
       }
       section {
         id
@@ -862,6 +864,11 @@ export interface CourseOffering {
       name: string
       code: string
     }
+  }
+  faculty?: {
+    id: string
+    first_name: string
+    last_name: string
   }
   teacher?: {
     id: string
@@ -1094,3 +1101,50 @@ export interface CheckRoutineConflictsData {
     }
   }>
 }
+
+// --- DEVICE TOKENS (Multi-Provider Notifications) ---
+export const UPSERT_DEVICE_TOKEN = gql`
+  mutation UpsertDeviceToken(
+    $user_id: uuid!
+    $device_id: String!
+    $provider: String!
+    $token: String!
+    $platform: String!
+  ) {
+    insert_user_device_one(
+      object: {
+        user_id: $user_id
+        device_id: $device_id
+        provider: $provider
+        token: $token
+        platform: $platform
+      }
+      on_conflict: {
+        constraint: device_user_id_device_id_provider_key
+        update_columns: [token, last_used_at, is_active]
+      }
+    ) {
+      id
+      token
+    }
+  }
+`
+
+export const DEACTIVATE_DEVICE = gql`
+  mutation DeactivateDevice(
+    $user_id: uuid!
+    $device_id: String!
+    $provider: String!
+  ) {
+    update_user_device(
+      where: {
+        user_id: { _eq: $user_id }
+        device_id: { _eq: $device_id }
+        provider: { _eq: $provider }
+      }
+      _set: { is_active: false }
+    ) {
+      affected_rows
+    }
+  }
+`

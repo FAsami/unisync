@@ -2,7 +2,7 @@
 export const ROLES = {
   ADMIN: 'admin',
   TEACHER: 'teacher',
-  CR: 'cr',
+  CLASS_REPRESENTATIVE: 'class_representative',
   STUDENT: 'student',
 } as const
 
@@ -25,6 +25,7 @@ export const PERMISSIONS = {
   MANAGE_BATCHES: 'manage_batches',
   MANAGE_SECTIONS: 'manage_sections',
   VIEW_BATCHES: 'view_batches',
+  VIEW_SECTIONS: 'view_sections',
 
   // Grade management
   MANAGE_GRADES: 'manage_grades',
@@ -56,7 +57,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.MANAGE_GRADES,
   ],
 
-  [ROLES.CR]: [
+  [ROLES.CLASS_REPRESENTATIVE]: [
     PERMISSIONS.VIEW_SECTION_DETAILS,
     PERMISSIONS.MANAGE_SECTION_ATTENDANCE,
     PERMISSIONS.POST_SECTION_ANNOUNCEMENTS,

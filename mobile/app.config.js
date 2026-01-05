@@ -21,12 +21,14 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.pibyi.unisync',
+      googleServicesFile: './GoogleService-Info.plist',
     },
     extra: {
       ...getEnvs(),
     },
     android: {
       package: 'com.pibyi.unisync',
+      googleServicesFile: './google-services.json',
       adaptiveIcon: {
         foregroundImage: './assets/images/adaptive-icon.png',
         backgroundColor: '#ffffff',
@@ -45,6 +47,7 @@ export default {
         {
           ios: {
             deploymentTarget: '15.5',
+            useFrameworks: 'static',
           },
         },
       ],
@@ -58,6 +61,7 @@ export default {
         },
       ],
       'expo-asset',
+      '@react-native-firebase/app',
       [
         '@revopush/expo-code-push-plugin',
         {

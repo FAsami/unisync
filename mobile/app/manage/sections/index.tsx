@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, Stack } from 'expo-router'
 import { useQuery } from '@apollo/client'
 import { Ionicons } from '@expo/vector-icons'
-import { GET_ALL_SECTIONS } from '@/lib/graphql-operations'
+import { GET_ALL_SECTIONS, GET_USER_SECTION } from '@/lib/graphql-operations'
 
 import { Text } from '@/components/ui/text'
 import { Heading } from '@/components/ui/heading'
@@ -20,24 +20,46 @@ import { HStack } from '@/components/ui/hstack'
 import { SearchBar } from '@/components/ui/SearchBar'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useHaptics } from '@/hooks/useHaptics'
+import { useAuth } from '@/contexts/Auth'
+import { ROLES } from '@/constants/Permissions'
 
 const SectionsScreen = () => {
   const { currentMode } = useTheme()
   const haptics = useHaptics()
+  const { user, userRole } = useAuth()
 
   const [searchQuery, setSearchQuery] = useState('')
 
   const { loading, error, data, refetch } = useQuery(GET_ALL_SECTIONS)
 
+  // Fetch user's section if they're a class representative
+  const { data: userSectionData } = useQuery(GET_USER_SECTION, {
+    variables: { userId: user?.id },
+    skip: !user?.id || userRole !== ROLES.CLASS_REPRESENTATIVE,
+  })
+
   const filteredData = useMemo(() => {
     if (!data?.academic_section) return []
-    return data.academic_section.filter((item: any) => {
+
+    let sections = data.academic_section
+
+    // If user is a class representative, only show their assigned section
+    if (
+      userRole === ROLES.CLASS_REPRESENTATIVE &&
+      userSectionData?.user_profile?.[0]?.section_id
+    ) {
+      const userSectionId = userSectionData.user_profile[0].section_id
+      sections = sections.filter((section: any) => section.id === userSectionId)
+    }
+
+    // Apply search filter
+    return sections.filter((item: any) => {
       const matchesSearch =
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.batch?.name.toLowerCase().includes(searchQuery.toLowerCase())
       return matchesSearch
     })
-  }, [data, searchQuery])
+  }, [data, searchQuery, userRole, userSectionData])
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-background-950">
@@ -69,23 +91,25 @@ const SectionsScreen = () => {
           </VStack>
         </HStack>
 
-        <TouchableOpacity
-          onPress={() => {
-            haptics.light()
-            router.push('/manage/sections/new')
-          }}
-          className="flex-row items-center p-2 active:opacity-50"
-        >
-          <Ionicons
-            name="add"
-            size={20}
-            color={currentMode === 'dark' ? '#59adff' : '#59adff'}
-          />
-          <Text className="text-primary-600 dark:text-primary-400 font-semibold ml-1 mr-3 text-base">
-            Add
-          </Text>
-          <Ionicons name="chevron-forward" size={20} />
-        </TouchableOpacity>
+        {userRole !== ROLES.CLASS_REPRESENTATIVE && (
+          <TouchableOpacity
+            onPress={() => {
+              haptics.light()
+              router.push('/manage/sections/new')
+            }}
+            className="flex-row items-center p-2 active:opacity-50"
+          >
+            <Ionicons
+              name="add"
+              size={20}
+              color={currentMode === 'dark' ? '#59adff' : '#59adff'}
+            />
+            <Text className="text-primary-600 dark:text-primary-400 font-semibold ml-1 mr-3 text-base">
+              Add
+            </Text>
+            <Ionicons name="chevron-forward" size={20} />
+          </TouchableOpacity>
+        )}
       </HStack>
 
       <ScrollView

@@ -38,6 +38,7 @@ import {
   ToastDescription,
 } from '@/components/ui/toast'
 import { Icon } from '@/components/ui/icon'
+import { useAuth } from '@/contexts/Auth'
 import { useTheme } from '@/contexts/ThemeContext'
 
 const loginSchema = z.object({
@@ -57,6 +58,7 @@ type LoginFormValues = z.infer<typeof loginSchema>
 const Login = () => {
   const router = useRouter()
   const { currentMode } = useTheme()
+  const auth = useAuth()
   const toast = useToast()
 
   const [showPassword, setShowPassword] = useState(false)
@@ -112,7 +114,6 @@ const Login = () => {
         phone: data.phoneNumber,
         password: data.password,
       })
-      console.log('==> response', response.data)
 
       if (response.data?.data?.access_token) {
         await AsyncStorage.setItem(
@@ -123,6 +124,7 @@ const Login = () => {
           'iam_refresh_token',
           response.data.data.refresh_token
         )
+        await auth.login()
         router.replace('/(tabs)')
       } else {
         const msg =

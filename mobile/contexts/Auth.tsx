@@ -33,6 +33,7 @@ interface AuthContextType {
   refreshAuth: () => Promise<void>
   handleRevocation: () => Promise<void>
   logout: () => Promise<void>
+  login: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -147,6 +148,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [])
 
+  const login = async () => {
+    setIsLoading(true)
+    await checkAuthStatus(true)
+  }
+
   const value: AuthContextType = {
     isLoading,
     isOnline,
@@ -158,6 +164,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     refreshAuth,
     handleRevocation,
     logout,
+    login,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

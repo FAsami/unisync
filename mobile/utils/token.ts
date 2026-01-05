@@ -15,7 +15,6 @@ export const getSessionToken = async (): Promise<string | null> => {
   try {
     let accessToken = await AsyncStorage.getItem('iam_access_token')
     let refreshToken = await AsyncStorage.getItem('iam_refresh_token')
-
     if (accessToken && isTokenValid(accessToken)) {
       return accessToken
     }
