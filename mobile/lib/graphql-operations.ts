@@ -1151,7 +1151,9 @@ export const DEACTIVATE_DEVICE = gql`
 
 // ===== SCHEDULE EXCEPTIONS =====
 export const CREATE_ROUTINE_EXCEPTION = gql`
-  mutation CreateRoutineException($object: event_routine_exception_insert_input!) {
+  mutation CreateRoutineException(
+    $object: event_routine_exception_insert_input!
+  ) {
     insert_event_routine_exception_one(object: $object) {
       id
       routine_id
@@ -1165,9 +1167,7 @@ export const CREATE_ROUTINE_EXCEPTION = gql`
 export const GET_ROUTINE_EXCEPTIONS = gql`
   query GetRoutineExceptions($startDate: date!, $endDate: date!) {
     event_routine_exception(
-      where: {
-        exception_date: { _gte: $startDate, _lte: $endDate }
-      }
+      where: { exception_date: { _gte: $startDate, _lte: $endDate } }
     ) {
       id
       routine_id
@@ -1248,10 +1248,7 @@ export const SEND_CUSTOM_NOTIFICATION = gql`
 
 export const GET_MY_SENT_NOTIFICATIONS = gql`
   query GetMySentNotifications {
-    notification_log(
-      order_by: { created_at: desc }
-      limit: 50
-    ) {
+    notification_log(order_by: { created_at: desc }, limit: 50) {
       id
       title
       body

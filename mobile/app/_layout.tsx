@@ -26,6 +26,7 @@ import { useColorScheme } from '@/hooks/useColorScheme'
 import { AuthProvider, useAuth } from '@/contexts/Auth'
 import { GraphQLProvider } from '@/contexts/Apollo'
 import { FCMProvider } from '@/contexts/FCM'
+import { AlertProvider } from '@/contexts/AlertContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider'
 import '@/global.css'
@@ -102,42 +103,44 @@ const RootLayout = () => {
           <AuthProvider>
             <GraphQLProvider>
               <FCMProvider>
-                <NavThemeProvider value={navigationTheme}>
-                  <AuthGuard>
-                    <Stack>
-                      <Stack.Screen
-                        name="(tabs)"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen
-                        name="login"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen
-                        name="register"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen
-                        name="verify-otp"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen
-                        name="forgot-password"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen
-                        name="reset-password"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen
-                        name="profile"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen name="+not-found" />
-                    </Stack>
-                  </AuthGuard>
-                  <StatusBar style="auto" />
-                </NavThemeProvider>
+                <AlertProvider>
+                  <NavThemeProvider value={navigationTheme}>
+                    <AuthGuard>
+                      <Stack>
+                        <Stack.Screen
+                          name="(tabs)"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="login"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="register"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="verify-otp"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="forgot-password"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="reset-password"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="profile"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen name="+not-found" />
+                      </Stack>
+                    </AuthGuard>
+                    <StatusBar style="auto" />
+                  </NavThemeProvider>
+                </AlertProvider>
               </FCMProvider>
             </GraphQLProvider>
           </AuthProvider>

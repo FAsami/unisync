@@ -115,7 +115,13 @@ const ClassRepresentativeSection = () => {
           route={`/manage/sections/routine?id=${sectionId}` as Href}
           color="#059669"
         />
-        <Box className="w-[31%]" />
+        <ManagementCard
+          icon="notifications"
+          title="Notify"
+          description="Send Alert"
+          route={'/manage/notifications' as Href}
+          color="#EF4444"
+        />
       </Box>
     </VStack>
   )
@@ -191,6 +197,13 @@ const ManageScreen = () => {
                   route="/manage/courses"
                   color="#6366F1"
                 />
+                <ManagementCard
+                  icon="notifications"
+                  title="Notify"
+                  description="Broadcast"
+                  route={'/manage/notifications' as Href}
+                  color="#EF4444"
+                />
                 <Box className="w-[31%]" />
               </Box>
             </VStack>
@@ -217,7 +230,13 @@ const ManageScreen = () => {
                   route={'/manage/grades' as Href}
                   color="#6366F1"
                 />
-                <Box className="w-[31%]" />
+                <ManagementCard
+                  icon="notifications"
+                  title="Notify"
+                  description="Send Alert"
+                  route={'/manage/notifications' as Href}
+                  color="#EF4444"
+                />
               </Box>
             </VStack>
           </PermissionGate>

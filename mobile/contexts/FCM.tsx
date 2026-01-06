@@ -26,20 +26,13 @@ export const FCMProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { userId, hasValidToken } = useAuth()
-  console.log('FCMProvider: Rendered', { userId, hasValidToken })
   const [hasPermission, setHasPermission] = useState(false)
   const [isRegistered, setIsRegistered] = useState(false)
 
   const [upsertToken, { loading, error }] = useMutation(UPSERT_DEVICE_TOKEN)
-  console.log('FCMProvider: upsertToken', { loading, error })
   const [deactivateToken] = useMutation(DEACTIVATE_DEVICE)
 
   const registerToken = async (token: string, provider: string = 'fcm') => {
-    console.log('FCMProvider: registerToken called', {
-      token,
-      provider,
-      userId,
-    })
     if (!userId) return
 
     try {
@@ -52,7 +45,6 @@ export const FCMProvider: React.FC<{ children: React.ReactNode }> = ({
           platform: getPlatform(),
         },
       })
-      console.log('FCMProvider: Token registered successfully')
       setIsRegistered(true)
     } catch (error) {
       console.error('Failed to register FCM token:', error)
@@ -72,19 +64,13 @@ export const FCMProvider: React.FC<{ children: React.ReactNode }> = ({
   }
 
   useEffect(() => {
-    console.log('FCMProvider: useEffect triggered', { hasValidToken, userId })
     if (!hasValidToken || !userId) return
-
-    // Auto-request permission and register token after login
     const initFCM = async () => {
-      console.log('FCMProvider: initFCM started')
       const granted = await requestNotificationPermission()
-      console.log('FCMProvider: Permission granted?', granted)
       setHasPermission(granted)
 
       if (granted) {
         const token = await getFCMToken()
-        console.log('FCMProvider: FCM Token retrieved', token)
         if (token) {
           await registerToken(token)
         }
@@ -92,14 +78,9 @@ export const FCMProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     initFCM()
-
-    // Listen for token refresh
     const unsubscribeTokenRefresh = setupTokenRefreshListener(registerToken)
-
-    // Handle foreground messages
     const unsubscribeForeground = setupForegroundMessageHandler((message) => {
       console.log('Foreground message:', message)
-      // You can show in-app notification here
     })
 
     return () => {
@@ -108,7 +89,6 @@ export const FCMProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [hasValidToken, userId])
 
-  // Deactivate token on logout
   useEffect(() => {
     if (!hasValidToken && isRegistered) {
       deactivateToken({
