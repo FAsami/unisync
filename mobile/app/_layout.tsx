@@ -46,7 +46,6 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
       segments[0] === 'verify-otp' ||
       segments[0] === 'reset-password'
 
-    // Use setTimeout to ensure navigation happens after the navigator is ready
     const timeoutId = setTimeout(() => {
       if (!hasValidToken && !inAuthGroup) {
         router.replace('/login')

@@ -15,7 +15,7 @@ import { Divider } from '@/components/ui/divider'
 import { useAuth } from '@/contexts/Auth'
 import { useTheme } from '@/contexts/ThemeContext'
 
-const SettingsScreen = () => {
+const AccountScreen = () => {
   const { currentMode, setTheme } = useTheme()
   const { logout } = useAuth()
 
@@ -32,14 +32,14 @@ const SettingsScreen = () => {
     <SafeAreaView className="flex-1 bg-white dark:bg-background-950">
       <VStack className="px-4 py-4">
         <Heading size="2xl" className="font-extrabold text-typography-900">
-          Settings
+          Account
         </Heading>
       </VStack>
 
       <ScrollView className="flex-1">
         <VStack className="mt-4 px-4">
           <Text className="text-xs font-bold uppercase tracking-widest text-typography-500 mb-2 pl-1">
-            Account
+            General
           </Text>
 
           <Box className="bg-white dark:bg-background-900 rounded-xl overflow-hidden shadow-sm">
@@ -117,4 +117,4 @@ const SettingsScreen = () => {
   )
 }
 
-export default SettingsScreen
+export default AccountScreen

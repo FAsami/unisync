@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { RefreshControl, ScrollView } from 'react-native'
+import Animated, { FadeInDown } from 'react-native-reanimated'
+import { RefreshControl, ScrollView, Image } from 'react-native'
 import { useQuery } from '@apollo/client'
 import {
   GET_EVENT_ROUTINES,
@@ -19,7 +20,6 @@ import { VStack } from '@/components/ui/vstack'
 import { HStack } from '@/components/ui/hstack'
 import { Spinner } from '@/components/ui/spinner'
 import { Badge, BadgeText } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Icon } from '@/components/ui/icon'
 
@@ -179,11 +179,33 @@ const HomeScreen = () => {
 
   if (error) {
     return (
-      <Box className="flex-1 justify-center items-center bg-background-0 dark:bg-background-950 p-4">
-        <Text className="text-error-500 text-center">
-          Error loading routines: {error.message}
-        </Text>
-      </Box>
+      <SafeAreaView className="flex-1 bg-white dark:bg-background-950">
+        <Box className="flex-1 justify-center items-center p-4">
+          <Box className="w-full mb-6 relative items-center">
+            <Image
+              source={require('../../assets/images/generic-error.png')}
+              style={{ width: 280, height: 280 }}
+              resizeMode="contain"
+              accessibilityLabel="Error illustration"
+            />
+          </Box>
+          <Animated.View
+            entering={FadeInDown.delay(200).springify().damping(12)}
+            className="items-center w-full"
+          >
+            <Heading
+              size="md"
+              className="text-center font-bold tracking-wider uppercase text-typography-900 mb-3"
+            >
+              SOMETHING WENT WRONG
+            </Heading>
+            <Text className="text-center text-lg text-typography-500 px-6 mb-8">
+              Oops! We hit a snag while loading your routine. unexpected glitch
+              in the matrix.
+            </Text>
+          </Animated.View>
+        </Box>
+      </SafeAreaView>
     )
   }
 
@@ -243,26 +265,36 @@ const HomeScreen = () => {
                 }
                 style={{
                   borderRadius: 16,
-                  padding: 32,
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  padding: 0,
                   minHeight: 200,
                   borderWidth: 1,
                   borderColor: currentMode === 'dark' ? '#334155' : '#e2e8f0',
+                  overflow: 'hidden',
                 }}
               >
-                <Box className="bg-primary-500/10 p-4 rounded-full mb-4">
-                  <Text className="text-4xl">☕</Text>
+                <Box className="w-full">
+                  <Image
+                    source={require('../../assets/images/no-classes.png')}
+                    style={{ width: '100%', height: 220 }}
+                    resizeMode="cover"
+                    accessibilityLabel="No classes illustration"
+                  />
                 </Box>
-                <Heading
-                  size="md"
-                  className="text-center font-bold text-typography-900 mb-2"
+                <Animated.View
+                  entering={FadeInDown.delay(200).springify().damping(9)}
+                  className="py-12 items-center w-full"
                 >
-                  No classes right now
-                </Heading>
-                <Text className="text-center text-typography-500">
-                  Enjoy your free time! Check back later for upcoming sessions.
-                </Text>
+                  <Heading
+                    size="md"
+                    className="text-center font-bold tracking-wider uppercase text-typography-900 mb-3"
+                  >
+                    YOU'RE OFF THE HOOK
+                  </Heading>
+                  <Text className="text-center text-lg text-typography-500 px-6">
+                    Time to recharge! Grab a coffee ☕️, catch up on sleep 😴,
+                    or just chill. You've earned this break.
+                  </Text>
+                </Animated.View>
               </LinearGradient>
             </Box>
           )

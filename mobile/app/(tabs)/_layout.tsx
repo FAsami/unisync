@@ -77,20 +77,33 @@ const TabLayout = () => {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               size={22}
-              name={focused ? 'construct' : 'construct-outline'}
+              name={focused ? 'briefcase' : 'briefcase-outline'}
               color={color}
             />
           ),
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="notifications"
         options={{
-          title: 'SETTINGS',
+          title: 'ALERTS',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               size={22}
-              name={focused ? 'settings' : 'settings-outline'}
+              name={focused ? 'notifications' : 'notifications-outline'}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="account"
+        options={{
+          title: 'ACCOUNT',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              size={22}
+              name={focused ? 'person' : 'person-outline'}
               color={color}
             />
           ),
