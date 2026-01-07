@@ -123,7 +123,7 @@ const BuildingList = () => {
       await deleteBuilding({ variables: { id } })
       message.success('Building deleted successfully')
       refetch()
-    } catch (error) {
+    } catch {
       message.error('Failed to delete building')
     }
   }
@@ -152,7 +152,7 @@ const BuildingList = () => {
       setIsModalOpen(false)
       form.resetFields()
       refetch()
-    } catch (error) {
+    } catch {
       message.error(
         editingBuilding
           ? 'Failed to update building'
@@ -180,6 +180,7 @@ const BuildingList = () => {
     {
       title: 'Location',
       key: 'location',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: Building) => (
         <span>
           {record.latitude}, {record.longitude}
@@ -189,6 +190,7 @@ const BuildingList = () => {
     {
       title: 'Actions',
       key: 'actions',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: Building) => (
         <Space>
           <Button

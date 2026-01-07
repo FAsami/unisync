@@ -10,7 +10,6 @@ import {
   Modal,
   Form,
   Select,
-  Input,
   DatePicker,
   Switch,
 } from 'antd'
@@ -252,7 +251,7 @@ const ClassRepresentativeList = () => {
       await deleteRep({ variables: { id } })
       message.success('Class representative deleted successfully')
       refetch()
-    } catch (error) {
+    } catch {
       message.error('Failed to delete class representative')
     }
   }
@@ -288,7 +287,7 @@ const ClassRepresentativeList = () => {
       form.resetFields()
       setSelectedBatch(null)
       refetch()
-    } catch (error) {
+    } catch {
       message.error(
         editingRep
           ? 'Failed to update class representative'
@@ -299,6 +298,7 @@ const ClassRepresentativeList = () => {
 
   const filteredSections = selectedBatch
     ? sectionsData?.academic_section.filter(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (s: any) => s.batch_id === selectedBatch
       )
     : sectionsData?.academic_section
@@ -307,6 +307,7 @@ const ClassRepresentativeList = () => {
     {
       title: 'User',
       key: 'user',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: ClassRepresentative) => {
         const profile = record.account?.profiles?.[0]
         if (profile) {
@@ -322,6 +323,7 @@ const ClassRepresentativeList = () => {
     {
       title: 'Batch',
       key: 'batch',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: ClassRepresentative) => {
         const dept = record.batch?.department
         return (
@@ -352,6 +354,7 @@ const ClassRepresentativeList = () => {
     {
       title: 'Actions',
       key: 'actions',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: ClassRepresentative) => (
         <Space>
           <Button
@@ -439,6 +442,7 @@ const ClassRepresentativeList = () => {
                   .includes(input.toLowerCase())
               }
             >
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {usersData?.user_account.map((user: any) => {
                 const profile = user.profiles?.[0]
                 const displayName = profile
@@ -468,6 +472,7 @@ const ClassRepresentativeList = () => {
                 form.setFieldsValue({ section_id: undefined })
               }}
             >
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {batchesData?.academic_batch.map((batch: any) => (
                 <Select.Option key={batch.id} value={batch.id}>
                   {batch.name}
@@ -481,6 +486,7 @@ const ClassRepresentativeList = () => {
             rules={[{ required: true, message: 'Please select a section' }]}
           >
             <Select placeholder='Select section' disabled={!selectedBatch}>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {filteredSections?.map((section: any) => (
                 <Select.Option key={section.id} value={section.id}>
                   {section.name}

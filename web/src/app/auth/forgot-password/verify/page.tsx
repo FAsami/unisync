@@ -29,7 +29,7 @@ export default async function ForgotPasswordVerifyPage({
         Reset your password
       </h1>
       <div className='text-center text-gray-600 text-sm mb-8'>
-        We've sent an OTP to your{' '}
+        We&apos;ve sent an OTP to your{' '}
         <span className='font-medium text-gray-900'>{context.identifier}</span>{' '}
         {context.identifierType === 'EMAIL' ? 'email' : 'phone'}. Then choose a
         new password.

@@ -80,6 +80,7 @@ export default function ForgotPasswordVerifyForm({
       if (!success) {
         setErrorMessage(message || 'Failed to send OTP')
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setErrorMessage(error?.message || 'Failed to send OTP')
     } finally {
@@ -147,8 +148,10 @@ export default function ForgotPasswordVerifyForm({
         }
 
         clearVerifyContext()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setContext(null as any)
         router.push(context.redirectTo || '/auth/login')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         const message = error?.message || 'Verification failed'
         setErrorMessage(message)
@@ -162,6 +165,7 @@ export default function ForgotPasswordVerifyForm({
     })
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onFinishFailed = ({ errorFields }: any) => {
     if (errorFields?.length) {
       form.scrollToField(errorFields[0].name)
@@ -170,7 +174,7 @@ export default function ForgotPasswordVerifyForm({
 
   const footerContent = (
     <p className='text-sm text-gray-600 text-center'>
-      Didn't receive the code?{' '}
+      Didn&apos;t receive the code?{' '}
       <button
         type='button'
         onClick={() => void sendOtp()}

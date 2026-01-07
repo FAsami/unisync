@@ -175,7 +175,7 @@ const CourseList = () => {
       await deleteCourse({ variables: { id } })
       message.success('Course deleted successfully')
       refetch()
-    } catch (error) {
+    } catch {
       message.error('Failed to delete course')
     }
   }
@@ -204,7 +204,7 @@ const CourseList = () => {
       setIsModalOpen(false)
       form.resetFields()
       refetch()
-    } catch (error) {
+    } catch {
       message.error(
         editingCourse ? 'Failed to update course' : 'Failed to create course'
       )
@@ -215,6 +215,7 @@ const CourseList = () => {
     {
       title: 'Department',
       key: 'department',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: Course) => (
         <span>
           {record.department
@@ -257,6 +258,7 @@ const CourseList = () => {
     {
       title: 'Actions',
       key: 'actions',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: Course) => (
         <Space>
           <Button
@@ -407,4 +409,3 @@ const CourseList = () => {
 }
 
 export default CourseList
-

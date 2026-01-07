@@ -1,8 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import { Table, Button, Space, Popconfirm, message, Modal, Form, Input, InputNumber, Select } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, CopyOutlined } from '@ant-design/icons'
+import {
+  Table,
+  Button,
+  Space,
+  Popconfirm,
+  message,
+  Modal,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+} from 'antd'
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CopyOutlined,
+} from '@ant-design/icons'
 import { useQuery, useMutation } from '@apollo/client/react'
 import { gql } from '@apollo/client'
 
@@ -79,7 +95,7 @@ interface Room {
   room_number: string
   floor: string
   capacity: number | null
-  facility: any
+  facility: unknown
   room_name: string
   created_at: string
   updated_at: string
@@ -102,8 +118,14 @@ const RoomList = () => {
   const [copyingRoom, setCopyingRoom] = useState<Room | null>(null)
   const [form] = Form.useForm()
 
-  const { data: roomsData, loading: roomsLoading, refetch } = useQuery<{ venue_room: Room[] }>(GET_ROOMS)
-  const { data: buildingsData } = useQuery<{ venue_building: Building[] }>(GET_BUILDINGS)
+  const {
+    data: roomsData,
+    loading: roomsLoading,
+    refetch,
+  } = useQuery<{ venue_room: Room[] }>(GET_ROOMS)
+  const { data: buildingsData } = useQuery<{ venue_building: Building[] }>(
+    GET_BUILDINGS
+  )
   const [createRoom] = useMutation(CREATE_ROOM)
   const [updateRoom] = useMutation(UPDATE_ROOM)
   const [deleteRoom] = useMutation(DELETE_ROOM)
@@ -142,7 +164,7 @@ const RoomList = () => {
       await deleteRoom({ variables: { id } })
       message.success('Room deleted successfully')
       refetch()
-    } catch (error) {
+    } catch {
       message.error('Failed to delete room')
     }
   }
@@ -150,7 +172,7 @@ const RoomList = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields()
-      
+
       let facilityValue = null
       if (values.facility) {
         try {
@@ -182,12 +204,14 @@ const RoomList = () => {
         })
         message.success('Room created successfully')
       }
-      
+
       setIsModalOpen(false)
       form.resetFields()
       refetch()
-    } catch (error) {
-      message.error(editingRoom ? 'Failed to update room' : 'Failed to create room')
+    } catch {
+      message.error(
+        editingRoom ? 'Failed to update room' : 'Failed to create room'
+      )
     }
   }
 
@@ -195,8 +219,13 @@ const RoomList = () => {
     {
       title: 'Building',
       key: 'building',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: Room) => (
-        <span>{record.building ? `${record.building.code} - ${record.building.name}` : '-'}</span>
+        <span>
+          {record.building
+            ? `${record.building.code} - ${record.building.name}`
+            : '-'}
+        </span>
       ),
     },
     {
@@ -223,30 +252,31 @@ const RoomList = () => {
     {
       title: 'Actions',
       key: 'actions',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: Room) => (
         <Space>
           <Button
-            type="link"
+            type='link'
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
           >
             Edit
           </Button>
           <Button
-            type="link"
+            type='link'
             icon={<CopyOutlined />}
             onClick={() => handleCopy(record)}
           >
             Copy
           </Button>
           <Popconfirm
-            title="Delete room"
-            description="Are you sure you want to delete this room?"
+            title='Delete room'
+            description='Are you sure you want to delete this room?'
             onConfirm={() => handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
+            okText='Yes'
+            cancelText='No'
           >
-            <Button type="link" danger icon={<DeleteOutlined />}>
+            <Button type='link' danger icon={<DeleteOutlined />}>
               Delete
             </Button>
           </Popconfirm>
@@ -257,8 +287,14 @@ const RoomList = () => {
 
   return (
     <div>
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+      <div
+        style={{
+          marginBottom: 16,
+          display: 'flex',
+          justifyContent: 'flex-end',
+        }}
+      >
+        <Button type='primary' icon={<PlusOutlined />} onClick={handleCreate}>
           Add Room
         </Button>
       </div>
@@ -267,12 +303,14 @@ const RoomList = () => {
         columns={columns}
         dataSource={roomsData?.venue_room || []}
         loading={roomsLoading}
-        rowKey="id"
+        rowKey='id'
         pagination={{ pageSize: 10 }}
       />
 
       <Modal
-        title={editingRoom ? 'Edit Room' : copyingRoom ? 'Copy Room' : 'Create Room'}
+        title={
+          editingRoom ? 'Edit Room' : copyingRoom ? 'Copy Room' : 'Create Room'
+        }
         open={isModalOpen}
         onOk={handleSubmit}
         onCancel={() => {
@@ -282,13 +320,13 @@ const RoomList = () => {
         okText={editingRoom ? 'Update' : 'Create'}
         width={600}
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} layout='vertical'>
           <Form.Item
-            name="building_id"
-            label="Building"
+            name='building_id'
+            label='Building'
             rules={[{ required: true, message: 'Please select a building' }]}
           >
-            <Select placeholder="Select building">
+            <Select placeholder='Select building'>
               {buildingsData?.venue_building.map((building) => (
                 <Select.Option key={building.id} value={building.id}>
                   {building.code} - {building.name}
@@ -297,38 +335,42 @@ const RoomList = () => {
             </Select>
           </Form.Item>
           <Form.Item
-            name="room_number"
-            label="Room Number"
+            name='room_number'
+            label='Room Number'
             rules={[{ required: true, message: 'Please enter room number' }]}
           >
-            <Input placeholder="e.g., 101" />
+            <Input placeholder='e.g., 101' />
           </Form.Item>
           <Form.Item
-            name="room_name"
-            label="Room Name"
+            name='room_name'
+            label='Room Name'
             rules={[{ required: true, message: 'Please enter room name' }]}
           >
-            <Input placeholder="e.g., Lecture Hall 1" />
+            <Input placeholder='e.g., Lecture Hall 1' />
           </Form.Item>
           <Form.Item
-            name="floor"
-            label="Floor"
+            name='floor'
+            label='Floor'
             rules={[{ required: true, message: 'Please enter floor' }]}
           >
-            <Input placeholder="e.g., 1" />
+            <Input placeholder='e.g., 1' />
+          </Form.Item>
+          <Form.Item name='capacity' label='Capacity'>
+            <InputNumber
+              style={{ width: '100%' }}
+              placeholder='e.g., 50'
+              min={1}
+            />
           </Form.Item>
           <Form.Item
-            name="capacity"
-            label="Capacity"
-          >
-            <InputNumber style={{ width: '100%' }} placeholder="e.g., 50" min={1} />
-          </Form.Item>
-          <Form.Item
-            name="facility"
-            label="Facility (JSON)"
+            name='facility'
+            label='Facility (JSON)'
             tooltip='Enter facility information as JSON (e.g., {"projector": true, "whiteboard": true})'
           >
-            <Input.TextArea rows={4} placeholder='{"projector": true, "whiteboard": true}' />
+            <Input.TextArea
+              rows={4}
+              placeholder='{"projector": true, "whiteboard": true}'
+            />
           </Form.Item>
         </Form>
       </Modal>
@@ -337,4 +379,3 @@ const RoomList = () => {
 }
 
 export default RoomList
-

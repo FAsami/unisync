@@ -178,7 +178,7 @@ const BatchList = () => {
       await deleteBatch({ variables: { id } })
       message.success('Batch deleted successfully')
       refetch()
-    } catch (error) {
+    } catch {
       message.error('Failed to delete batch')
     }
   }
@@ -214,7 +214,7 @@ const BatchList = () => {
       setIsModalOpen(false)
       form.resetFields()
       refetch()
-    } catch (error) {
+    } catch {
       message.error(
         editingBatch ? 'Failed to update batch' : 'Failed to create batch'
       )
@@ -225,6 +225,7 @@ const BatchList = () => {
     {
       title: 'Department',
       key: 'department',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: Batch) => (
         <span>
           {record.department
@@ -262,6 +263,7 @@ const BatchList = () => {
     {
       title: 'Actions',
       key: 'actions',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: Batch) => (
         <Space>
           <Button
@@ -398,4 +400,3 @@ const BatchList = () => {
 }
 
 export default BatchList
-

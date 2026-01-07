@@ -56,7 +56,8 @@ const httpLink = new HttpLink({
     'http://localhost:9203/v1/graphql',
 })
 
-const authLink = new SetContextLink(async (prevContext, operation) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const authLink = new SetContextLink(async (_prevContext, _operation) => {
   try {
     const token = await getGuestToken()
 
@@ -65,7 +66,8 @@ const authLink = new SetContextLink(async (prevContext, operation) => {
         'x-hasura-access-token': token,
       },
     }
-  } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_error) {
     return {}
   }
 })

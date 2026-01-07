@@ -82,7 +82,10 @@ const GET_SECTIONS = gql`
 
 const GET_USERS = gql`
   query GetUsers {
-    user_account(where: { is_active: { _eq: true } }, order_by: { created_at: desc }) {
+    user_account(
+      where: { is_active: { _eq: true } }
+      order_by: { created_at: desc }
+    ) {
       id
       phone
       email
@@ -98,7 +101,9 @@ const GET_USERS = gql`
 `
 
 const CREATE_COURSE_OFFERING = gql`
-  mutation CreateCourseOffering($object: academic_course_offering_insert_input!) {
+  mutation CreateCourseOffering(
+    $object: academic_course_offering_insert_input!
+  ) {
     insert_academic_course_offering_one(object: $object) {
       id
       course_id
@@ -166,12 +171,20 @@ interface CourseOffering {
 
 const CourseOfferingList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingOffering, setEditingOffering] = useState<CourseOffering | null>(null)
-  const [copyingOffering, setCopyingOffering] = useState<CourseOffering | null>(null)
+  const [editingOffering, setEditingOffering] = useState<CourseOffering | null>(
+    null
+  )
+  const [copyingOffering, setCopyingOffering] = useState<CourseOffering | null>(
+    null
+  )
   const [form] = Form.useForm()
   const [selectedBatch, setSelectedBatch] = useState<string | null>(null)
 
-  const { data: offeringsData, loading: offeringsLoading, refetch } = useQuery<{
+  const {
+    data: offeringsData,
+    loading: offeringsLoading,
+    refetch,
+  } = useQuery<{
     academic_course_offering: CourseOffering[]
   }>(GET_COURSE_OFFERINGS)
   const { data: coursesData } = useQuery<{
@@ -233,7 +246,7 @@ const CourseOfferingList = () => {
       await deleteOffering({ variables: { id } })
       message.success('Course offering deleted successfully')
       refetch()
-    } catch (error) {
+    } catch {
       message.error('Failed to delete course offering')
     }
   }
@@ -263,7 +276,7 @@ const CourseOfferingList = () => {
       form.resetFields()
       setSelectedBatch(null)
       refetch()
-    } catch (error) {
+    } catch {
       message.error(
         editingOffering
           ? 'Failed to update course offering'
@@ -273,16 +286,21 @@ const CourseOfferingList = () => {
   }
 
   const filteredSections = selectedBatch
-    ? sectionsData?.academic_section.filter((s: any) => s.batch_id === selectedBatch)
+    ? sectionsData?.academic_section.filter(
+        (s: { batch_id: string; id: string; name: string }) =>
+          s.batch_id === selectedBatch
+      )
     : sectionsData?.academic_section
 
   const columns = [
     {
       title: 'Course',
       key: 'course',
-      render: (_: any, record: CourseOffering) => (
+      render: (_: unknown, record: CourseOffering) => (
         <span>
-          {record.course ? `${record.course.code} - ${record.course.name}` : '-'}
+          {record.course
+            ? `${record.course.code} - ${record.course.name}`
+            : '-'}
         </span>
       ),
     },
@@ -310,7 +328,7 @@ const CourseOfferingList = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: CourseOffering) => (
+      render: (_: unknown, record: CourseOffering) => (
         <Space>
           <Button
             type='link'
@@ -389,11 +407,13 @@ const CourseOfferingList = () => {
             rules={[{ required: true, message: 'Please select a course' }]}
           >
             <Select placeholder='Select course'>
-              {coursesData?.academic_course.map((course: any) => (
-                <Select.Option key={course.id} value={course.id}>
-                  {course.code} - {course.name}
-                </Select.Option>
-              ))}
+              {coursesData?.academic_course.map(
+                (course: { id: string; code: string; name: string }) => (
+                  <Select.Option key={course.id} value={course.id}>
+                    {course.code} - {course.name}
+                  </Select.Option>
+                )
+              )}
             </Select>
           </Form.Item>
           <Form.Item
@@ -408,11 +428,13 @@ const CourseOfferingList = () => {
                 form.setFieldsValue({ section_id: undefined })
               }}
             >
-              {batchesData?.academic_batch.map((batch: any) => (
-                <Select.Option key={batch.id} value={batch.id}>
-                  {batch.name}
-                </Select.Option>
-              ))}
+              {batchesData?.academic_batch.map(
+                (batch: { id: string; name: string }) => (
+                  <Select.Option key={batch.id} value={batch.id}>
+                    {batch.name}
+                  </Select.Option>
+                )
+              )}
             </Select>
           </Form.Item>
           <Form.Item
@@ -420,15 +442,14 @@ const CourseOfferingList = () => {
             label='Section'
             rules={[{ required: true, message: 'Please select a section' }]}
           >
-            <Select
-              placeholder='Select section'
-              disabled={!selectedBatch}
-            >
-              {filteredSections?.map((section: any) => (
-                <Select.Option key={section.id} value={section.id}>
-                  {section.name}
-                </Select.Option>
-              ))}
+            <Select placeholder='Select section' disabled={!selectedBatch}>
+              {filteredSections?.map(
+                (section: { id: string; name: string }) => (
+                  <Select.Option key={section.id} value={section.id}>
+                    {section.name}
+                  </Select.Option>
+                )
+              )}
             </Select>
           </Form.Item>
           <Form.Item
@@ -440,22 +461,42 @@ const CourseOfferingList = () => {
               placeholder='Select teacher'
               showSearch
               filterOption={(input, option) =>
-                String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                String(option?.label ?? '')
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
               }
             >
               {usersData?.user_account
-                .filter((user: any) => user.role === 'instructor' || user.role === 'admin')
-                .map((user: any) => {
-                  const profile = user.profiles?.[0]
-                  const displayName = profile
-                    ? `${profile.first_name} ${profile.last_name}${profile.student_id ? ` (${profile.student_id})` : ''}`
-                    : user.email || user.phone
-                  return (
-                    <Select.Option key={user.id} value={user.id} label={displayName}>
-                      {displayName} - {user.email || user.phone}
-                    </Select.Option>
-                  )
-                })}
+                .filter(
+                  (user: { role: string }) =>
+                    user.role === 'instructor' || user.role === 'admin'
+                )
+                .map(
+                  (user: {
+                    id: string
+                    phone: string
+                    email: string
+                    profiles?: Array<{
+                      first_name: string
+                      last_name: string
+                      student_id: string | null
+                    }>
+                  }) => {
+                    const profile = user.profiles?.[0]
+                    const displayName = profile
+                      ? `${profile.first_name} ${profile.last_name}${profile.student_id ? ` (${profile.student_id})` : ''}`
+                      : user.email || user.phone
+                    return (
+                      <Select.Option
+                        key={user.id}
+                        value={user.id}
+                        label={displayName}
+                      >
+                        {displayName} - {user.email || user.phone}
+                      </Select.Option>
+                    )
+                  }
+                )}
             </Select>
           </Form.Item>
           <Form.Item
@@ -480,4 +521,3 @@ const CourseOfferingList = () => {
 }
 
 export default CourseOfferingList
-

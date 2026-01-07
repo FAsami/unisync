@@ -17,7 +17,7 @@ const authPageConfig: Record<
     title: 'Welcome back',
     footer: (
       <p className='text-center text-gray-600 text-sm'>
-        Don't have an account?{' '}
+        Don&apos;t have an account?{' '}
         <Link
           href='/auth/register'
           className='text-blue-500 font-medium hover:underline'

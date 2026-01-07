@@ -28,7 +28,7 @@ export default async function RegisterVerifyPage({ searchParams }: Props) {
         Verify your account
       </h1>
       <div className='text-center text-gray-600 text-sm mb-8'>
-        We've sent an OTP to your{' '}
+        We&apos;ve sent an OTP to your{' '}
         <span className='font-medium text-gray-900'>{context.identifier}</span>{' '}
         {channel}. Please verify to complete your registration.
       </div>

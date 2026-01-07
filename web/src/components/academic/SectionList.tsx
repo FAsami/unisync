@@ -170,7 +170,7 @@ const SectionList = () => {
       await deleteSection({ variables: { id } })
       message.success('Section deleted successfully')
       refetch()
-    } catch (error) {
+    } catch {
       message.error('Failed to delete section')
     }
   }
@@ -199,7 +199,7 @@ const SectionList = () => {
       setIsModalOpen(false)
       form.resetFields()
       refetch()
-    } catch (error) {
+    } catch {
       message.error(
         editingSection ? 'Failed to update section' : 'Failed to create section'
       )
@@ -210,6 +210,7 @@ const SectionList = () => {
     {
       title: 'Batch',
       key: 'batch',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: Section) => {
         const dept = record.batch?.department
         return (
@@ -240,6 +241,7 @@ const SectionList = () => {
     {
       title: 'Actions',
       key: 'actions',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: Section) => (
         <Space>
           <Button

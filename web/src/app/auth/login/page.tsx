@@ -41,12 +41,14 @@ const LoginForm = () => {
         const redirect = searchParams.get('redirect') || '/'
         router.push(redirect)
         router.refresh()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         setErrorMessage(error?.message || 'Something went wrong!')
       }
     })
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onFinishFailed = ({ errorFields }: any) => {
     if (errorFields?.length) {
       form.scrollToField(errorFields[0].name)

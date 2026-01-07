@@ -29,6 +29,7 @@ export default function RegisterPage() {
     })
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onFinishFailed = ({ errorFields }: any) => {
     if (errorFields?.length) {
       form.scrollToField(errorFields[0].name)

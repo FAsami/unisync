@@ -127,7 +127,7 @@ const DepartmentList = () => {
       await deleteDepartment({ variables: { id } })
       message.success('Department deleted successfully')
       refetch()
-    } catch (error) {
+    } catch {
       message.error('Failed to delete department')
     }
   }
@@ -156,7 +156,7 @@ const DepartmentList = () => {
       setIsModalOpen(false)
       form.resetFields()
       refetch()
-    } catch (error) {
+    } catch {
       message.error(
         editingDepartment
           ? 'Failed to update department'
@@ -191,6 +191,7 @@ const DepartmentList = () => {
     {
       title: 'Actions',
       key: 'actions',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: Department) => (
         <Space>
           <Button
@@ -298,4 +299,3 @@ const DepartmentList = () => {
 }
 
 export default DepartmentList
-

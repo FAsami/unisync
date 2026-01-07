@@ -88,7 +88,10 @@ const GET_COURSE_OFFERINGS = gql`
 
 const GET_USERS = gql`
   query GetUsers {
-    user_account(where: { is_active: { _eq: true } }, order_by: { created_at: desc }) {
+    user_account(
+      where: { is_active: { _eq: true } }
+      order_by: { created_at: desc }
+    ) {
       id
       phone
       email
@@ -104,7 +107,9 @@ const GET_USERS = gql`
 `
 
 const CREATE_USER_ENROLLMENT = gql`
-  mutation CreateUserEnrollment($object: academic_user_enrollment_insert_input!) {
+  mutation CreateUserEnrollment(
+    $object: academic_user_enrollment_insert_input!
+  ) {
     insert_academic_user_enrollment_one(object: $object) {
       id
       user_id
@@ -181,11 +186,17 @@ interface UserEnrollment {
 
 const UserEnrollmentList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingEnrollment, setEditingEnrollment] = useState<UserEnrollment | null>(null)
-  const [copyingEnrollment, setCopyingEnrollment] = useState<UserEnrollment | null>(null)
+  const [editingEnrollment, setEditingEnrollment] =
+    useState<UserEnrollment | null>(null)
+  const [copyingEnrollment, setCopyingEnrollment] =
+    useState<UserEnrollment | null>(null)
   const [form] = Form.useForm()
 
-  const { data: enrollmentsData, loading: enrollmentsLoading, refetch } = useQuery<{
+  const {
+    data: enrollmentsData,
+    loading: enrollmentsLoading,
+    refetch,
+  } = useQuery<{
     academic_user_enrollment: UserEnrollment[]
   }>(GET_USER_ENROLLMENTS)
   const { data: offeringsData } = useQuery<{
@@ -261,7 +272,7 @@ const UserEnrollmentList = () => {
       await deleteEnrollment({ variables: { id } })
       message.success('User enrollment deleted successfully')
       refetch()
-    } catch (error) {
+    } catch {
       message.error('Failed to delete user enrollment')
     }
   }
@@ -296,7 +307,7 @@ const UserEnrollmentList = () => {
       setIsModalOpen(false)
       form.resetFields()
       refetch()
-    } catch (error) {
+    } catch {
       message.error(
         editingEnrollment
           ? 'Failed to update user enrollment'
@@ -309,17 +320,23 @@ const UserEnrollmentList = () => {
     {
       title: 'User',
       key: 'user',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: UserEnrollment) => {
         const profile = record.account?.profiles?.[0]
         if (profile) {
           return `${profile.first_name} ${profile.last_name}${profile.student_id ? ` (${profile.student_id})` : ''}`
         }
-        return record.account?.email || record.account?.phone || record.user_id.substring(0, 8) + '...'
+        return (
+          record.account?.email ||
+          record.account?.phone ||
+          record.user_id.substring(0, 8) + '...'
+        )
       },
     },
     {
       title: 'Course',
       key: 'course',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: UserEnrollment) => (
         <span>
           {record.course_offering?.course
@@ -357,6 +374,7 @@ const UserEnrollmentList = () => {
     {
       title: 'Actions',
       key: 'actions',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (_: any, record: UserEnrollment) => (
         <Space>
           <Button
@@ -438,40 +456,79 @@ const UserEnrollmentList = () => {
               placeholder='Select user'
               showSearch
               filterOption={(input, option) =>
-                String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                String(option?.label ?? '')
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
               }
             >
-              {usersData?.user_account.map((user: any) => {
-                const profile = user.profiles?.[0]
-                const displayName = profile
-                  ? `${profile.first_name} ${profile.last_name}${profile.student_id ? ` (${profile.student_id})` : ''}`
-                  : user.email || user.phone
-                return (
-                  <Select.Option key={user.id} value={user.id} label={displayName}>
-                    {displayName} - {user.email || user.phone}
-                  </Select.Option>
-                )
-              })}
+              {usersData?.user_account.map(
+                (user: {
+                  id: string
+                  phone: string
+                  email: string
+                  role: string
+                  profiles?: Array<{
+                    id: string
+                    first_name: string
+                    last_name: string
+                    student_id: string | null
+                  }>
+                }) => {
+                  const profile = user.profiles?.[0]
+                  const displayName = profile
+                    ? `${profile.first_name} ${profile.last_name}${profile.student_id ? ` (${profile.student_id})` : ''}`
+                    : user.email || user.phone
+                  return (
+                    <Select.Option
+                      key={user.id}
+                      value={user.id}
+                      label={displayName}
+                    >
+                      {displayName} - {user.email || user.phone}
+                    </Select.Option>
+                  )
+                }
+              )}
             </Select>
           </Form.Item>
           <Form.Item
             name='course_offering_id'
             label='Course Offering'
-            rules={[{ required: true, message: 'Please select a course offering' }]}
+            rules={[
+              { required: true, message: 'Please select a course offering' },
+            ]}
           >
             <Select placeholder='Select course offering'>
-              {offeringsData?.academic_course_offering.map((offering: any) => {
-                const course = offering.course
-                const batch = offering.batch
-                const section = offering.section
-                return (
-                  <Select.Option key={offering.id} value={offering.id}>
-                    {course ? `${course.code} - ${course.name}` : ''} |{' '}
-                    {batch?.name || ''} | {section?.name || ''} |{' '}
-                    {offering.academic_year}
-                  </Select.Option>
-                )
-              })}
+              {offeringsData?.academic_course_offering.map(
+                (offering: {
+                  id: string
+                  academic_year: string
+                  course?: {
+                    id: string
+                    code: string
+                    name: string
+                  }
+                  batch?: {
+                    id: string
+                    name: string
+                  }
+                  section?: {
+                    id: string
+                    name: string
+                  }
+                }) => {
+                  const course = offering.course
+                  const batch = offering.batch
+                  const section = offering.section
+                  return (
+                    <Select.Option key={offering.id} value={offering.id}>
+                      {course ? `${course.code} - ${course.name}` : ''} |{' '}
+                      {batch?.name || ''} | {section?.name || ''} |{' '}
+                      {offering.academic_year}
+                    </Select.Option>
+                  )
+                }
+              )}
             </Select>
           </Form.Item>
           <Form.Item
@@ -490,7 +547,9 @@ const UserEnrollmentList = () => {
           <Form.Item
             name='enrolled_at'
             label='Enrolled At'
-            rules={[{ required: true, message: 'Please select enrollment date' }]}
+            rules={[
+              { required: true, message: 'Please select enrollment date' },
+            ]}
           >
             <DatePicker
               showTime
@@ -505,4 +564,3 @@ const UserEnrollmentList = () => {
 }
 
 export default UserEnrollmentList
-
