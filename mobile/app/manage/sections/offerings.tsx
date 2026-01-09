@@ -107,7 +107,7 @@ const CourseOfferingsScreen = () => {
     useMutation(UPDATE_COURSE_OFFERING)
   const [deleteOffering, { loading: deleteLoading, error: deleteError }] =
     useMutation(DELETE_COURSE_OFFERING)
-
+  console.log('sectionData', createError, updateError, deleteError)
   const {
     control,
     handleSubmit,

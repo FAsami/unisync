@@ -77,6 +77,11 @@ export const GET_EVENT_ROUTINES = gql`
           name
           code
         }
+        faculty {
+          id
+          first_name
+          last_name
+        }
       }
     }
   }
@@ -106,6 +111,11 @@ export interface EventRoutine {
       id: string
       name: string
       code: string
+    }
+    faculty?: {
+      id: string
+      first_name: string
+      last_name: string
     }
   }
 }

@@ -1,5 +1,4 @@
 export const Fonts = {
-  // Montserrat doesn't have 100, 200, 300 weights, so we map them to available weights
   thin: 'Montserrat_400Regular',
   extraLight: 'Montserrat_400Regular',
   light: 'Montserrat_400Regular',
@@ -9,8 +8,6 @@ export const Fonts = {
   bold: 'Montserrat_700Bold',
   extraBold: 'Montserrat_800ExtraBold',
   black: 'Montserrat_900Black',
-
-  // Libre Bodoni (Serif font for elegant headings)
   serifSemiBold: 'LibreBodoni_600SemiBold',
   serifBold: 'LibreBodoni_700Bold',
 } as const

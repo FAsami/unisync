@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
-import { ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native'
+import React, { useMemo } from 'react'
+import { ScrollView, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, Stack } from 'expo-router'
-import { useMutation, useQuery } from '@apollo/client'
+import { useMutation } from '@apollo/client'
 import { Ionicons } from '@expo/vector-icons'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
@@ -14,31 +14,16 @@ import {
   GET_DEPARTMENTS,
 } from '@/lib/graphql-operations'
 
-import { SelectModal } from '@/components/ui/SelectModal'
 import { Text } from '@/components/ui/text'
 import { Heading } from '@/components/ui/heading'
 import { VStack } from '@/components/ui/vstack'
 import { HStack } from '@/components/ui/hstack'
-import { Box } from '@/components/ui/box'
-import { Input, InputField } from '@/components/ui/input'
-import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button'
-import { Textarea, TextareaInput } from '@/components/ui/textarea'
-import {
-  FormControl,
-  FormControlLabel,
-  FormControlLabelText,
-  FormControlError,
-  FormControlErrorText,
-} from '@/components/ui/form-control'
-import {
-  useToast,
-  Toast,
-  ToastTitle,
-  ToastDescription,
-} from '@/components/ui/toast'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useHaptics } from '@/hooks/useHaptics'
 import { useAuth } from '@/contexts/Auth'
+import { useAlert } from '@/contexts/AlertContext'
+import { FormFieldRenderer, type FormConfig } from '@/components/form'
+import { AuthSubmitButton } from '@/components/auth'
 
 const notificationSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title too long'),
@@ -59,32 +44,13 @@ const TARGET_TYPES = [
 export default function ComposeNotificationScreen() {
   const { userRole } = useAuth()
   const haptics = useHaptics()
-  const toast = useToast()
+  const { showAlert } = useAlert()
   const { currentMode } = useTheme()
 
-  const [isTargetTypeModalOpen, setIsTargetTypeModalOpen] = useState(false)
-  const [isTargetModalOpen, setIsTargetModalOpen] = useState(false)
+  const [sendNotification, { loading: sending }] = useMutation(
+    SEND_CUSTOM_NOTIFICATION
+  )
 
-  const {
-    data: sectionsData,
-    loading: sectionsLoading,
-    error: sectionsError,
-  } = useQuery(GET_ALL_SECTIONS)
-  const {
-    data: batchesData,
-    loading: batchesLoading,
-    error: batchesError,
-  } = useQuery(GET_ALL_BATCHES)
-  const {
-    data: departmentsData,
-    loading: departmentsLoading,
-    error: departmentsError,
-  } = useQuery(GET_DEPARTMENTS)
-  console.log('=====>', sectionsError, batchesError, departmentsError)
-  const [sendNotification, { loading: sending, error: sendingError }] =
-    useMutation(SEND_CUSTOM_NOTIFICATION)
-
-  console.log('sending ERROR', sendingError)
   const {
     control,
     handleSubmit,
@@ -106,101 +72,130 @@ export default function ComposeNotificationScreen() {
   const watchedTargetId = watch('target_id')
 
   // Filter target types based on role
-  const availableTargetTypes = React.useMemo(() => {
+  const availableTargetTypes = useMemo(() => {
     if (userRole === 'class_representative') {
       return TARGET_TYPES.filter((t) => t.value === 'section')
     }
     return TARGET_TYPES
   }, [userRole])
 
-  const showToast = (
-    title: string,
-    description: string,
-    action: 'success' | 'error' = 'success'
-  ) => {
-    toast.show({
-      placement: 'top',
-      render: ({ id }) => (
-        <Toast
-          nativeID={id}
-          action={action}
-          variant="outline"
-          className="mt-12 bg-white dark:bg-background-50 rounded-xl border-outline-100"
-        >
-          <VStack space="xs">
-            <ToastTitle className="font-semibold text-typography-900">
-              {title}
-            </ToastTitle>
-            <ToastDescription className="text-typography-600">
-              {description}
-            </ToastDescription>
-          </VStack>
-        </Toast>
-      ),
-    })
-  }
-
-  const getTargetDisplayName = () => {
+  const getTargetDisplayName = (items: any[]) => {
     if (watchedTargetType === 'all') return 'All Users'
     if (!watchedTargetId) return 'Select Target'
 
+    const item = items.find((i: any) => i.id === watchedTargetId)
+    if (!item) return 'Select Target'
+
     switch (watchedTargetType) {
       case 'section':
-        const section = sectionsData?.academic_section?.find(
-          (s: any) => s.id === watchedTargetId
-        )
-        return section
-          ? `${section.batch?.department?.name} - ${section.batch?.name} - ${section.name}`
-          : 'Unknown Section'
+        return `${item.batch?.department?.name} - ${item.batch?.name} - ${item.name}`
       case 'batch':
-        const batch = batchesData?.academic_batch?.find(
-          (b: any) => b.id === watchedTargetId
-        )
-        return batch
-          ? `${batch.department?.name} - ${batch.name}`
-          : 'Unknown Batch'
+        return `${item.department?.name} - ${item.name}`
       case 'department':
-        const dept = departmentsData?.academic_department?.find(
-          (d: any) => d.id === watchedTargetId
-        )
-        return dept ? dept.name : 'Unknown Department'
+        return item.name
       default:
         return 'Select Target'
     }
   }
 
-  const getTargetOptions = () => {
-    switch (watchedTargetType) {
-      case 'section':
+  const fields: FormConfig<NotificationFormValues>[] = [
+    {
+      type: 'input',
+      name: 'title' as const,
+      label: 'Title',
+      placeholder: 'e.g., Quiz Tomorrow',
+      required: true,
+      maxLength: 100,
+    },
+    {
+      type: 'textarea',
+      name: 'body' as const,
+      label: 'Message',
+      placeholder: 'Enter your message here...',
+      required: true,
+      maxLength: 500,
+      minHeight: 128,
+    },
+    {
+      type: 'select',
+      name: 'target_type' as const,
+      label: 'Send To',
+      placeholder: 'Select Target Type',
+      icon: 'people-outline',
+      items: availableTargetTypes,
+      getValue: () =>
+        availableTargetTypes.find((t) => t.value === watchedTargetType)
+          ?.label || 'Select',
+      modalTitle: 'Send To',
+      keyExtractor: (item: any) => item.value,
+      renderItem: (item: any) => (
+        <Text className="text-typography-900">{item.label}</Text>
+      ),
+      selectedItem: availableTargetTypes.find(
+        (t) => t.value === watchedTargetType
+      )
+        ? { value: watchedTargetType }
+        : undefined,
+    },
+    {
+      type: 'select',
+      name: 'target_id' as const,
+      label: `Select ${
+        watchedTargetType.charAt(0).toUpperCase() + watchedTargetType.slice(1)
+      }`,
+      placeholder: 'Select Target',
+      required: true,
+      shouldRender: watchedTargetType !== 'all',
+      getValue: (items: any[]) => getTargetDisplayName(items),
+      modalTitle: `Select ${
+        watchedTargetType.charAt(0).toUpperCase() + watchedTargetType.slice(1)
+      }`,
+      query: {
+        query:
+          watchedTargetType === 'section'
+            ? GET_ALL_SECTIONS
+            : watchedTargetType === 'batch'
+            ? GET_ALL_BATCHES
+            : GET_DEPARTMENTS,
+        dataPath:
+          watchedTargetType === 'section'
+            ? 'academic_section'
+            : watchedTargetType === 'batch'
+            ? 'academic_batch'
+            : 'academic_department',
+      },
+      keyExtractor: (item: any) => item.id,
+      renderItem: (item: any, isSelected: boolean) => {
+        let label = ''
+        switch (watchedTargetType) {
+          case 'section':
+            label = `${item.batch?.department?.name} - ${item.batch?.name} - ${item.name}`
+            break
+          case 'batch':
+            label = `${item.department?.name} - ${item.name}`
+            break
+          case 'department':
+            label = item.name
+            break
+        }
         return (
-          sectionsData?.academic_section?.map((s: any) => ({
-            id: s.id,
-            label: `${s.batch?.department?.name} - ${s.batch?.name} - ${s.name}`,
-          })) || []
+          <Text
+            className={`text-base ${
+              isSelected ? 'font-bold text-primary-600' : 'text-typography-900'
+            }`}
+          >
+            {label}
+          </Text>
         )
-      case 'batch':
-        return (
-          batchesData?.academic_batch?.map((b: any) => ({
-            id: b.id,
-            label: `${b.department?.name} - ${b.name}`,
-          })) || []
-        )
-      case 'department':
-        return (
-          departmentsData?.academic_department?.map((d: any) => ({
-            id: d.id,
-            label: d.name,
-          })) || []
-        )
-      default:
-        return []
-    }
-  }
+      },
+      selectedItem: watchedTargetId ? { id: watchedTargetId } : undefined,
+    },
+  ]
 
   const onSubmit = async (data: NotificationFormValues) => {
     haptics.medium()
     try {
-      await sendNotification({
+      const { data: response, errors } = await sendNotification({
         variables: {
           object: {
             title: data.title,
@@ -210,14 +205,36 @@ export default function ComposeNotificationScreen() {
           },
         },
       })
-      haptics.success()
-      showToast('Success', 'Notification sent successfully')
-      reset()
-      router.back()
+      if (response?.insert_notification_log_one?.id) {
+        haptics.success()
+        showAlert({
+          title: 'Success',
+          description: 'Notification sent successfully',
+          type: 'success',
+          onConfirm: () => {
+            reset()
+            router.back()
+          },
+        })
+      } else {
+        haptics.error()
+        showAlert({
+          title: 'Failed to Send',
+          description: 'Something went wrong while sending the notification.',
+          type: 'error',
+        })
+      }
     } catch (error: any) {
       haptics.error()
       console.error('Error sending notification:', error)
-      showToast('Error', error.message || 'Failed to send', 'error')
+      showAlert({
+        title: 'Failed to Send',
+        description:
+          error?.message ||
+          error?.graphQLErrors?.[0]?.message ||
+          'An error occurred while sending the notification. Please try again.',
+        type: 'error',
+      })
     }
   }
 
@@ -249,185 +266,21 @@ export default function ComposeNotificationScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <VStack space="lg">
-          {/* Title */}
-          <Controller
+          <FormFieldRenderer
+            fields={fields}
             control={control}
-            name="title"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <FormControl isInvalid={!!errors.title}>
-                <FormControlLabel className="mb-1">
-                  <FormControlLabelText className="text-typography-600 font-medium">
-                    Title <Text className="text-error-500">*</Text>
-                  </FormControlLabelText>
-                </FormControlLabel>
-                <Input className="rounded-xl border-outline-200 bg-transparent h-14">
-                  <InputField
-                    placeholder="e.g., Quiz Tomorrow"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    className="text-sm"
-                  />
-                </Input>
-                <FormControlError>
-                  <FormControlErrorText>
-                    {errors.title?.message}
-                  </FormControlErrorText>
-                </FormControlError>
-              </FormControl>
-            )}
+            errors={errors}
+            setValue={setValue}
           />
-
-          {/* Body */}
-          <Controller
-            control={control}
-            name="body"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <FormControl isInvalid={!!errors.body}>
-                <FormControlLabel className="mb-1">
-                  <FormControlLabelText className="text-typography-600 font-medium">
-                    Message <Text className="text-error-500">*</Text>
-                  </FormControlLabelText>
-                </FormControlLabel>
-                <Textarea className="rounded-xl border-outline-200 bg-transparent min-h-32">
-                  <TextareaInput
-                    placeholder="Enter your message here..."
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    className="text-sm"
-                  />
-                </Textarea>
-                <FormControlError>
-                  <FormControlErrorText>
-                    {errors.body?.message}
-                  </FormControlErrorText>
-                </FormControlError>
-              </FormControl>
-            )}
-          />
-
-          {/* Target Type */}
-          <Controller
-            control={control}
-            name="target_type"
-            render={({ field: { value } }) => (
-              <FormControl>
-                <FormControlLabel className="mb-1">
-                  <FormControlLabelText className="text-typography-600 font-medium">
-                    Send To
-                  </FormControlLabelText>
-                </FormControlLabel>
-                <TouchableOpacity
-                  onPress={() => setIsTargetTypeModalOpen(true)}
-                  className="flex-row items-center justify-between rounded-xl border border-outline-200 h-14 px-3 bg-white dark:bg-background-900"
-                >
-                  <HStack className="items-center">
-                    <Ionicons name="people-outline" size={18} color="#94A3B8" />
-                    <Text className="text-sm text-typography-900 ml-2">
-                      {availableTargetTypes.find((t) => t.value === value)
-                        ?.label || 'Select'}
-                    </Text>
-                  </HStack>
-                  <Ionicons name="chevron-down" size={18} color="#94A3B8" />
-                </TouchableOpacity>
-              </FormControl>
-            )}
-          />
-
-          {/* Target ID (if not 'all') */}
-          {watchedTargetType !== 'all' && (
-            <Controller
-              control={control}
-              name="target_id"
-              render={({ field: { value } }) => (
-                <FormControl isInvalid={!!errors.target_id}>
-                  <FormControlLabel className="mb-1">
-                    <FormControlLabelText className="text-typography-600 font-medium">
-                      Select{' '}
-                      {watchedTargetType.charAt(0).toUpperCase() +
-                        watchedTargetType.slice(1)}{' '}
-                      <Text className="text-error-500">*</Text>
-                    </FormControlLabelText>
-                  </FormControlLabel>
-                  <TouchableOpacity
-                    onPress={() => setIsTargetModalOpen(true)}
-                    className="flex-row items-center justify-between rounded-xl border border-outline-200 h-14 px-3 bg-white dark:bg-background-900"
-                  >
-                    <Text
-                      className={`text-sm flex-1 ${
-                        value ? 'text-typography-900' : 'text-typography-400'
-                      }`}
-                      numberOfLines={1}
-                    >
-                      {getTargetDisplayName()}
-                    </Text>
-                    <Ionicons name="chevron-down" size={18} color="#94A3B8" />
-                  </TouchableOpacity>
-                  <FormControlError>
-                    <FormControlErrorText>
-                      {errors.target_id?.message}
-                    </FormControlErrorText>
-                  </FormControlError>
-                </FormControl>
-              )}
-            />
-          )}
 
           {/* Send Button */}
-          <Button
-            className="rounded-full bg-primary-500 mt-4"
+          <AuthSubmitButton
             onPress={handleSubmit(onSubmit)}
-            isDisabled={sending}
-          >
-            {sending && <ButtonSpinner className="mr-2" />}
-            <ButtonText>
-              {sending ? 'Sending...' : 'Send Notification'}
-            </ButtonText>
-          </Button>
+            isLoading={sending}
+            text="Send Notification"
+          />
         </VStack>
       </ScrollView>
-
-      {/* Target Type Modal */}
-      <SelectModal
-        isOpen={isTargetTypeModalOpen}
-        onClose={() => setIsTargetTypeModalOpen(false)}
-        title="Send To"
-        items={availableTargetTypes}
-        keyExtractor={(item) => item.value}
-        selectedItem={availableTargetTypes.find(
-          (t) => t.value === watchedTargetType
-        )}
-        onSelect={(item) => {
-          setValue('target_type', item.value as any)
-          setValue('target_id', '')
-          setIsTargetTypeModalOpen(false)
-        }}
-        renderItem={(item) => (
-          <Text className="text-typography-900">{item.label}</Text>
-        )}
-      />
-
-      {/* Target Modal */}
-      <SelectModal
-        isOpen={isTargetModalOpen}
-        onClose={() => setIsTargetModalOpen(false)}
-        title={`Select ${
-          watchedTargetType.charAt(0).toUpperCase() + watchedTargetType.slice(1)
-        }`}
-        items={getTargetOptions()}
-        keyExtractor={(item) => item.id}
-        selectedItem={getTargetOptions().find(
-          (t: { id: string; label: string }) => t.id === watchedTargetId
-        )}
-        onSelect={(item) => {
-          setValue('target_id', item.id)
-          setIsTargetModalOpen(false)
-        }}
-        renderItem={(item) => (
-          <Text className="text-typography-900">{item.label}</Text>
-        )}
-      />
     </SafeAreaView>
   )
 }
