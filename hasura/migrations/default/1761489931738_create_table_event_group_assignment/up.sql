@@ -1,2 +1,0 @@
-CREATE TABLE "event"."group_assignment" ("id" uuid NOT NULL DEFAULT gen_random_uuid(), "user_id" uuid NOT NULL, "section_id" uuid NOT NULL, "course_offering_id" uuid NOT NULL, "group_identifier" text NOT NULL, "assigned_by" uuid NOT NULL, "is_active" boolean NOT NULL DEFAULT true, PRIMARY KEY ("id") );COMMENT ON TABLE "event"."group_assignment" IS E'Assign students to sub-groups within sections/courses (for labs).';
-CREATE EXTENSION IF NOT EXISTS pgcrypto;

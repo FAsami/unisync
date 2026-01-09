@@ -1,2 +1,0 @@
-CREATE TABLE "event"."event_change" ("id" uuid NOT NULL DEFAULT gen_random_uuid(), "event_id" uuid NOT NULL, "changed_by" uuid NOT NULL, "change_type" text NOT NULL, "old_value" jsonb NOT NULL, "new_value" jsonb NOT NULL, "reason" text NOT NULL, "changed_at" timestamptz NOT NULL DEFAULT now(), "notification_sent" boolean NOT NULL DEFAULT false, "notification_sent_at" timestamptz NOT NULL, PRIMARY KEY ("id") );COMMENT ON TABLE "event"."event_change" IS E'Audit trail for all event modifications.';
-CREATE EXTENSION IF NOT EXISTS pgcrypto;

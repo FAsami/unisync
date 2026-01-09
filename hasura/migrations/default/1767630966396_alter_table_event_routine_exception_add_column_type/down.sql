@@ -1,4 +1,0 @@
--- Could not auto-generate a down migration.
--- Please write an appropriate down migration for the SQL below:
--- alter table "event"."routine_exception" add column "type" text
---  not null default 'cancellation';

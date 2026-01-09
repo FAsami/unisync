@@ -1,1 +1,0 @@
-INSERT INTO "user"."account"("is_active", "email", "password", "phone", "role", "created_at", "email_verified_at", "phone_verified_at", "updated_at", "id") VALUES (true, null, E'hellow', E'01790909849', E'class-representative', E'2025-11-30T07:35:02.04849+00:00', null, null, E'2025-11-30T07:35:02.04849+00:00', E'b1512b35-69ca-482e-8157-3abab9ec604c');

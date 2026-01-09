@@ -1,2 +1,0 @@
-CREATE TABLE "event"."event_target" ("id" uuid NOT NULL DEFAULT gen_random_uuid(), "event_id" uuid NOT NULL, "target_type" text NOT NULL, "target_id" uuid NOT NULL, "group_identifier" text NOT NULL, "created_at" timestamptz NOT NULL DEFAULT now(), PRIMARY KEY ("id") , FOREIGN KEY ("event_id") REFERENCES "event"."event"("id") ON UPDATE restrict ON DELETE cascade);COMMENT ON TABLE "event"."event_target" IS E'Group-based targeting (who should see the event).';
-CREATE EXTENSION IF NOT EXISTS pgcrypto;

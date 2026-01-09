@@ -1,4 +1,0 @@
--- Could not auto-generate a down migration.
--- Please write an appropriate down migration for the SQL below:
--- alter table "user"."otp_rate_limit" add column "ip_address" text
---  not null;
