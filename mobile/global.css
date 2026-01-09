@@ -134,7 +134,7 @@
 
   body {
     @apply bg-background-0 text-typography-900;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI',
       sans-serif;
   }
 

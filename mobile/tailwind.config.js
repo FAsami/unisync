@@ -182,6 +182,8 @@ module.exports = {
         roboto: ['var(--font-roboto)'],
         code: ['var(--font-source-code-pro)'],
         inter: ['var(--font-inter)'],
+        montserrat: ['Montserrat'],
+        'libre-bodoni': ['LibreBodoni'],
         'space-mono': ['var(--font-space-mono)'],
       },
       fontWeight: {
@@ -203,4 +205,4 @@ module.exports = {
       },
     },
   },
-};
+}

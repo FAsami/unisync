@@ -4,21 +4,24 @@ import {
   DefaultTheme,
   ThemeProvider as NavThemeProvider,
 } from '@react-navigation/native'
+
 import {
-  Inter_100Thin,
-  Inter_200ExtraLight,
-  Inter_300Light,
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  Inter_800ExtraBold,
-  Inter_900Black,
+  Montserrat_400Regular,
+  Montserrat_500Medium,
+  Montserrat_600SemiBold,
+  Montserrat_700Bold,
+  Montserrat_800ExtraBold,
+  Montserrat_900Black,
   useFonts,
-} from '@expo-google-fonts/inter'
+} from '@expo-google-fonts/montserrat'
+import {
+  LibreBodoni_600SemiBold,
+  LibreBodoni_700Bold,
+} from '@expo-google-fonts/libre-bodoni'
+
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import 'react-native-reanimated'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
@@ -29,7 +32,40 @@ import { FCMProvider } from '@/contexts/FCM'
 import { AlertProvider } from '@/contexts/AlertContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import '@/global.css'
+
+const ONBOARDING_KEY = '@onboarding_completed'
+
+const OnboardingGuard = ({ children }: { children: React.ReactNode }) => {
+  const segments = useSegments()
+  const router = useRouter()
+  const [onboardingChecked, setOnboardingChecked] = useState(false)
+
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      try {
+        const completed = await AsyncStorage.getItem(ONBOARDING_KEY)
+        setOnboardingChecked(true)
+
+        if (!completed && segments[0] !== 'onboarding') {
+          router.replace('/onboarding')
+        }
+      } catch (error) {
+        console.error('Error checking onboarding status:', error)
+        setOnboardingChecked(true)
+      }
+    }
+
+    checkOnboarding()
+  }, [])
+
+  if (!onboardingChecked) {
+    return null
+  }
+
+  return <>{children}</>
+}
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { hasValidToken, isLoading } = useAuth()
@@ -46,8 +82,10 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
       segments[0] === 'verify-otp' ||
       segments[0] === 'reset-password'
 
+    const inOnboarding = segments[0] === 'onboarding'
+
     const timeoutId = setTimeout(() => {
-      if (!hasValidToken && !inAuthGroup) {
+      if (!hasValidToken && !inAuthGroup && !inOnboarding) {
         router.replace('/login')
       } else if (hasValidToken && inAuthGroup) {
         router.replace('/(tabs)')
@@ -68,7 +106,9 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
     segments[0] === 'verify-otp' ||
     segments[0] === 'reset-password'
 
-  if (!hasValidToken && !inAuthGroup) {
+  const inOnboarding = segments[0] === 'onboarding'
+
+  if (!hasValidToken && !inAuthGroup && !inOnboarding) {
     return null
   }
 
@@ -78,15 +118,14 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
 const RootLayout = () => {
   const colorScheme = useColorScheme()
   const [loaded] = useFonts({
-    Inter_100Thin,
-    Inter_200ExtraLight,
-    Inter_300Light,
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-    Inter_800ExtraBold,
-    Inter_900Black,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+    Montserrat_800ExtraBold,
+    Montserrat_900Black,
+    LibreBodoni_600SemiBold,
+    LibreBodoni_700Bold,
   })
 
   if (!loaded) {
@@ -104,39 +143,45 @@ const RootLayout = () => {
               <FCMProvider>
                 <AlertProvider>
                   <NavThemeProvider value={navigationTheme}>
-                    <AuthGuard>
-                      <Stack>
-                        <Stack.Screen
-                          name="(tabs)"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="login"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="register"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="verify-otp"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="forgot-password"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="reset-password"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                          name="profile"
-                          options={{ headerShown: false }}
-                        />
-                        <Stack.Screen name="+not-found" />
-                      </Stack>
-                    </AuthGuard>
+                    <OnboardingGuard>
+                      <AuthGuard>
+                        <Stack>
+                          <Stack.Screen
+                            name="onboarding"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="(tabs)"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="login"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="register"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="verify-otp"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="forgot-password"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="reset-password"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen
+                            name="profile"
+                            options={{ headerShown: false }}
+                          />
+                          <Stack.Screen name="+not-found" />
+                        </Stack>
+                      </AuthGuard>
+                    </OnboardingGuard>
                     <StatusBar style="auto" />
                   </NavThemeProvider>
                 </AlertProvider>

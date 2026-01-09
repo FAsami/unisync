@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
-    "@expo-google-fonts/inter": "^0.4.1",
+    "@expo-google-fonts/libre-bodoni": "^0.4.2",
+    "@expo-google-fonts/montserrat": "^0.4.2",
     "@expo/html-elements": "^0.10.1",
     "@expo/vector-icons": "^14.1.0",
     "@gluestack-ui/core": "^3.0.12",
