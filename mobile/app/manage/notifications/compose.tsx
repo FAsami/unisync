@@ -42,7 +42,7 @@ const TARGET_TYPES = [
 ]
 
 export default function ComposeNotificationScreen() {
-  const { userRole } = useAuth()
+  const { userRole, userId } = useAuth()
   const haptics = useHaptics()
   const { showAlert } = useAlert()
   const { currentMode } = useTheme()
@@ -70,8 +70,6 @@ export default function ComposeNotificationScreen() {
 
   const watchedTargetType = watch('target_type')
   const watchedTargetId = watch('target_id')
-
-  // Filter target types based on role
   const availableTargetTypes = useMemo(() => {
     if (userRole === 'class_representative') {
       return TARGET_TYPES.filter((t) => t.value === 'section')
@@ -202,6 +200,7 @@ export default function ComposeNotificationScreen() {
             body: data.body,
             target_type: data.target_type,
             target_id: data.target_type === 'all' ? null : data.target_id,
+            ...(userRole === 'admin' && userId ? { created_by: userId } : {}),
           },
         },
       })
