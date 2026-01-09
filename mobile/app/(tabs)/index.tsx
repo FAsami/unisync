@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { format, getDay } from 'date-fns'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useAuth } from '@/contexts/Auth'
-import { Ionicons } from '@expo/vector-icons'
+import { Clock } from 'lucide-react-native'
 
 import { Text } from '@/components/ui/text'
 import { Heading } from '@/components/ui/heading'
@@ -86,14 +86,9 @@ const ClassCard = ({
 
           <Box className="border-t border-white/20 pt-4 mt-2">
             <HStack className="items-center space-x-2">
-              <Icon
-                as={Ionicons}
-                name="time-outline"
-                size="sm"
-                className="text-white"
-              />
+              <Icon as={Clock} size="sm" className="text-white" />
               <Text className="text-white font-bold text-lg">
-                {formattedStartTime} - {formattedEndTime}
+                &nbsp; {formattedStartTime} - {formattedEndTime}
               </Text>
             </HStack>
           </Box>
@@ -102,6 +97,13 @@ const ClassCard = ({
             <Text className="text-white/80 text-xs mt-1">
               {item.course_offering.course.code} •{' '}
               {item.course_offering.course.name}
+            </Text>
+          )}
+
+          {item.course_offering?.faculty && (
+            <Text className="text-white/70 text-xs mt-1">
+              Instructor: {item.course_offering.faculty.first_name}{' '}
+              {item.course_offering.faculty.last_name}
             </Text>
           )}
         </VStack>
@@ -346,6 +348,12 @@ const HomeScreen = () => {
                             {routine.course_offering?.section?.name} •{' '}
                             {routine.event_type}
                           </Text>
+                          {routine.course_offering?.faculty && (
+                            <Text className="text-typography-400 text-xs mt-0.5">
+                              {routine.course_offering.faculty.first_name}{' '}
+                              {routine.course_offering.faculty.last_name}
+                            </Text>
+                          )}
                         </VStack>
 
                         {(isCurrent || isNext) && (
