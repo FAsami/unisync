@@ -1,4 +1,5 @@
 import React, { useState, ReactNode } from 'react'
+import { useAlert } from '@/contexts/AlertContext'
 import { TouchableOpacity } from 'react-native'
 import {
   Control,
@@ -13,8 +14,6 @@ import {
   FormControl,
   FormControlLabel,
   FormControlLabelText,
-  FormControlError,
-  FormControlErrorText,
 } from '@/components/ui/form-control'
 import { HStack } from '@/components/ui/hstack'
 import { Text } from '@/components/ui/text'
@@ -83,6 +82,16 @@ export function FormSelectModal<T extends FieldValues>({
   const [queryData, setQueryData] = useState<any[]>([])
   const [queryLoading, setQueryLoading] = useState(false)
 
+  const { showAlert } = useAlert()
+
+  const handleQueryError = (error: Error) => {
+    showAlert({
+      title: 'Error Loading Data',
+      description: error.message || `Failed to load ${label.toLowerCase()}.`,
+      type: 'error',
+    })
+  }
+
   // Determine items and loading state based on mode
   const items = queryConfig ? queryData : staticItems ?? []
   const loading = queryConfig ? queryLoading : staticLoading
@@ -118,6 +127,7 @@ export function FormSelectModal<T extends FieldValues>({
           label={label}
           onDataLoaded={setQueryData}
           onLoadingChange={setQueryLoading}
+          onError={handleQueryError}
         />
       )}
       <Controller

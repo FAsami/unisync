@@ -1283,3 +1283,89 @@ export interface NotificationLog {
 export interface GetMySentNotificationsData {
   notification_log: NotificationLog[]
 }
+
+// ===== USER PROFILE =====
+export const GET_USER_PROFILE_FOR_NOTIFICATIONS = gql`
+  query GetUserProfileForNotifications($userId: uuid!) {
+    user_profile(where: { user_id: { _eq: $userId } }, limit: 1) {
+      section_id
+      batch_id
+      department_id
+    }
+  }
+`
+
+export interface UserProfileForNotifications {
+  section_id?: string
+  batch_id?: string
+  department_id?: string
+}
+
+export interface GetUserProfileForNotificationsData {
+  user_profile: UserProfileForNotifications[]
+}
+
+// ===== USER NOTIFICATIONS =====
+export const GET_USER_NOTIFICATIONS = gql`
+  query GetUserNotifications(
+    $sectionId: uuid
+    $batchId: uuid
+    $departmentId: uuid
+  ) {
+    notification_log(
+      where: {
+        _or: [
+          { target_type: { _eq: "all" } }
+          {
+            _and: [
+              { target_type: { _eq: "section" } }
+              { target_id: { _eq: $sectionId } }
+            ]
+          }
+          {
+            _and: [
+              { target_type: { _eq: "batch" } }
+              { target_id: { _eq: $batchId } }
+            ]
+          }
+          {
+            _and: [
+              { target_type: { _eq: "department" } }
+              { target_id: { _eq: $departmentId } }
+            ]
+          }
+        ]
+      }
+      order_by: { created_at: desc }
+      limit: 50
+    ) {
+      id
+      title
+      body
+      target_type
+      target_id
+      image_url
+      data
+      created_at
+      status
+      sent_count
+    }
+  }
+`
+
+export interface UserNotification {
+  id: string
+  title: string
+  body: string
+  target_type: string
+  target_id: string
+  image_url?: string
+  data?: any
+  created_at: string
+  status: string
+  sent_count: number
+}
+
+export interface GetUserNotificationsData {
+  notification_log: UserNotification[]
+}

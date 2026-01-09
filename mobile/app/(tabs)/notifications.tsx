@@ -1,3 +1,7 @@
+/**
+ * TODO:
+ * Handnle role for notifications according to user role
+ */
 import React from 'react'
 import { Text, FlatList, RefreshControl, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'

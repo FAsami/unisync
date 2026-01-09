@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react'
-import { useAlert } from '@/contexts/AlertContext'
+import { useEffect } from 'react'
 import { DocumentNode } from '@apollo/client'
 import { useQuery } from '@apollo/client'
 
@@ -11,6 +10,7 @@ interface QueryDataFetcherProps {
   label: string
   onDataLoaded: (data: any[]) => void
   onLoadingChange: (loading: boolean) => void
+  onError?: (error: Error) => void
 }
 
 export function QueryDataFetcher({
@@ -21,9 +21,8 @@ export function QueryDataFetcher({
   label,
   onDataLoaded,
   onLoadingChange,
+  onError,
 }: QueryDataFetcherProps) {
-  const { showAlert } = useAlert()
-
   const { data, loading, error } = useQuery(query, {
     variables,
     skip,
@@ -31,14 +30,10 @@ export function QueryDataFetcher({
 
   // Handle query errors
   useEffect(() => {
-    if (error && !skip) {
-      showAlert({
-        title: 'Error Loading Data',
-        description: error.message || `Failed to load ${label.toLowerCase()}.`,
-        type: 'error',
-      })
+    if (error && !skip && onError) {
+      onError(error)
     }
-  }, [error, skip, label, showAlert])
+  }, [error, skip, onError])
 
   // Update parent with data
   useEffect(() => {
