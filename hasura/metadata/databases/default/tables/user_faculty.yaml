@@ -44,3 +44,15 @@ select_permissions:
         - updated_at
       filter: {}
     comment: ""
+  - role: student
+    permission:
+      columns:
+        - department_id
+        - description
+        - designation
+        - faculty_id
+        - first_name
+        - id
+        - last_name
+      filter: {}
+    comment: ""

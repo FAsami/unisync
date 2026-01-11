@@ -42,9 +42,12 @@ select_permissions:
         - target_id
         - target_type
         - title
-      filter:
-        created_by:
-          _eq: X-Hasura-User-Id
+      filter: {}
+    comment: ""
+  - role: student
+    permission:
+      columns: []
+      filter: {}
     comment: ""
   - role: teacher
     permission:
@@ -59,9 +62,7 @@ select_permissions:
         - target_id
         - target_type
         - title
-      filter:
-        created_by:
-          _eq: X-Hasura-User-Id
+      filter: {}
     comment: ""
 event_triggers:
   - name: sendNotification
