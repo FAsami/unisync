@@ -11,7 +11,7 @@ import { apiClient } from '@/lib/axios'
 import Image from 'next/image'
 
 const DeleteAccountForm = () => {
-  const [step, setStep] = useState<'phone' | 'otp' | 'success'>('success')
+  const [step, setStep] = useState<'phone' | 'otp' | 'success'>('phone')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [isPending, startTransition] = useTransition()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
