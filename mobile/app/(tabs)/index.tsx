@@ -115,13 +115,8 @@ const ClassCard = ({
 const HomeScreen = () => {
   const { currentMode } = useTheme()
   const { userId } = useAuth()
-  const { loading, error, data, refetch } = useQuery<GetEventRoutinesData>(
-    GET_EVENT_ROUTINES,
-    {
-      variables: { userId },
-      skip: !userId,
-    }
-  )
+  const { loading, error, data, refetch } =
+    useQuery<GetEventRoutinesData>(GET_EVENT_ROUTINES)
   const [now, setNow] = useState(new Date())
   const [refreshing, setRefreshing] = useState(false)
 

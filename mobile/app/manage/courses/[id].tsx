@@ -1,17 +1,10 @@
-import React, { useEffect, useState, useMemo } from 'react'
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-} from 'react-native'
+import React, { useEffect, useMemo } from 'react'
+import { ScrollView, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { useMutation, useQuery } from '@apollo/client'
 import { Ionicons } from '@expo/vector-icons'
-import { useForm, Controller, type Resolver } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
@@ -23,22 +16,16 @@ import {
   GET_DEPARTMENTS,
 } from '@/lib/graphql-operations'
 
-import { SelectModal } from '@/components/ui/SelectModal'
 import { Text } from '@/components/ui/text'
 import { Heading } from '@/components/ui/heading'
 import { VStack } from '@/components/ui/vstack'
 import { HStack } from '@/components/ui/hstack'
-import { Input, InputField, InputSlot } from '@/components/ui/input'
-import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button'
-import {
-  FormControl,
-  FormControlLabel,
-  FormControlLabelText,
-  FormControlError,
-  FormControlErrorText,
-} from '@/components/ui/form-control'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useHaptics } from '@/hooks/useHaptics'
+import { useAlert } from '@/contexts/AlertContext'
+import { FormFieldRenderer, type FormConfig } from '@/components/form'
+import { AuthSubmitButton } from '@/components/auth'
+import { Button, ButtonText } from '@/components/ui/button'
 
 const courseSchema = z.object({
   name: z.string().min(1, { message: 'Course name is required' }),
@@ -70,10 +57,11 @@ const CourseDetailsScreen = () => {
   const { id } = useLocalSearchParams()
   const isEditing = id !== 'new'
   const haptics = useHaptics()
+  const { showAlert } = useAlert()
   const { currentMode } = useTheme()
 
   const { data: deptData, loading: deptLoading } = useQuery(GET_DEPARTMENTS)
-  const { data: courseData, loading: dataLoading } = useQuery(GET_COURSE, {
+  const { data: courseData } = useQuery(GET_COURSE, {
     variables: { id },
     skip: !isEditing,
   })
@@ -105,19 +93,15 @@ const CourseDetailsScreen = () => {
       course_type: 'Lecture',
       syllabus_url: '',
     },
-    resolver: zodResolver(courseSchema) as Resolver<CourseFormValues>,
+    resolver: zodResolver(courseSchema) as any,
   })
-
-  // Modal States
-  const [isDeptModalOpen, setIsDeptModalOpen] = useState(false)
-  const [isTypeModalOpen, setIsTypeModalOpen] = useState(false)
 
   const watchedDeptId = watch('department_id')
   const watchedType = watch('course_type')
 
-  const getDepartmentDisplayName = () => {
+  const getDepartmentDisplayName = (items: any[]) => {
     if (!watchedDeptId) return 'Select Department'
-    const dept = departments.find((d: any) => d.id === watchedDeptId)
+    const dept = items.find((d: any) => d.id === watchedDeptId)
     return dept ? `${dept.code} - ${dept.name}` : 'Unknown Department'
   }
 
@@ -137,55 +121,52 @@ const CourseDetailsScreen = () => {
     }
   }, [courseData, reset])
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!isEditing) return
     haptics.medium()
-    Alert.alert(
-      'Delete Course',
-      'Are you sure you want to delete this course? This action cannot be undone.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const { data: result } = await deleteCourse({
-                variables: { id },
-                refetchQueries: [{ query: GET_ALL_COURSES }],
-              })
 
-              // Validate response
-              if (!result?.delete_academic_course_by_pk) {
-                throw new Error('Failed to delete course - no data returned')
-              }
+    showAlert({
+      title: 'Delete Course',
+      description:
+        'Are you sure you want to delete this course? This action cannot be undone.',
+      type: 'warning',
+      onConfirm: async () => {
+        try {
+          const { data: response } = await deleteCourse({
+            variables: { id },
+            refetchQueries: [{ query: GET_ALL_COURSES }],
+          })
 
-              haptics.success()
-              router.back()
-            } catch (err: any) {
-              haptics.error()
-              console.error('Error deleting course:', err)
-
-              // Extract error message
-              let errorMessage = 'Failed to delete course'
-
-              if (err.graphQLErrors && err.graphQLErrors.length > 0) {
-                errorMessage = err.graphQLErrors[0].message
-              } else if (err.networkError) {
-                errorMessage = 'Network error. Please check your connection.'
-              } else if (err.message) {
-                errorMessage = err.message
-              }
-
-              Alert.alert('Error', errorMessage)
-            }
-          },
-        },
-      ]
-    )
+          if (response?.delete_academic_course_by_pk?.id) {
+            haptics.success()
+            showAlert({
+              title: 'Success',
+              description: 'Course deleted successfully',
+              type: 'success',
+              onConfirm: () => router.back(),
+            })
+          } else {
+            haptics.error()
+            showAlert({
+              title: 'Failed to Delete',
+              description: 'Something went wrong while deleting the course.',
+              type: 'error',
+            })
+          }
+        } catch (err: any) {
+          haptics.error()
+          console.error('Error deleting course:', err)
+          showAlert({
+            title: 'Failed to Delete',
+            description:
+              err?.graphQLErrors?.[0]?.message ||
+              err?.message ||
+              'An error occurred while deleting the course.',
+            type: 'error',
+          })
+        }
+      },
+    })
   }
 
   const onSubmit = async (data: CourseFormValues) => {
@@ -195,7 +176,7 @@ const CourseDetailsScreen = () => {
 
     try {
       if (isEditing) {
-        const { data: result } = await updateCourse({
+        const { data: response } = await updateCourse({
           variables: {
             id,
             set: {
@@ -215,15 +196,24 @@ const CourseDetailsScreen = () => {
           ],
         })
 
-        // Validate response
-        if (!result?.update_academic_course_by_pk) {
-          throw new Error('Failed to update course - no data returned')
+        if (response?.update_academic_course_by_pk?.id) {
+          haptics.success()
+          showAlert({
+            title: 'Success',
+            description: 'Course updated successfully',
+            type: 'success',
+            onConfirm: () => router.back(),
+          })
+        } else {
+          haptics.error()
+          showAlert({
+            title: 'Failed to Update',
+            description: 'Something went wrong while updating the course.',
+            type: 'error',
+          })
         }
-
-        Alert.alert('Success', 'Course updated successfully')
-        router.back()
       } else {
-        const { data: result } = await createCourse({
+        const { data: response } = await createCourse({
           variables: {
             object: {
               name: data.name,
@@ -240,57 +230,135 @@ const CourseDetailsScreen = () => {
           refetchQueries: [{ query: GET_ALL_COURSES }],
         })
 
-        // Validate response
-        if (!result?.insert_academic_course_one) {
-          throw new Error('Failed to create course - no data returned')
+        if (response?.insert_academic_course_one?.id) {
+          haptics.success()
+          showAlert({
+            title: 'Success',
+            description: 'Course created successfully',
+            type: 'success',
+            onConfirm: () => router.back(),
+          })
+        } else {
+          haptics.error()
+          showAlert({
+            title: 'Failed to Create',
+            description: 'Something went wrong while creating the course.',
+            type: 'error',
+          })
         }
-
-        Alert.alert('Success', 'Course created successfully')
-        router.back()
       }
-      haptics.success()
     } catch (err: any) {
       haptics.error()
       console.error('Error saving course:', err)
-
-      // Extract error message from different error formats
-      let errorMessage = 'Failed to save course'
-
-      // GraphQL error
-      if (err.graphQLErrors && err.graphQLErrors.length > 0) {
-        const graphqlError = err.graphQLErrors[0]
-        errorMessage = graphqlError.message
-
-        // Check for specific constraint violations
-        if (
-          graphqlError.message.includes('Uniqueness violation') ||
-          graphqlError.message.includes('unique constraint')
-        ) {
-          errorMessage = 'Course code already exists'
-        }
-      }
-      // Network error
-      else if (err.networkError) {
-        errorMessage = 'Network error. Please check your connection.'
-      }
-      // Generic error with message
-      else if (err.message) {
-        if (
-          err.message.includes('Uniqueness violation') ||
-          err.message.includes('unique constraint')
-        ) {
-          errorMessage = 'Course code already exists'
-        } else {
-          errorMessage = err.message
-        }
-      }
-
-      Alert.alert('Error', errorMessage)
+      const errorMessage =
+        err?.graphQLErrors?.[0]?.message ||
+        err?.message ||
+        'Failed to save course'
+      showAlert({
+        title: 'Failed to Save',
+        description: errorMessage.includes('unique constraint')
+          ? 'Course code already exists'
+          : errorMessage,
+        type: 'error',
+      })
     }
   }
 
-  const isLoading =
-    dataLoading || createLoading || updateLoading || deleteLoading
+  const fields: FormConfig<CourseFormValues>[] = [
+    {
+      type: 'select',
+      name: 'department_id' as const,
+      label: 'Department',
+      placeholder: 'Select Department',
+      icon: 'business-outline',
+      required: true,
+      getValue: (items: any[]) => getDepartmentDisplayName(items),
+      modalTitle: 'Select Department',
+      query: {
+        query: GET_DEPARTMENTS,
+        dataPath: 'academic_department',
+      },
+      keyExtractor: (item: any) => item.id,
+      renderItem: (item: any, isSelected: boolean) => (
+        <Text
+          className={`text-base ${
+            isSelected ? 'font-bold text-primary-600' : 'text-typography-900'
+          }`}
+        >
+          {item.name} ({item.code})
+        </Text>
+      ),
+      selectedItem: watchedDeptId ? { id: watchedDeptId } : undefined,
+    },
+    {
+      type: 'input',
+      name: 'code' as const,
+      label: 'Course Code',
+      placeholder: 'e.g. CSE101',
+      icon: 'code-slash-outline',
+      required: true,
+    },
+    {
+      type: 'input',
+      name: 'name' as const,
+      label: 'Course Name',
+      placeholder: 'e.g. Introduction to Programming',
+      icon: 'book-outline',
+      required: true,
+    },
+    {
+      type: 'input',
+      name: 'credit_hours' as const,
+      label: 'Credits',
+      placeholder: '3.0',
+      keyboardType: 'numeric',
+    },
+    {
+      type: 'select',
+      name: 'course_type' as const,
+      label: 'Type',
+      placeholder: 'Select Type',
+      items: COURSE_TYPES,
+      getValue: () => watchedType || 'Select Type',
+      modalTitle: 'Select Course Type',
+      keyExtractor: (item: any) => item.id,
+      renderItem: (item: any, isSelected: boolean) => (
+        <Text
+          className={`text-base ${
+            isSelected ? 'font-bold text-primary-600' : 'text-typography-900'
+          }`}
+        >
+          {item.name}
+        </Text>
+      ),
+      selectedItem: watchedType ? { id: watchedType } : undefined,
+    },
+    {
+      type: 'input',
+      name: 'semester' as const,
+      label: 'Semester',
+      placeholder: 'e.g. 1',
+      icon: 'calendar-outline',
+      keyboardType: 'number-pad',
+      required: true,
+    },
+    {
+      type: 'input',
+      name: 'syllabus_url' as const,
+      label: 'Syllabus URL (Optional)',
+      placeholder: 'https://example.com/syllabus.pdf',
+      icon: 'link-outline',
+    },
+    {
+      type: 'textarea',
+      name: 'description' as const,
+      label: 'Description (Optional)',
+      placeholder: 'Optional description...',
+      minHeight: 128,
+    },
+  ]
+
+  const isLoading = createLoading || updateLoading || deleteLoading
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-background-950">
@@ -298,13 +366,13 @@ const CourseDetailsScreen = () => {
 
       {/* Header */}
       <HStack className="items-center justify-between px-4 py-3 bg-white dark:bg-background-900 border-b border-outline-100 dark:border-outline-800">
-        <HStack className="items-center">
+        <HStack className="items-center flex-1">
           <TouchableOpacity
             onPress={() => {
               haptics.light()
               router.back()
             }}
-            className="p-2 rounded-full hover:bg-background-50 dark:hover:bg-background-800 mr-2"
+            className="p-2 rounded-full mr-2"
           >
             <Ionicons
               name="arrow-back"
@@ -312,441 +380,43 @@ const CourseDetailsScreen = () => {
               color={currentMode === 'dark' ? '#F1F5F9' : '#1E293B'}
             />
           </TouchableOpacity>
-          <VStack>
-            <Heading size="md" className="font-bold text-typography-900">
-              {isEditing ? 'Edit Course' : 'New Course'}
-            </Heading>
-          </VStack>
+          <Heading size="md" className="font-bold text-typography-900">
+            {isEditing ? 'Edit Course' : 'New Course'}
+          </Heading>
         </HStack>
-        {isEditing && (
-          <Button
-            variant="link"
-            onPress={handleSubmit((data) =>
-              onSubmit(data as unknown as CourseFormValues)
-            )}
-            isDisabled={isLoading}
-          >
-            {isLoading ? (
-              <ButtonSpinner />
-            ) : (
-              <ButtonText className="text-primary-500 font-bold">
-                Save
-              </ButtonText>
-            )}
-          </Button>
-        )}
       </HStack>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
-      >
-        {dataLoading ? (
-          <ActivityIndicator className="mt-20" size="large" color="#8B5CF6" />
-        ) : (
-          <ScrollView
-            contentContainerStyle={{ padding: 16 }}
-            keyboardShouldPersistTaps="handled"
-          >
-            <VStack space="xl" className="mt-2">
-              {/* Department Selection */}
-              <Controller
-                control={control}
-                name="department_id"
-                render={({ field: { onChange, value } }) => (
-                  <FormControl isInvalid={!!errors.department_id}>
-                    <FormControlLabel className="mb-1">
-                      <FormControlLabelText className="text-typography-600 font-medium">
-                        Department <Text className="text-error-500">*</Text>
-                      </FormControlLabelText>
-                    </FormControlLabel>
-                    <TouchableOpacity
-                      onPress={() => setIsDeptModalOpen(true)}
-                      className="flex-row items-center justify-between rounded-xl border border-outline-200 h-14 px-3"
-                    >
-                      <HStack className="items-center">
-                        <Ionicons
-                          name="business-outline"
-                          size={18}
-                          color="#94A3B8"
-                        />
-                        <Text
-                          className={`ml-2 text-sm ${
-                            value
-                              ? 'text-typography-900'
-                              : 'text-typography-400'
-                          }`}
-                        >
-                          {getDepartmentDisplayName()}
-                        </Text>
-                      </HStack>
-                      <Ionicons name="chevron-down" size={18} color="#94A3B8" />
-                    </TouchableOpacity>
-                    <FormControlError>
-                      <FormControlErrorText>
-                        {errors.department_id?.message}
-                      </FormControlErrorText>
-                    </FormControlError>
-                  </FormControl>
-                )}
-              />
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        <VStack space="lg">
+          <FormFieldRenderer
+            fields={fields}
+            control={control}
+            errors={errors}
+            setValue={setValue}
+          />
 
-              {/* Code */}
-              <Controller
-                control={control}
-                name="code"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <FormControl isInvalid={!!errors.code}>
-                    <FormControlLabel className="mb-1">
-                      <FormControlLabelText className="text-typography-600 font-medium">
-                        Course Code <Text className="text-error-500">*</Text>
-                      </FormControlLabelText>
-                    </FormControlLabel>
-                    <Input className="rounded-xl border-outline-200 focus:border-primary-500 bg-transparent h-14">
-                      <InputSlot className="pl-3">
-                        <Ionicons
-                          name="code-slash-outline"
-                          size={18}
-                          color="#94A3B8"
-                        />
-                      </InputSlot>
-                      <InputField
-                        placeholder="e.g. CSE101"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        autoCapitalize="characters"
-                        className="text-sm"
-                      />
-                    </Input>
-                    <FormControlError>
-                      <Ionicons
-                        name="alert-circle-outline"
-                        size={16}
-                        color="#EF4444"
-                      />
-                      <FormControlErrorText className="ml-1">
-                        {errors.code?.message}
-                      </FormControlErrorText>
-                    </FormControlError>
-                  </FormControl>
-                )}
-              />
+          {/* Submit Button */}
+          <AuthSubmitButton
+            onPress={handleSubmit(onSubmit)}
+            isLoading={isLoading}
+            text={isEditing ? 'Save Changes' : 'Create Course'}
+          />
 
-              {/* Name */}
-              <Controller
-                control={control}
-                name="name"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <FormControl isInvalid={!!errors.name}>
-                    <FormControlLabel className="mb-1">
-                      <FormControlLabelText className="text-typography-600 font-medium">
-                        Course Name <Text className="text-error-500">*</Text>
-                      </FormControlLabelText>
-                    </FormControlLabel>
-                    <Input className="rounded-xl border-outline-200 focus:border-primary-500 bg-transparent h-14">
-                      <InputSlot className="pl-3">
-                        <Ionicons
-                          name="book-outline"
-                          size={18}
-                          color="#94A3B8"
-                        />
-                      </InputSlot>
-                      <InputField
-                        placeholder="e.g. Introduction to Programming"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        autoCapitalize="words"
-                        className="text-sm"
-                      />
-                    </Input>
-                    <FormControlError>
-                      <Ionicons
-                        name="alert-circle-outline"
-                        size={16}
-                        color="#EF4444"
-                      />
-                      <FormControlErrorText className="ml-1">
-                        {errors.name?.message}
-                      </FormControlErrorText>
-                    </FormControlError>
-                  </FormControl>
-                )}
-              />
-
-              <HStack space="md">
-                {/* Credits */}
-                <Controller
-                  control={control}
-                  name="credit_hours"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormControl
-                      isInvalid={!!errors.credit_hours}
-                      className="flex-1"
-                    >
-                      <FormControlLabel className="mb-1">
-                        <FormControlLabelText className="text-typography-600 font-medium">
-                          Credits
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <Input className="rounded-xl border-outline-200 focus:border-primary-500 bg-transparent h-14">
-                        <InputField
-                          placeholder="3.0"
-                          value={String(value)}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          keyboardType="numeric"
-                          className="text-sm"
-                        />
-                      </Input>
-                      <FormControlError>
-                        <FormControlErrorText>
-                          {errors.credit_hours?.message}
-                        </FormControlErrorText>
-                      </FormControlError>
-                    </FormControl>
-                  )}
-                />
-
-                {/* Type */}
-                <Controller
-                  control={control}
-                  name="course_type"
-                  render={({ field: { onChange, value } }) => (
-                    <FormControl
-                      isInvalid={!!errors.course_type}
-                      className="flex-1"
-                    >
-                      <FormControlLabel className="mb-1">
-                        <FormControlLabelText className="text-typography-600 font-medium">
-                          Type
-                        </FormControlLabelText>
-                      </FormControlLabel>
-                      <TouchableOpacity
-                        onPress={() => setIsTypeModalOpen(true)}
-                        className="flex-row items-center justify-between rounded-xl border border-outline-200 h-14 px-3"
-                      >
-                        <Text
-                          className={`text-sm ${
-                            value
-                              ? 'text-typography-900'
-                              : 'text-typography-400'
-                          }`}
-                        >
-                          {value || 'Select Type'}
-                        </Text>
-                        <Ionicons
-                          name="chevron-down"
-                          size={18}
-                          color="#94A3B8"
-                        />
-                      </TouchableOpacity>
-                      <FormControlError>
-                        <FormControlErrorText>
-                          {errors.course_type?.message}
-                        </FormControlErrorText>
-                      </FormControlError>
-                    </FormControl>
-                  )}
-                />
-              </HStack>
-
-              {/* Semester */}
-              <Controller
-                control={control}
-                name="semester"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <FormControl isInvalid={!!errors.semester}>
-                    <FormControlLabel className="mb-1">
-                      <FormControlLabelText className="text-typography-600 font-medium">
-                        Semester <Text className="text-error-500">*</Text>
-                      </FormControlLabelText>
-                    </FormControlLabel>
-                    <Input className="rounded-xl border-outline-200 focus:border-primary-500 bg-transparent h-14">
-                      <InputSlot className="pl-3">
-                        <Ionicons
-                          name="calendar-outline"
-                          size={18}
-                          color="#94A3B8"
-                        />
-                      </InputSlot>
-                      <InputField
-                        placeholder="e.g. 1"
-                        value={String(value)}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        keyboardType="number-pad"
-                        className="text-sm"
-                      />
-                    </Input>
-                    <FormControlError>
-                      <Ionicons
-                        name="alert-circle-outline"
-                        size={16}
-                        color="#EF4444"
-                      />
-                      <FormControlErrorText className="ml-1">
-                        {errors.semester?.message}
-                      </FormControlErrorText>
-                    </FormControlError>
-                  </FormControl>
-                )}
-              />
-
-              {/* Syllabus URL */}
-              <Controller
-                control={control}
-                name="syllabus_url"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <FormControl isInvalid={!!errors.syllabus_url}>
-                    <FormControlLabel className="mb-1">
-                      <FormControlLabelText className="text-typography-600 font-medium">
-                        Syllabus URL (Optional)
-                      </FormControlLabelText>
-                    </FormControlLabel>
-                    <Input className="rounded-xl border-outline-200 focus:border-primary-500 bg-transparent h-14">
-                      <InputSlot className="pl-3">
-                        <Ionicons
-                          name="link-outline"
-                          size={18}
-                          color="#94A3B8"
-                        />
-                      </InputSlot>
-                      <InputField
-                        placeholder="https://example.com/syllabus.pdf"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        keyboardType="url"
-                        autoCapitalize="none"
-                        className="text-sm"
-                      />
-                    </Input>
-                    <FormControlError>
-                      <Ionicons
-                        name="alert-circle-outline"
-                        size={16}
-                        color="#EF4444"
-                      />
-                      <FormControlErrorText className="ml-1">
-                        {errors.syllabus_url?.message}
-                      </FormControlErrorText>
-                    </FormControlError>
-                  </FormControl>
-                )}
-              />
-
-              {/* Description */}
-              <Controller
-                control={control}
-                name="description"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <FormControl isInvalid={!!errors.description}>
-                    <FormControlLabel className="mb-1">
-                      <FormControlLabelText className="text-typography-600 font-medium">
-                        Description (Optional)
-                      </FormControlLabelText>
-                    </FormControlLabel>
-                    <Input className="rounded-xl border-outline-200 focus:border-primary-500 bg-transparent h-32 py-2">
-                      <InputField
-                        placeholder="Optional description..."
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        multiline
-                        textAlignVertical="top"
-                        className="text-sm"
-                      />
-                    </Input>
-                    <FormControlError>
-                      <FormControlErrorText>
-                        {errors.description?.message}
-                      </FormControlErrorText>
-                    </FormControlError>
-                  </FormControl>
-                )}
-              />
-
-              {!isEditing && (
-                <Button
-                  className="mt-4 rounded-full bg-primary-500 h-14"
-                  onPress={handleSubmit((data) =>
-                    onSubmit(data as unknown as CourseFormValues)
-                  )}
-                  isDisabled={isLoading}
-                >
-                  {isLoading ? (
-                    <ButtonSpinner color="white" />
-                  ) : (
-                    <ButtonText className="font-bold">Create Course</ButtonText>
-                  )}
-                </Button>
-              )}
-
-              {isEditing && (
-                <Button
-                  variant="link"
-                  className="mt-8 rounded-full border-error-200 h-14 active:bg-error-50"
-                  onPress={handleDelete}
-                  isDisabled={isLoading}
-                >
-                  <ButtonText className="text-error-500 font-bold">
-                    Delete this course
-                  </ButtonText>
-                </Button>
-              )}
-            </VStack>
-          </ScrollView>
-        )}
-      </KeyboardAvoidingView>
-
-      {/* Department Modal */}
-      <SelectModal
-        isOpen={isDeptModalOpen}
-        onClose={() => setIsDeptModalOpen(false)}
-        title="Select Department"
-        items={departments}
-        loading={deptLoading}
-        onSelect={(item: any) => {
-          setValue('department_id', item.id, { shouldValidate: true })
-        }}
-        keyExtractor={(item) => item.id}
-        renderItem={(item: any, isSelected) => (
-          <Text
-            className={`text-base ${
-              isSelected ? 'font-bold text-primary-600' : 'text-typography-900'
-            }`}
-          >
-            {item.name} ({item.code})
-          </Text>
-        )}
-        selectedItem={watchedDeptId ? { id: watchedDeptId } : undefined}
-      />
-
-      {/* Type Modal */}
-      <SelectModal
-        isOpen={isTypeModalOpen}
-        onClose={() => setIsTypeModalOpen(false)}
-        title="Select Course Type"
-        items={COURSE_TYPES}
-        loading={false}
-        onSelect={(item: any) => {
-          setValue('course_type', item.id, { shouldValidate: true })
-        }}
-        keyExtractor={(item) => item.id}
-        enableSearch={false}
-        renderItem={(item: any, isSelected) => (
-          <Text
-            className={`text-base ${
-              isSelected ? 'font-bold text-primary-600' : 'text-typography-900'
-            }`}
-          >
-            {item.name}
-          </Text>
-        )}
-        selectedItem={watchedType ? { id: watchedType } : undefined}
-      />
+          {/* Delete Button */}
+          {isEditing && (
+            <Button
+              variant="link"
+              className="mt-4 rounded-full border-error-200 h-14 active:bg-error-50"
+              onPress={handleDelete}
+              isDisabled={isLoading}
+            >
+              <ButtonText className="text-error-500 font-bold">
+                Delete this course
+              </ButtonText>
+            </Button>
+          )}
+        </VStack>
+      </ScrollView>
     </SafeAreaView>
   )
 }

@@ -19,8 +19,7 @@ export default function NotificationHistoryScreen() {
   const haptics = useHaptics()
   const { currentMode } = useTheme()
 
-  const { data, loading, refetch, error } = useQuery(GET_MY_SENT_NOTIFICATIONS)
-  console.log('=====>', error)
+  const { data, loading, refetch } = useQuery(GET_MY_SENT_NOTIFICATIONS)
   const notifications = data?.notification_log || []
 
   const getStatusColor = (status: string) => {

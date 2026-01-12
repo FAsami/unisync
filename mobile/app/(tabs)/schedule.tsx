@@ -148,14 +148,14 @@ const ScheduleScreen = () => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingRight: 20 }}
         >
-          <HStack className="space-x-3 mb-2">
+          <HStack className="mb-2">
             {DAYS.map((day) => {
               const isSelected = selectedDay === day.value
               return (
                 <TouchableOpacity
                   key={day.value}
                   onPress={() => setSelectedDay(day.value)}
-                  className={`px-4 py-2 rounded-full border ${
+                  className={`px-3 py-1.5 rounded-full border mr-2 ${
                     isSelected
                       ? 'bg-primary-500 border-primary-500'
                       : 'bg-transparent border-outline-200 dark:border-outline-800'

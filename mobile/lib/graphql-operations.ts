@@ -51,7 +51,7 @@ export interface GetUserSessionsData {
 }
 
 export const GET_EVENT_ROUTINES = gql`
-  query GetEventRoutines($userId: uuid) {
+  query GetEventRoutines {
     event_routine(where: { is_active: { _eq: true } }) {
       id
       name
@@ -150,6 +150,7 @@ export interface UserAccount {
   created_at: string
   updated_at: string
   is_active: boolean
+  deleted_at?: string | null
   profiles?: {
     first_name: string
     last_name: string
@@ -398,6 +399,32 @@ export const DELETE_USER = gql`
   }
 `
 
+export const SOFT_DELETE_USER_ACCOUNT = gql`
+  mutation SoftDeleteUserAccount($id: uuid!) {
+    update_user_account_by_pk(
+      pk_columns: { id: $id }
+      _set: { is_active: false, deleted_at: "now()" }
+    ) {
+      id
+      is_active
+      deleted_at
+    }
+  }
+`
+
+export const RESTORE_USER_ACCOUNT = gql`
+  mutation RestoreUserAccount($id: uuid!) {
+    update_user_account_by_pk(
+      pk_columns: { id: $id }
+      _set: { is_active: true, deleted_at: null }
+    ) {
+      id
+      is_active
+      deleted_at
+    }
+  }
+`
+
 export const UPDATE_USER_ACCOUNT = gql`
   mutation UpdateUserAccount($id: uuid!, $set: user_account_set_input!) {
     update_user_account_by_pk(pk_columns: { id: $id }, _set: $set) {
@@ -405,6 +432,28 @@ export const UPDATE_USER_ACCOUNT = gql`
     }
   }
 `
+
+export const GET_ALL_FACULTIES_FOR_PICKER = gql`
+  query GetAllFacultiesForPicker {
+    user_faculty(order_by: { first_name: asc, last_name: asc }, limit: 1000) {
+      id
+      user_id
+      first_name
+      last_name
+      designation
+    }
+  }
+`
+
+export interface GetAllFacultiesForPickerData {
+  user_faculty: {
+    id: string
+    user_id: string
+    first_name: string
+    last_name: string
+    designation: string
+  }[]
+}
 
 // Academic Management Operations
 
