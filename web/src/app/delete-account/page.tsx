@@ -36,8 +36,12 @@ const DeleteAccountForm = () => {
 
         setPhoneNumber(values.phone)
         setStep('otp')
-      } catch (error: any) {
-        setErrorMessage(error.message || 'Failed to send OTP')
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setErrorMessage(error.message)
+        } else {
+          setErrorMessage('Failed to send OTP')
+        }
       }
     })
   }
@@ -57,8 +61,12 @@ const DeleteAccountForm = () => {
         }
 
         setStep('success')
-      } catch (error: any) {
-        setErrorMessage(error.message || 'Failed to delete account')
+      } catch (error) {
+        if (error instanceof Error) {
+          setErrorMessage(error.message)
+        } else {
+          setErrorMessage('Failed to delete account')
+        }
       }
     })
   }
