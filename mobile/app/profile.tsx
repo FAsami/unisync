@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { ScrollView, TouchableOpacity } from 'react-native'
+import { ScrollView, TouchableOpacity, Linking } from 'react-native'
 import { useQuery } from '@apollo/client'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
@@ -14,6 +14,7 @@ import { Divider } from '@/components/ui/divider'
 import { Spinner } from '@/components/ui/spinner'
 import { Icon } from '@/components/ui/icon'
 import { Avatar } from '@/components/ui/avatar'
+import { Button, ButtonText } from '@/components/ui/button'
 import { useAuth } from '@/contexts/Auth'
 import { getCurrentUserFromToken } from '@/utils/getUserFromToken'
 import { GET_CURRENT_USER, GetCurrentUserData } from '@/lib/graphql-operations'
@@ -43,9 +44,9 @@ const ProfileScreen = () => {
 
   const user = data?.user_account_by_pk
 
-  const handleLogout = async () => {
-    await logout()
-    router.replace('/login')
+  const handleDeleteAccount = () => {
+    const DELETE_ACCOUNT_URL = 'https://www.uni-sync.site/delete-account'
+    Linking.openURL(DELETE_ACCOUNT_URL)
   }
 
   if (loading) {
@@ -99,6 +100,9 @@ const ProfileScreen = () => {
               ? `${user.profiles[0].first_name} ${user.profiles[0].last_name}`
               : user.phone}
           </Heading>
+          <Text className="text-sm text-typography-500 capitalize">
+            {tokenData?.role}
+          </Text>
         </VStack>
 
         <Box className="bg-white dark:bg-background-900 rounded-xl p-4 border border-outline-100 dark:border-outline-800 mt-6">
@@ -171,6 +175,32 @@ const ProfileScreen = () => {
                 </Text>
               </VStack>
             </HStack>
+          </VStack>
+        </Box>
+
+        <Box className="bg-white dark:bg-background-900 rounded-xl p-4 border border-error-200 dark:border-error-800 mt-6">
+          <Text className="text-xs font-bold uppercase tracking-widest text-error-600 dark:text-error-400 mb-4">
+            Danger Zone
+          </Text>
+
+          <VStack space="md">
+            <VStack space="xs">
+              <Text className="text-base font-semibold text-typography-900">
+                Delete Account
+              </Text>
+              <Text className="text-sm text-typography-500 mb-3">
+                Permanently delete your account and all associated data. This
+                action cannot be undone.
+              </Text>
+              <Button
+                onPress={handleDeleteAccount}
+                className="bg-error-500 hover:bg-error-600 rounded-full"
+              >
+                <ButtonText className="text-white font-medium">
+                  Delete My Account
+                </ButtonText>
+              </Button>
+            </VStack>
           </VStack>
         </Box>
       </ScrollView>
