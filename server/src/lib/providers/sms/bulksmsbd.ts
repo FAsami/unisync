@@ -28,7 +28,6 @@ interface BulkSMSProviderConfig {
 export const createBulkSMSBDProvider = (
   providerConfig: BulkSMSProviderConfig
 ): SMSProvider => {
-  // Validate required credentials
   if (
     !config.BULK_SMS_API_KEY ||
     !config.BULK_SMS_SECRET_KEY ||
@@ -41,17 +40,19 @@ export const createBulkSMSBDProvider = (
 
   const getSMSMessage = (
     otp: string,
-    purpose: "LOGIN" | "SIGNUP" | "PASSWORD_RESET"
+    purpose: "LOGIN" | "SIGNUP" | "PASSWORD_RESET" | "DELETE_ACCOUNT"
   ): string => {
     const expiryMinutes = config.OTP_EXPIRY_MINUTES;
 
     switch (purpose) {
       case "LOGIN":
-        return `Your UniSync login verification code is ${otp}. Valid for ${expiryMinutes} minutes. Do not share this code with anyone.`;
+        return `${otp} is your OTP for unisync login. Valid for ${expiryMinutes} minutes. - unisync`;
       case "SIGNUP":
-        return `Your UniSync signup verification code is ${otp}. Valid for ${expiryMinutes} minutes. Do not share this code with anyone.`;
+        return `${otp} is your OTP for unisync signup. Valid for ${expiryMinutes} minutes. - unisync`;
       case "PASSWORD_RESET":
-        return `Your UniSync password reset code is ${otp}. Valid for ${expiryMinutes} minutes. Do not share this code with anyone.`;
+        return `${otp} is your OTP for unisync password reset. Valid for ${expiryMinutes} minutes. - unisync`;
+      case "DELETE_ACCOUNT":
+        return `${otp} is your OTP for deleing your unisync account. Valid for ${expiryMinutes} minutes. - unisync`;
     }
   };
 

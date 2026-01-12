@@ -5,6 +5,7 @@ import { registerRouter } from "./auth/register";
 import { resetPasswordRouter } from "./auth/reset-password";
 import { loginRouter } from "./auth/login";
 import { logoutRouter } from "./auth/logout";
+import { accountRouter } from "./auth/account";
 
 const router = Router();
 
@@ -13,8 +14,8 @@ router.use("/auth/login", loginRouter);
 router.use("/auth/logout", logoutRouter);
 router.use("/auth/register", registerRouter);
 router.use("/auth/reset-password", resetPasswordRouter);
+router.use("/auth/account", accountRouter);
 
-/**For Hasura */
 router.post("/auth/webhook/authorize", authorizeRequest);
 
 export { router as authRouter };

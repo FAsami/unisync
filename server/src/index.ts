@@ -23,11 +23,12 @@ installResponseExtensions();
 
 initSentry();
 applySecurityMiddleware(app);
+applyRateLimiting(app);
+
 app.use(compression() as any);
 app.use(morgan("combined", { stream }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-applyRateLimiting(app);
 app.use(requestInfo);
 
 app.use("/api/v1", routes);

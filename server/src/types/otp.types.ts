@@ -3,7 +3,11 @@
  * OTP delivery, verification, and rate limiting types
  */
 
-export type OTPPurpose = "LOGIN" | "SIGNUP" | "PASSWORD_RESET";
+export type OTPPurpose =
+  | "LOGIN"
+  | "SIGNUP"
+  | "PASSWORD_RESET"
+  | "DELETE_ACCOUNT";
 export type IdentifierType = "EMAIL" | "PHONE";
 export type OTPActionType = "SEND" | "VERIFY";
 

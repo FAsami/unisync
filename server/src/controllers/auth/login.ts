@@ -6,7 +6,13 @@ import { GET_USER_BY_PHONE } from "./gql/queries";
 import { CREATE_SESSION } from "./gql/mutation";
 import { JWTService } from "../../utils/jwt";
 import { asyncHandler } from "../../utils/response";
-import { ValidationError, InvalidCredentialsError } from "../../utils/errors";
+import {
+  ValidationError,
+  InvalidCredentialsError,
+  UserNotActiveError,
+  UserNotFoundError,
+  UserNotVerifiedError,
+} from "../../utils/errors";
 import { config } from "../../config/environment";
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
@@ -25,13 +31,21 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
       phone_verified_at: string | null;
       is_active: boolean;
       role: string;
+      deleted_at: string | null;
     }>;
   }>(GET_USER_BY_PHONE, { phone });
 
   const user = userResult.user_account?.[0];
+  if (!user) {
+    throw new UserNotFoundError();
+  }
 
-  if (!user || !user.is_active || !user.phone_verified_at) {
-    throw new InvalidCredentialsError();
+  if (!user.is_active && user.deleted_at === null) {
+    throw new UserNotActiveError();
+  }
+
+  if (!user.phone_verified_at) {
+    throw new UserNotVerifiedError();
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -101,5 +115,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
       access_token: accessToken,
       refresh_token: refreshToken,
       role: payload.role,
+      isDeleted: user.deleted_at !== null,
+      isVerified: user.phone_verified_at !== null,
     });
 });

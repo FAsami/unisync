@@ -10,6 +10,7 @@ export const GET_USER_BY_PHONE = `
       is_active
       created_at
       updated_at
+      deleted_at
     }
   }
 `;

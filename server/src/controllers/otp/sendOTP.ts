@@ -14,7 +14,6 @@ import { asyncHandler } from "../../utils/response";
 
 export const sendOTP = asyncHandler(async (req: Request, res: Response) => {
   const rawInput = req.body;
-  console.log("[raw INput]", rawInput);
 
   if (!rawInput) {
     return res.error(
@@ -51,7 +50,6 @@ export const sendOTP = asyncHandler(async (req: Request, res: Response) => {
   logger.info(`Generated OTP for ${identifierType}`, { identifier, purpose });
 
   const graphqlClient = getGraphQLClient();
-
   await graphqlClient.request(INVALIDATE_OLD_OTPS, { identifier, purpose });
 
   const insertResult = await graphqlClient.request<{

@@ -9,9 +9,13 @@ import { emailSchema, otpCodeSchema } from "./common.schema";
 /**
  * OTP purpose enum
  */
-export const otpPurposeSchema = z.enum(["LOGIN", "SIGNUP", "PASSWORD_RESET"], {
-  message: "Invalid purpose. Must be LOGIN, SIGNUP, or PASSWORD_RESET",
-});
+export const otpPurposeSchema = z.enum(
+  ["LOGIN", "SIGNUP", "PASSWORD_RESET", "DELETE_ACCOUNT"],
+  {
+    message:
+      "Invalid purpose. Must be LOGIN, SIGNUP, PASSWORD_RESET, or DELETE_ACCOUNT",
+  }
+);
 
 /**
  * Identifier type enum

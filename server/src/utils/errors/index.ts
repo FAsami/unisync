@@ -66,6 +66,12 @@ export class NotFoundError extends HttpError {
   }
 }
 
+export class UserNotFoundError extends NotFoundError {
+  constructor(message: string = "User not found") {
+    super(message, "USER_NOT_FOUND");
+  }
+}
+
 // 409 Conflict
 export class ConflictError extends HttpError {
   constructor(
@@ -138,6 +144,18 @@ export class TokenExpiredError extends UnauthorizedError {
 export class InvalidTokenError extends UnauthorizedError {
   constructor(message: string = "Invalid token") {
     super(message, "INVALID_TOKEN");
+  }
+}
+
+export class UserNotActiveError extends UnauthorizedError {
+  constructor(message: string = "User account is disabled or inactive") {
+    super(message, "USER_NOT_ACTIVE");
+  }
+}
+
+export class UserNotVerifiedError extends UnauthorizedError {
+  constructor(message: string = "Account not verified") {
+    super(message, "USER_NOT_VERIFIED");
   }
 }
 
