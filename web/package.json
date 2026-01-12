@@ -16,15 +16,19 @@
     "@ant-design/nextjs-registry": "^1.1.0",
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@apollo/client": "^4.0.7",
+    "@hookform/resolvers": "^5.2.2",
     "@types/js-cookie": "^3.0.6",
     "antd": "^5.27.6",
     "axios": "^1.12.2",
     "graphql": "^16.11.0",
     "js-cookie": "^3.0.5",
+    "libphonenumber-js": "^1.12.33",
     "next": "15.5.7",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "rxjs": "^7.8.2"
+    "react-hook-form": "^7.71.0",
+    "rxjs": "^7.8.2",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
