@@ -165,21 +165,29 @@ public sealed class ClassChangeService(UniSyncDbContext db, ScheduleService sche
          where r.Id == roomId
          select r.RoomNumber + ", " + b.Name).FirstOrDefaultAsync(ct);
 
-    public static NotificationLog Notice(ClassContext ctx, Guid by, string change, DateOnly date, string title, string body) => new()
+    public static NotificationLog Notice(ClassContext ctx, Guid by, string change, DateOnly date, string title, string body)
     {
-        Title = title,
-        Body = body,
-        TargetType = "section",
-        TargetId = ctx.Offering.SectionId,
-        CreatedBy = by,
-        Data = JsonSerializer.Serialize(new Dictionary<string, string>
+        // The id is chosen here so the push payload can carry it: tapping the
+        // push opens this notification in the inbox.
+        var id = Guid.NewGuid();
+        return new NotificationLog
         {
-            ["type"] = "class_change",
-            ["change"] = change,
-            ["routineId"] = ctx.Routine.Id.ToString(),
-            ["date"] = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-        }),
-    };
+            Id = id,
+            Title = title,
+            Body = body,
+            TargetType = "section",
+            TargetId = ctx.Offering.SectionId,
+            CreatedBy = by,
+            Data = JsonSerializer.Serialize(new Dictionary<string, string>
+            {
+                ["type"] = "class_change",
+                ["change"] = change,
+                ["routineId"] = ctx.Routine.Id.ToString(),
+                ["date"] = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                ["notificationId"] = id.ToString(),
+            }),
+        };
+    }
 
     /// <summary>"Mon 9 Nov, 09:00".</summary>
     public static string Describe(DateOnly date, TimeOnly time) =>

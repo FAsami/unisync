@@ -52,6 +52,8 @@ public static class ErrorCodes
     public const string SectionBusy = "SECTION_BUSY";
     public const string TeacherBusy = "TEACHER_BUSY";
     public const string RoomTaken = "ROOM_TAKEN";
+    public const string AudienceNotAllowed = "AUDIENCE_NOT_ALLOWED";
+    public const string EmptyAudience = "EMPTY_AUDIENCE";
     public const string Unauthorized = "UNAUTHORIZED";
     public const string TokenExpired = "TOKEN_EXPIRED";
     public const string SessionRevoked = "SESSION_REVOKED";

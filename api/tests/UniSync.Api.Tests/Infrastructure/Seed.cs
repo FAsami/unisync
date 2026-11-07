@@ -123,6 +123,16 @@ public static class Seed
             ("newDate", (object?)newDate ?? DBNull.Value), ("newStart", (object?)newStart ?? DBNull.Value),
             ("newEnd", (object?)newEnd ?? DBNull.Value), ("newRoom", (object?)newRoomId ?? DBNull.Value));
 
+    /// <summary>A notification.log row, as the legacy apps or the API write them.</summary>
+    public static Task<Guid> NotificationAsync(
+        string connectionString, string targetType, Guid targetId, Guid createdBy, string title, CancellationToken ct, DateTimeOffset? createdAt = null) =>
+        ScalarAsync<Guid>(connectionString, """
+            INSERT INTO notification.log (title, body, target_type, target_id, created_by, data, created_at)
+            VALUES (@title, 'Body of ' || @title, @type, @target, @by, '{"type":"notice"}', COALESCE(@at, now()))
+            RETURNING id
+            """, ct, ("title", title), ("type", targetType), ("target", targetId), ("by", createdBy),
+            ("at", (object?)createdAt ?? DBNull.Value));
+
     public static async Task ExecuteAsync(string connectionString, string sql, CancellationToken ct, params (string Name, object Value)[] parameters)
     {
         await using var connection = new NpgsqlConnection(connectionString);

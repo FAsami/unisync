@@ -15,6 +15,7 @@ src/UniSync.Api/
   Academic/             /directory: public list of open departments, batches and sections
   AccessRequests/       request to join, plus the department admin queue (approve / reject)
   Schedule/             /me/today, /me/week (resolved classes); /classes/{routineId}/{date}/cancel|move|room and undo
+  Notifications/        inbox (/me/notifications), devices (/me/devices), sending (/notifications), AudienceService
   Health/               /health, /health/ready
   Sms/                  ISmsSender: BulkSMSBD (prod), console (Development only)
 db/migrations/          schema changes owned by this API (NNNN_name.sql)
@@ -50,6 +51,9 @@ missing database fails the run instead of skipping.
 - **One class change per occurrence** (`event.routine_exception`, mapped as `ClassChange`): `cancellation`, `reschedule` (new date and times, optional room) or `room_change`. The database checks the fields match the type. A move shows on both slots: `moved_away` on the old one, `moved` on the new one.
 - **Who may change a class**: its teacher, an active CR of its section, or the admin of its department (`ClassChangeService.CanChangeAsync`). A move is refused on a section, teacher or room clash; a room change only on a room clash. The latest decision replaces the previous one.
 - **Every class change notifies its section in the same transaction** by inserting into `notification.log`. Until the inbox slice lands, the legacy Hasura event trigger turns that row into a push (via the Node server). `data` values must be strings (FCM).
+- **Audiences have one definition**: `AudienceService` decides who is in an audience (inbox and counts) and who may address it. A department admin may address their department, its batches and its sections; a teacher, the sections they teach; a CR, their own section. Nobody sends university-wide (no role decided). Never write audience rules anywhere else.
+- **Every notification carries its own id** in `data.notificationId`, so a push opens it. `data` values are strings.
+- **A push token belongs to one person**: registering a token removes it from anyone else. Logout with `deviceId` deactivates that device in the same call.
 - **Codes are bound to their purpose** (`LOGIN`, `ACCESS_REQUEST`): a code sent for one flow can't complete another.
 - **Never log codes, tokens or SMS gateway URLs.** The console SMS sender is refused at startup outside Development.
 

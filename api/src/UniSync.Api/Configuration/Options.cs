@@ -65,6 +65,9 @@ public sealed class RateLimitOptions
 
     /// <summary>Each class change pushes to a whole section, so cap them per user.</summary>
     public int ClassChangesPerHourPerUser { get; set; } = 30;
+
+    /// <summary>Each notice pushes to a whole audience, so cap them per user.</summary>
+    public int NotificationsPerHourPerUser { get; set; } = 20;
 }
 
 public sealed class CampusOptions

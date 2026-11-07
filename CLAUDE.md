@@ -22,7 +22,13 @@ The backend is moving from Hasura + `server/` to `api/` (.NET), feature by featu
 
 **New backend work goes in `api/`.** Change `server/` or Hasura only to keep today's apps working. All three share one Postgres and one JWT secret until the cut-over.
 
-Done in `api/`: health, `/auth/code`, `/auth/verify`, `/auth/refresh`, `/auth/logout`, `/me`, `/directory`, access requests (`/access-requests/code`, submit, plus the department admin queue with approve and reject), "My day" (`/me/today`, `/me/week`), and class changes (`/classes/{routineId}/{date}/cancel|move|room`, plus `DELETE` to undo). Next up: the notification inbox. The apps still call the legacy stack; switching them over is a separate step.
+Done in `api/`: health, `/auth/code`, `/auth/verify`, `/auth/refresh`, `/auth/logout`, `/me`, `/directory`, access requests (`/access-requests/code`, submit, plus the department admin queue with approve and reject), "My day" (`/me/today`, `/me/week`), class changes (`/classes/{routineId}/{date}/cancel|move|room`, plus `DELETE` to undo), and the inbox (`/me/notifications`, read and read-all, `/me/devices`, `/notifications` send, audiences and sent). Every backend slice in the UX review is built.
+
+Still to do before cut-over:
+1. Switch the mobile and web apps to `api/`, using a client generated from `/openapi/v1.json`.
+2. Move push delivery (FCM) into `api/`. Until then the legacy Hasura trigger on `notification.log` sends pushes through `server/`.
+3. Build the web setup screens for departments, semesters and the roster import.
+4. Retire Hasura and `server/`. The apps still call the legacy stack; switching them over is a separate step.
 
 ## How the pieces talk (legacy stack)
 

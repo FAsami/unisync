@@ -213,6 +213,7 @@ public sealed class TeacherProfile
     public Guid UserId { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
+    public Guid DepartmentId { get; set; }
 }
 
 /// <summary>
@@ -230,6 +231,29 @@ public sealed class NotificationLog
     /// <summary>JSON object of string values (FCM data payloads accept strings only).</summary>
     public string? Data { get; set; }
     public Guid CreatedBy { get; set; }
+    /// <summary>Push delivery state, written by the legacy sender: pending | processing | sent | failed.</summary>
     public string Status { get; set; } = "pending";
+    public int SentCount { get; set; }
+    public int FailedCount { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+}
+
+public sealed class NotificationRead
+{
+    public Guid UserId { get; set; }
+    public Guid NotificationId { get; set; }
+    public DateTimeOffset ReadAt { get; set; }
+}
+
+/// <summary>A push token (legacy table user.device). Unique per (user, device, provider).</summary>
+public sealed class Device
+{
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; }
+    public string DeviceId { get; set; } = "";
+    public string Provider { get; set; } = "fcm";
+    public string Token { get; set; } = "";
+    public string Platform { get; set; } = "";
+    public bool IsActive { get; set; }
+    public DateTimeOffset LastUsedAt { get; set; }
 }

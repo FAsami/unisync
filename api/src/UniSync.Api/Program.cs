@@ -12,6 +12,7 @@ using UniSync.Api.Data;
 using UniSync.Api.Academic;
 using UniSync.Api.Health;
 using UniSync.Api.CurrentUser;
+using UniSync.Api.Notifications;
 using UniSync.Api.Schedule;
 using UniSync.Api.Sms;
 
@@ -54,6 +55,7 @@ services.AddScoped<OtpService>();
 services.AddScoped<SessionService>();
 services.AddScoped<ScheduleService>();
 services.AddScoped<ClassChangeService>();
+services.AddScoped<AudienceService>();
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
     .Configure<IOptions<AuthOptions>>((jwt, auth) =>
@@ -93,6 +95,13 @@ services.AddRateLimiter(o =>
         _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = http.RequestServices.GetRequiredService<IOptions<RateLimitOptions>>().Value.CodeRequestsPerHourPerIp,
+            Window = TimeSpan.FromHours(1),
+        }));
+    o.AddPolicy(NotificationEndpoints.SendPolicy, http => RateLimitPartition.GetFixedWindowLimiter(
+        http.User.FindFirst(TokenService.UserIdClaim)?.Value ?? http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = http.RequestServices.GetRequiredService<IOptions<RateLimitOptions>>().Value.NotificationsPerHourPerUser,
             Window = TimeSpan.FromHours(1),
         }));
     o.AddPolicy(ClassChangeEndpoints.Policy, http => RateLimitPartition.GetFixedWindowLimiter(
@@ -144,6 +153,8 @@ api.MapDirectoryEndpoints();
 api.MapAccessRequestEndpoints();
 api.MapScheduleEndpoints();
 api.MapClassChangeEndpoints();
+api.MapNotificationEndpoints();
+api.MapDeviceEndpoints();
 
 await app.RunAsync();
 

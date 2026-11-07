@@ -13,6 +13,7 @@ public sealed record RequestCodeBody(string? Phone);
 public sealed record CodeSent(string Phone, int ExpiresInSeconds);
 public sealed record VerifyCodeBody(string? Phone, string? Code);
 public sealed record RefreshBody(string? RefreshToken);
+public sealed record LogoutBody(string? DeviceId);
 
 /// <summary>Passwordless sign-in: phone → one-time code → session (UX review decision 1).</summary>
 public static partial class AuthEndpoints
@@ -126,9 +127,21 @@ public static partial class AuthEndpoints
             : ApiResponse.Fail(http, 401, result.ErrorCode!, result.Message!);
     }
 
-    private static async Task<IResult> LogoutAsync(ClaimsPrincipal user, HttpContext http, SessionService sessions, CancellationToken ct)
+    /// <summary>
+    /// Ends the session. With a deviceId, that device also stops getting pushes
+    /// in the same call, so a signed-out phone can't keep receiving the user's
+    /// notifications.
+    /// </summary>
+    private static async Task<IResult> LogoutAsync(
+        LogoutBody? body, ClaimsPrincipal user, HttpContext http, SessionService sessions, UniSyncDbContext db, CancellationToken ct)
     {
         var sessionId = Guid.Parse(user.FindFirstValue(TokenService.SessionIdClaim)!);
+        if (!string.IsNullOrWhiteSpace(body?.DeviceId))
+        {
+            var userId = Guid.Parse(user.FindFirstValue(TokenService.UserIdClaim)!);
+            await Notifications.DeviceEndpoints.DeactivateAsync(userId, body.DeviceId.Trim(), db, ct);
+        }
+
         await sessions.RevokeAsync(sessionId, ct);
         return ApiResponse.Ok<object?>(http, "Signed out", null);
     }
