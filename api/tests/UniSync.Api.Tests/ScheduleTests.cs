@@ -15,32 +15,7 @@ public sealed class ScheduleTests : ApiTestBase
 
     public ScheduleTests(PostgresFixture db) : base(db) => Factory.CampusTime.Now = MondayMorning;
 
-    private sealed record World(
-        SeededStudent Student, Guid TeacherId, string TeacherPhone, Guid Cse101, Guid Cse102,
-        Guid RoomA, Guid RoomB, Guid OtherSectionRoutine);
-
-    private async Task<World> BuildAsync()
-    {
-        var cs = Db.ConnectionString;
-        var student = await Seed.StudentAsync(cs, ct: Ct);
-        var (teacherId, teacherPhone) = await Seed.TeacherAsync(cs, student.BatchId, "Rafiq", "Islam", Ct);
-        var (otherTeacher, _) = await Seed.TeacherAsync(cs, student.BatchId, "Sumi", "Akter", Ct);
-        var roomA = await Seed.RoomAsync(cs, "402", "Academic Building", Ct);
-        var roomB = await Seed.RoomAsync(cs, "105", "Science Building", Ct);
-
-        var cse101 = await Seed.RoutineAsync(cs, await Seed.OfferingAsync(cs, "CSE101", student.SectionId, student.BatchId, teacherId, Ct),
-            DayOfWeek.Monday, "09:00", "11:00", Ct, roomId: roomA);
-        // Written the way the legacy mobile app writes times: with "+06".
-        var cse102 = await Seed.RoutineAsync(cs, await Seed.OfferingAsync(cs, "CSE102", student.SectionId, student.BatchId, otherTeacher, Ct),
-            DayOfWeek.Monday, "11:30:00+06", "12:30:00+06", Ct, metadataRoom: "Lab 3");
-
-        // Another section's class at the same time must never show up.
-        var otherSection = await Seed.ScalarAsync<Guid>(cs, "INSERT INTO academic.section (name, batch_id) VALUES ('B', @b) RETURNING id", Ct, ("b", student.BatchId));
-        var other = await Seed.RoutineAsync(cs, await Seed.OfferingAsync(cs, "CSE999", otherSection, student.BatchId, teacherId, Ct),
-            DayOfWeek.Monday, "10:00", "11:00", Ct);
-
-        return new World(student, teacherId, teacherPhone, cse101, cse102, roomA, roomB, other);
-    }
+    private Task<TimetableWorld> BuildAsync() => TimetableWorld.BuildAsync(Db.ConnectionString, Ct);
 
     private async Task<JsonElement> TodayAsync(string phone)
     {
@@ -64,7 +39,7 @@ public sealed class ScheduleTests : ApiTestBase
 
         var classes = Classes(today);
         Assert.Equal(["CSE101", "CSE102"], classes.Select(Code));
-        Assert.DoesNotContain(classes, c => c.GetProperty("routineId").GetGuid() == world.OtherSectionRoutine);
+        Assert.DoesNotContain(classes, c => c.GetProperty("routineId").GetGuid() == world.Cse999);
 
         var first = classes[0];
         Assert.Equal("09:00:00", first.GetProperty("start").GetString());

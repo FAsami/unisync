@@ -62,6 +62,9 @@ public sealed class RateLimitOptions
     public int CodeRequestsPerHourPerIp { get; set; } = 10;
 
     public int VerifyAttemptsPer15MinPerIp { get; set; } = 30;
+
+    /// <summary>Each class change pushes to a whole section, so cap them per user.</summary>
+    public int ClassChangesPerHourPerUser { get; set; } = 30;
 }
 
 public sealed class CampusOptions

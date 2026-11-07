@@ -31,6 +31,7 @@ public sealed record ClassOccurrence(
     CourseInfo? Course,
     SectionInfo Section,
     string? Teacher,
+    Guid? RoomId,
     string? Room,
     string? Note,
     Slot? MovedFrom,
@@ -77,6 +78,13 @@ public sealed class ScheduleService(UniSyncDbContext db)
             offerings = offerings.Where(o => o.SectionId == sectionId);
         }
 
+        return (scope, await ResolveAsync(offerings, first, last, ct));
+    }
+
+    /// <summary>Resolved classes for any set of offerings (a section, a teacher, a room's users).</summary>
+    public async Task<IReadOnlyList<ClassOccurrence>> ResolveAsync(
+        IQueryable<CourseOffering> offerings, DateOnly first, DateOnly last, CancellationToken ct)
+    {
         var slots = await (
             from r in db.Routines
             join o in offerings on r.CourseOfferingId equals o.Id
@@ -97,7 +105,7 @@ public sealed class ScheduleService(UniSyncDbContext db)
 
         if (slots.Count == 0)
         {
-            return (scope, []);
+            return [];
         }
 
         var routineIds = slots.Select(x => x.Routine.Id).ToList();
@@ -122,6 +130,7 @@ public sealed class ScheduleService(UniSyncDbContext db)
         {
             var r = slot.Routine;
             var room = RoomLabel(r, rooms);
+            var roomId = r.RoomId;
 
             // Regular weekly occurrences inside the window and the routine's term.
             for (var day = Max(first, r.EffectiveFrom); day <= Min(last, r.EffectiveTo); day = day.AddDays(1))
@@ -133,7 +142,7 @@ public sealed class ScheduleService(UniSyncDbContext db)
 
                 exceptionByOccurrence.TryGetValue((r.Id, day), out var ex);
                 var occurrence = new ClassOccurrence(r.Id, day, r.StartTime, r.EndTime, ClassStatus.Scheduled, r.EventType,
-                    slot.Course, slot.Section, slot.Teacher, room, null, null, null);
+                    slot.Course, slot.Section, slot.Teacher, roomId, room, null, null, null);
 
                 result.Add(ex?.Type switch
                 {
@@ -141,6 +150,7 @@ public sealed class ScheduleService(UniSyncDbContext db)
                     ClassChangeType.RoomChange => occurrence with
                     {
                         Status = ClassStatus.RoomChanged,
+                        RoomId = ex.NewRoomId,
                         Room = ex.NewRoomId is { } id && rooms.TryGetValue(id, out var label) ? label : room,
                         Note = ex.Reason,
                     },
@@ -160,12 +170,13 @@ public sealed class ScheduleService(UniSyncDbContext db)
             {
                 result.Add(new ClassOccurrence(r.Id, ex.NewDate!.Value, ex.NewStartTime!.Value, ex.NewEndTime!.Value,
                     ClassStatus.Moved, r.EventType, slot.Course, slot.Section, slot.Teacher,
+                    ex.NewRoomId ?? roomId,
                     ex.NewRoomId is { } id && rooms.TryGetValue(id, out var label) ? label : room,
                     ex.Reason, new Slot(ex.ExceptionDate, r.StartTime, r.EndTime), null));
             }
         }
 
-        return (scope, [.. result.OrderBy(c => c.Date).ThenBy(c => c.Start).ThenBy(c => c.Course?.Code)]);
+        return [.. result.OrderBy(c => c.Date).ThenBy(c => c.Start).ThenBy(c => c.Course?.Code)];
     }
 
     private static string? RoomLabel(Routine routine, Dictionary<Guid, string> rooms)

@@ -47,6 +47,11 @@ public static class ErrorCodes
     public const string StudentIdTaken = "STUDENT_ID_TAKEN";
     public const string InvalidSection = "INVALID_SECTION";
     public const string AlreadyDecided = "ALREADY_DECIDED";
+    public const string NotAClassDay = "NOT_A_CLASS_DAY";
+    public const string ClassInPast = "CLASS_IN_PAST";
+    public const string SectionBusy = "SECTION_BUSY";
+    public const string TeacherBusy = "TEACHER_BUSY";
+    public const string RoomTaken = "ROOM_TAKEN";
     public const string Unauthorized = "UNAUTHORIZED";
     public const string TokenExpired = "TOKEN_EXPIRED";
     public const string SessionRevoked = "SESSION_REVOKED";

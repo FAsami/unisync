@@ -214,3 +214,22 @@ public sealed class TeacherProfile
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
 }
+
+/// <summary>
+/// A notification to an audience (notification.log). Inserting a row fires the
+/// legacy Hasura event trigger, which pushes it to the audience's devices.
+/// </summary>
+public sealed class NotificationLog
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = "";
+    public string Body { get; set; } = "";
+    /// <summary>all | department | batch | section | user</summary>
+    public string? TargetType { get; set; }
+    public Guid TargetId { get; set; }
+    /// <summary>JSON object of string values (FCM data payloads accept strings only).</summary>
+    public string? Data { get; set; }
+    public Guid CreatedBy { get; set; }
+    public string Status { get; set; } = "pending";
+    public DateTimeOffset CreatedAt { get; set; }
+}

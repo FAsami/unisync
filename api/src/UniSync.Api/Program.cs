@@ -53,6 +53,7 @@ services.AddScoped<TokenService>();
 services.AddScoped<OtpService>();
 services.AddScoped<SessionService>();
 services.AddScoped<ScheduleService>();
+services.AddScoped<ClassChangeService>();
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
     .Configure<IOptions<AuthOptions>>((jwt, auth) =>
@@ -94,6 +95,13 @@ services.AddRateLimiter(o =>
             PermitLimit = http.RequestServices.GetRequiredService<IOptions<RateLimitOptions>>().Value.CodeRequestsPerHourPerIp,
             Window = TimeSpan.FromHours(1),
         }));
+    o.AddPolicy(ClassChangeEndpoints.Policy, http => RateLimitPartition.GetFixedWindowLimiter(
+        http.User.FindFirst(TokenService.UserIdClaim)?.Value ?? http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = http.RequestServices.GetRequiredService<IOptions<RateLimitOptions>>().Value.ClassChangesPerHourPerUser,
+            Window = TimeSpan.FromHours(1),
+        }));
     o.AddPolicy(AuthEndpoints.VerifyPolicy, http => RateLimitPartition.GetFixedWindowLimiter(
         http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
         _ => new FixedWindowRateLimiterOptions
@@ -122,9 +130,9 @@ app.UseStatusCodePages(ctx => ctx.HttpContext.Response.HasStarted
     : ApiResponse.WriteFailAsync(ctx.HttpContext, ctx.HttpContext.Response.StatusCode,
         ctx.HttpContext.Response.StatusCode == 404 ? ErrorCodes.NotFound : ErrorCodes.InvalidRequest,
         ctx.HttpContext.Response.StatusCode == 404 ? "Not found." : "The request could not be processed."));
-app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter(); // after auth, so per-user limits can partition by the signed-in user
 
 app.MapOpenApi("/openapi/{documentName}.json");
 
@@ -135,6 +143,7 @@ api.MapMeEndpoints();
 api.MapDirectoryEndpoints();
 api.MapAccessRequestEndpoints();
 api.MapScheduleEndpoints();
+api.MapClassChangeEndpoints();
 
 await app.RunAsync();
 

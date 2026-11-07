@@ -19,6 +19,7 @@ public sealed class UniSyncDbContext(DbContextOptions<UniSyncDbContext> options)
     public DbSet<Room> Rooms => Set<Room>();
     public DbSet<Building> Buildings => Set<Building>();
     public DbSet<TeacherProfile> TeacherProfiles => Set<TeacherProfile>();
+    public DbSet<NotificationLog> Notifications => Set<NotificationLog>();
     public DbSet<ClassRepresentative> ClassRepresentatives => Set<ClassRepresentative>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -87,6 +88,13 @@ public sealed class UniSyncDbContext(DbContextOptions<UniSyncDbContext> options)
         modelBuilder.Entity<Room>(e => e.ToTable("room", "venue"));
         modelBuilder.Entity<Building>(e => e.ToTable("building", "venue"));
         modelBuilder.Entity<TeacherProfile>(e => e.ToTable("faculty", "user"));
+        modelBuilder.Entity<NotificationLog>(e =>
+        {
+            e.ToTable("log", "notification");
+            e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+            e.Property(x => x.Data).HasColumnType("jsonb");
+        });
         modelBuilder.Entity<ClassRepresentative>(e => e.ToTable("class_representative", "academic"));
     }
 }
