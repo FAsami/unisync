@@ -14,6 +14,9 @@ Checks
      insert/update/delete permissions at all.
   5. Event-trigger and action webhooks send the SERVER-AUTH-SECRET header the
      API server checks.
+  6. Migrations never create objects in hdb_catalog (Hasura's own schema). It
+     already exists by the time migrations run, so such a migration fails on
+     every fresh environment.
 """
 import re
 import sys
@@ -113,6 +116,19 @@ def check_actions():
             )
 
 
+def check_migrations():
+    for f in sorted((ROOT / "hasura" / "migrations").rglob("up.sql")):
+        for n, line in enumerate(f.read_text().splitlines(), 1):
+            if line.startswith("--"):
+                continue
+            if "hdb_catalog" in line:
+                errors.append(
+                    f"{f.relative_to(ROOT)}:{n}: migration touches hdb_catalog "
+                    "(Hasura-managed; strip it from the migration)"
+                )
+                break
+
+
 def main() -> int:
     for f in sorted(META.rglob("*.yaml")):
         load(f)
@@ -121,6 +137,7 @@ def main() -> int:
         if f.name != "tables.yaml":
             check_table(f)
     check_actions()
+    check_migrations()
 
     if errors:
         print("Hasura metadata check FAILED:\n")
