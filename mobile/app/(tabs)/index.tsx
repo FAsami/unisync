@@ -285,11 +285,11 @@ const HomeScreen = () => {
                     size="md"
                     className="text-center font-bold tracking-wider uppercase text-typography-900 mb-3"
                   >
-                    YOU'RE OFF THE HOOK
+                    YOU&apos;RE OFF THE HOOK
                   </Heading>
                   <Text className="text-center text-lg text-typography-500 px-6">
                     Time to recharge! Grab a coffee ☕️, catch up on sleep 😴,
-                    or just chill. You've earned this break.
+                    or just chill. You&apos;ve earned this break.
                   </Text>
                 </Animated.View>
               </LinearGradient>

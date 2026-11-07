@@ -258,7 +258,7 @@ const ManageScreen = () => {
                   No Access
                 </Heading>
                 <Text className="text-center text-typography-500 px-8 leading-relaxed">
-                  You don't have permission to manage any resources. Contact
+                  You don&apos;t have permission to manage any resources. Contact
                   your administrator.
                 </Text>
               </VStack>

@@ -199,7 +199,7 @@ const ResetPassword = () => {
 
                 <HStack className="justify-center items-center mt-4">
                   <Text className="text-typography-500 text-sm">
-                    Didn't receive code?
+                    Didn&apos;t receive code?
                   </Text>
                   <Button
                     variant="link"

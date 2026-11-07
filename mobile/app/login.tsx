@@ -189,7 +189,7 @@ const Login = () => {
 
                 <HStack className="justify-center items-center mt-4 space-x-1">
                   <Text className="text-typography-500">
-                    Don't have an account?
+                    Don&apos;t have an account?
                   </Text>
                   <Button
                     variant="link"

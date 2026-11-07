@@ -6,7 +6,6 @@ import { Badge, BadgeText } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Avatar, AvatarFallbackText } from '@/components/ui/avatar'
 import { Ionicons } from '@expo/vector-icons'
-import { roleColors } from '@/constants/theme'
 import { useHaptics } from '@/hooks/useHaptics'
 
 export interface User {
