@@ -113,6 +113,19 @@ describe("Hasura auth webhook", () => {
     expect(res.status).toBe(401);
   });
 
+  it("accepts access tokens issued by the new .NET API (typ + jti claims)", async () => {
+    // While the apps move to api/, the screens still on Hasura reach it with
+    // tokens from the .NET API. Same secret, same claims, plus a unique jti.
+    const token = jwt.sign(
+      { sessionId: "s-net", userId: "u-net", role: "student", typ: "access", jti: "4f1c0a" },
+      process.env.JWT_SECRET!,
+      { expiresIn: "1h" }
+    );
+    const res = await authorize(token);
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ "X-Hasura-User-Id": "u-net", "X-Hasura-Role": "student" });
+  });
+
   it("refuses requests with no token", async () => {
     expect((await authorize()).status).toBe(401);
   });

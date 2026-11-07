@@ -43,6 +43,16 @@ The `/consistency-audit` skill describes how to repeat this audit. When you fix 
 | repo | No CI, and server deploys ran without any checks. A 6.5 MB CodePush bundle was committed. No env templates for web or mobile. README linked to missing files and used npm commands. | b3bce80 |
 | hasura | The `deleted_at` migration had an empty `down.sql`. | 7e19d5a |
 
+### Fixed by the mobile switch to the new API
+
+| Problem | Commit |
+|---|---|
+| Two mobile auth modules with separate event emitters, no shared refresh: they are replaced by one session (SecureStore, one shared refresh, one retry on an expired token) | this branch |
+| Password reset showed success on a wrong code, and unfinished sign-ups were stuck: passwords are gone and sign-in is phone plus code | this branch |
+| Home showed every section's classes and ignored cancellations: it now uses `GET /me/today` | this branch |
+| A logged-out phone kept getting pushes, and Android devices collided on `Device.modelId`: tokens now register under an install id, move to the latest user, and logout switches the device off | this branch |
+| No SMS autofill, a typed "+880", generic errors: fixed prefix, autofill and auto-submit, server messages shown | this branch |
+
 ---
 
 ## Open

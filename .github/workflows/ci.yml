@@ -73,6 +73,12 @@ jobs:
       - run: yarn install --frozen-lockfile --ignore-scripts
       - run: yarn lint
       - run: yarn typecheck
+      - run: yarn test --ci
+      # The typed API client must match the committed API contract.
+      - name: API types are up to date
+        run: |
+          yarn api:types
+          git diff --exit-code -- lib/api/generated.ts || { echo "Run: cd mobile && yarn api:types"; exit 1; }
 
   api:
     name: API (.NET build, test, image)

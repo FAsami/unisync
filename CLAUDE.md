@@ -24,8 +24,12 @@ The backend is moving from Hasura + `server/` to `api/` (.NET), feature by featu
 
 Done in `api/`: health, `/auth/code`, `/auth/verify`, `/auth/refresh`, `/auth/logout`, `/me`, `/directory`, access requests (`/access-requests/code`, submit, plus the department admin queue with approve and reject), "My day" (`/me/today`, `/me/week`), class changes (`/classes/{routineId}/{date}/cancel|move|room`, plus `DELETE` to undo), and the inbox (`/me/notifications`, read and read-all, `/me/devices`, `/notifications` send, audiences and sent). Every backend slice in the UX review is built.
 
+The contract is `api/openapi/v1.json`, committed and drift-checked; clients are generated from it.
+
+Mobile already uses `api/` for sign-in, "My day" and push registration (see mobile/CLAUDE.md).
+
 Still to do before cut-over:
-1. Switch the mobile and web apps to `api/`, using a client generated from `/openapi/v1.json`.
+1. Switch the remaining mobile screens and the web app to `api/`.
 2. Move push delivery (FCM) into `api/`. Until then the legacy Hasura trigger on `notification.log` sends pushes through `server/`.
 3. Build the web setup screens for departments, semesters and the roster import.
 4. Retire Hasura and `server/`.
@@ -67,10 +71,10 @@ python3 scripts/check-hasura-metadata.py
 
 ## Known sharp edges (see AUDIT.md for the full list)
 
-- Both axios clients use `validateStatus: () => true`, so axios never throws. Always check `response.status`.
+- The legacy axios clients use `validateStatus: () => true`, so axios never throws: always check `response.status`. The new typed client (`mobile/lib/api`) does this for you.
 - The server returns errors in two shapes: REST `{success:false,error:{message,code}}`, and action-style `{message,extensions:{code}}` from `/otp/*` and `/auth/account/delete`. On web, read them with `getApiErrorMessage`.
 - Users with role `admin` map to Hasura's built-in **superuser** `admin` role, which bypasses all permissions. The manage and dashboard screens currently depend on this.
-- `mobile/lib/auth.ts` and `mobile/utils/token.ts` duplicate the refresh logic and each has its own event emitter.
+- Mobile has one session module (`mobile/lib/api/session.ts`). Never read tokens anywhere else.
 
 ## Skills and agents
 

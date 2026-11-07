@@ -77,10 +77,8 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
 
     const inAuthGroup =
       segments[0] === 'login' ||
-      segments[0] === 'register' ||
-      segments[0] === 'forgot-password' ||
       segments[0] === 'verify-otp' ||
-      segments[0] === 'reset-password'
+      segments[0] === 'request-access'
 
     const inOnboarding = segments[0] === 'onboarding'
 
@@ -101,10 +99,8 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
 
   const inAuthGroup =
     segments[0] === 'login' ||
-    segments[0] === 'register' ||
-    segments[0] === 'forgot-password' ||
     segments[0] === 'verify-otp' ||
-    segments[0] === 'reset-password'
+    segments[0] === 'request-access'
 
   const inOnboarding = segments[0] === 'onboarding'
 
@@ -159,19 +155,11 @@ const RootLayout = () => {
                             options={{ headerShown: false }}
                           />
                           <Stack.Screen
-                            name="register"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen
                             name="verify-otp"
                             options={{ headerShown: false }}
                           />
                           <Stack.Screen
-                            name="forgot-password"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen
-                            name="reset-password"
+                            name="request-access"
                             options={{ headerShown: false }}
                           />
                           <Stack.Screen

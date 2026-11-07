@@ -1,21 +1,6 @@
-import React, {
-  createContext,
-  useContext,
-  ReactNode,
-  useEffect,
-  useState,
-} from 'react'
-import { AppState } from 'react-native'
-import {
-  getGuestSessionToken,
-  isAuthenticated,
-  getNetworkStatus,
-  authEventEmitter,
-  handleSessionRevocation,
-} from '@/lib/auth'
-import { clearStoredTokens } from '@/utils/token'
-import { axiosClient } from '@/lib/axios'
-import { getCurrentUserFromToken } from '@/utils/getUserFromToken'
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react'
+import { session, type Tokens } from '@/lib/api'
+import { getInstallId } from '@/lib/installId'
 
 interface User {
   id: string
@@ -24,147 +9,58 @@ interface User {
 
 interface AuthContextType {
   isLoading: boolean
-  isOnline: boolean
   hasValidToken: boolean
+  /** True after the server ended the session (signed in elsewhere, deleted, revoked). */
   isSessionRevoked: boolean
   user: User | null
   userId: string | null
   userRole: string | null
-  refreshAuth: () => Promise<void>
-  handleRevocation: () => Promise<void>
+  /** Call with the tokens from /auth/verify. */
+  login: (tokens: Tokens) => Promise<void>
   logout: () => Promise<void>
-  login: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+/** React view of lib/api/session: the single source of truth for who is signed in. */
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true)
-  const [isOnline, setIsOnline] = useState(true)
-  const [hasValidToken, setHasValidToken] = useState(false)
-  const [isSessionRevoked, setIsSessionRevoked] = useState(false)
   const [user, setUser] = useState<User | null>(null)
+  const [isSessionRevoked, setIsSessionRevoked] = useState(false)
 
-  const checkAuthStatus = async (showLoading = true) => {
-    try {
-      if (showLoading) setIsLoading(true)
-
-      const [networkStatus, authStatus] = await Promise.all([
-        getNetworkStatus(),
-        isAuthenticated(),
-      ])
-
-      setIsOnline(networkStatus)
-      setHasValidToken(authStatus)
-
-      if (authStatus) {
-        const userData = await getCurrentUserFromToken()
-        if (userData) {
-          setUser({ id: userData.id, role: userData.role })
-        } else {
-          setUser(null)
-        }
-      } else {
-        setUser(null)
-      }
-    } catch (error) {
-      setHasValidToken(false)
-      setUser(null)
-    } finally {
-      if (showLoading) setIsLoading(false)
-    }
-  }
-
-  const refreshAuth = async () => {
-    try {
-      const token = await getGuestSessionToken(true)
-      setHasValidToken(!!token)
-      setIsSessionRevoked(false)
-    } catch (error) {
-      setHasValidToken(false)
-    }
-  }
-
-  const handleRevocation = async () => {
-    try {
-      await handleSessionRevocation()
-      setIsSessionRevoked(false)
-      setHasValidToken(false)
-      await checkAuthStatus(true)
-    } catch (error) {
-      // Handle silently
-    }
-  }
-
-  const logout = async () => {
-    try {
-      await axiosClient.post('/auth/logout')
-      await clearStoredTokens()
-      setHasValidToken(false)
-      setUser(null)
-    } catch (error) {
-      console.error('Logout failed:', error)
-    }
-  }
-
-  useEffect(() => {
-    checkAuthStatus(true)
-
-    const handleAppStateChange = (state: string) => {
-      if (state === 'active') {
-        checkAuthStatus(false)
-      }
-    }
-
-    const subscription = AppState.addEventListener(
-      'change',
-      handleAppStateChange
-    )
-
-    const handleSessionRevokedEvent = () => {
-      setIsSessionRevoked(true)
-      setHasValidToken(false)
-    }
-
-    const handleSessionExpiredEvent = () => {
-      setHasValidToken(false)
-    }
-
-    const handleAuthErrorEvent = () => {
-      setHasValidToken(false)
-    }
-
-    authEventEmitter.on('SESSION_REVOKED', handleSessionRevokedEvent)
-    authEventEmitter.on('SESSION_EXPIRED', handleSessionExpiredEvent)
-    authEventEmitter.on('AUTH_ERROR', handleAuthErrorEvent)
-
-    return () => {
-      subscription.remove()
-      authEventEmitter.off('SESSION_REVOKED', handleSessionRevokedEvent)
-      authEventEmitter.off('SESSION_EXPIRED', handleSessionExpiredEvent)
-      authEventEmitter.off('AUTH_ERROR', handleAuthErrorEvent)
-    }
+  const readUser = useCallback(async () => {
+    const signedIn = await session.isSignedIn()
+    const claims = signedIn ? await session.claims() : null
+    setUser(claims ? { id: claims.userId, role: claims.role } : null)
   }, [])
 
-  const login = async () => {
-    setIsLoading(true)
-    await checkAuthStatus(true)
-  }
+  useEffect(() => {
+    readUser().finally(() => setIsLoading(false))
+    return session.subscribe((event) => {
+      if (event.type === 'signed-in') {
+        setIsSessionRevoked(false)
+        void readUser()
+      } else {
+        setUser(null)
+        setIsSessionRevoked(event.reason === 'revoked')
+      }
+    })
+  }, [readUser])
+
+  const login = useCallback((tokens: Tokens) => session.signIn(tokens), [])
+
+  // Passing the install id makes the server stop this phone's pushes in the same call.
+  const logout = useCallback(async () => session.signOut(await getInstallId()), [])
 
   const value: AuthContextType = {
     isLoading,
-    isOnline,
-    hasValidToken,
+    hasValidToken: !!user,
     isSessionRevoked,
     user,
-    userId: user?.id || null,
-    userRole: user?.role || null,
-    refreshAuth,
-    handleRevocation,
-    logout,
+    userId: user?.id ?? null,
+    userRole: user?.role ?? null,
     login,
+    logout,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

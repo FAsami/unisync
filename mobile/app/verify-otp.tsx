@@ -1,249 +1,102 @@
-import React, { useState, useEffect } from 'react'
-import { useAlert } from '@/contexts/AlertContext'
-import {
-  KeyboardAvoidingView,
-  Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { axiosClient } from '@/lib/axios'
-import { setToken, setRefreshToken } from '@/utils/token'
-import { Ionicons } from '@expo/vector-icons'
-
+import React, { useEffect, useState } from 'react'
+import { Pressable } from 'react-native'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Text } from '@/components/ui/text'
 import { VStack } from '@/components/ui/vstack'
-import { HStack } from '@/components/ui/hstack'
-import { Button, ButtonText } from '@/components/ui/button'
-
-import { useTheme } from '@/contexts/ThemeContext'
+import { AuthHeader, AuthSubmitButton } from '@/components/auth'
+import { CodeField, Notice } from '@/components/signin/Fields'
+import { SignInScreen } from '@/components/signin/SignInScreen'
 import { useAuth } from '@/contexts/Auth'
-import { AuthFormField, AuthSubmitButton, AuthHeader } from '@/components/auth'
+import { api, ApiError, call, unwrap } from '@/lib/api'
+import { formatPhone } from '@/lib/phone'
 
-const verifySchema = z.object({
-  otp: z
-    .string()
-    .length(6, { message: 'OTP must be exactly 6 digits' })
-    .regex(/^\d+$/, { message: 'OTP must contain only numbers' }),
-})
+const CODE_LENGTH = 6
+const RESEND_SECONDS = 30
 
-type VerifyFormValues = z.infer<typeof verifySchema>
-
-const VerifyOTPScreen = () => {
+/** Sign-in step 2: the code from the SMS. Fills itself from the SMS where the OS allows. */
+export default function VerifyCode() {
   const router = useRouter()
-  const navigation = useNavigation()
-  const { currentMode } = useTheme()
   const auth = useAuth()
-  const params = useLocalSearchParams<{ phone: string; purpose: string }>()
-
-  const { showAlert } = useAlert()
-
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [resendTimer, setResendTimer] = useState(30)
-  const [canResend, setCanResend] = useState(false)
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<VerifyFormValues>({
-    defaultValues: {
-      otp: '',
-    },
-    resolver: zodResolver(verifySchema),
-  })
+  const { phone } = useLocalSearchParams<{ phone: string }>()
+  const [code, setCode] = useState('')
+  const [problem, setProblem] = useState<ApiError>()
+  const [info, setInfo] = useState<string>()
+  const [verifying, setVerifying] = useState(false)
+  const [wait, setWait] = useState(RESEND_SECONDS)
 
   useEffect(() => {
-    let interval: any
-    if (resendTimer > 0) {
-      interval = setInterval(() => {
-        setResendTimer((prev) => prev - 1)
-      }, 1000)
-    } else {
-      setCanResend(true)
-    }
-    return () => clearInterval(interval)
-  }, [resendTimer])
+    if (wait <= 0) return
+    const timer = setTimeout(() => setWait((w) => w - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [wait])
 
-  const onResend = async () => {
-    if (!params.phone) return
-    setCanResend(false)
-    setResendTimer(30)
+  const verify = async (value = code) => {
+    if (value.length !== CODE_LENGTH || verifying) return
+    setProblem(undefined)
+    setVerifying(true)
     try {
-      const response = await axiosClient.post('/otp/send', {
-        identifier: params.phone,
-        identifierType: 'PHONE',
-        purpose: params.purpose || 'SIGNUP',
-      })
-      if (!response.data.success) {
-        const msg = response.data.error?.message || 'Failed to resend OTP'
-        showAlert({
-          title: 'Error',
-          description: msg,
-          type: 'error',
-        })
-        setCanResend(true)
-        setResendTimer(0)
-      } else {
-        showAlert({
-          title: 'Success',
-          description: 'OTP resent successfully',
-          type: 'success',
-        })
-      }
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.error?.message ||
-        error?.message ||
-        'Failed to resend OTP'
-      showAlert({
-        title: 'Error',
-        description: msg,
-        type: 'error',
-      })
-      setCanResend(true)
-      setResendTimer(0)
-    }
-  }
-
-  const onSubmit = async (data: VerifyFormValues) => {
-    if (!params.phone) {
-      showAlert({
-        title: 'Error',
-        description: 'Phone number is missing',
-        type: 'error',
-      })
-      return
-    }
-
-    setIsSubmitting(true)
-    try {
-      const response = await axiosClient.post('/auth/register/verify', {
-        phone: params.phone,
-        otp: data.otp,
-      })
-
-      if (response.data.success) {
-        const { access_token, refresh_token } =
-          response.data.data.insert_user_session_one
-        await setToken(access_token)
-        await setRefreshToken(refresh_token)
-
-        await auth.login()
-
-        router.replace('/(tabs)')
-      } else {
-        const msg = response.data.error?.message || 'Verification failed'
-        showAlert({
-          title: 'Verification Failed',
-          description: msg,
-          type: 'error',
-        })
-      }
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.error?.message ||
-        error?.message ||
-        'Something went wrong during verification'
-      showAlert({
-        title: 'Error',
-        description: msg,
-        type: 'error',
-      })
+      const tokens = await call(async () => unwrap(await api.POST('/api/v1/auth/verify', { body: { phone, code: value } })))
+      await auth.login(tokens)
+      router.replace('/(tabs)')
+    } catch (error) {
+      setProblem(error as ApiError)
+      setCode('')
     } finally {
-      setIsSubmitting(false)
+      setVerifying(false)
     }
   }
+
+  const resend = async () => {
+    setProblem(undefined)
+    setInfo(undefined)
+    try {
+      await call(async () => unwrap(await api.POST('/api/v1/auth/code', { body: { phone } })))
+      setInfo('A new code is on its way.')
+      setWait(RESEND_SECONDS)
+    } catch (error) {
+      setProblem(error as ApiError)
+    }
+  }
+
+  const remaining = (problem?.details as { attemptsRemaining?: number } | undefined)?.attemptsRemaining
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-background-950">
-      <HStack className="px-4 py-2">
-        <TouchableOpacity
-          onPress={() => {
-            if (navigation.canGoBack()) {
-              router.back()
-            } else {
-              router.replace('/login')
-            }
-          }}
-          className="p-2 rounded-full bg-background-50 dark:bg-background-900"
-        >
-          <Ionicons
-            name="arrow-back"
-            size={24}
-            color={currentMode === 'dark' ? '#F1F5F9' : '#1E293B'}
+    <SignInScreen>
+      <VStack className="flex-1 justify-center" space="lg">
+        <AuthHeader title="Enter your code" subtitle={`We texted a ${CODE_LENGTH}-digit code to ${formatPhone(phone ?? '')}.`} />
+
+        <CodeField value={code} onChange={setCode} length={CODE_LENGTH} onComplete={verify} />
+
+        {problem ? (
+          <Notice
+            message={remaining !== undefined && remaining > 0 ? `${problem.message} ${remaining} tries left.` : problem.message}
           />
-        </TouchableOpacity>
-      </HStack>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView
-            contentContainerStyle={{
-              flexGrow: 1,
-              padding: 24,
-            }}
-          >
-            <VStack space="2xl" className="w-full max-w-md mx-auto">
-              <AuthHeader
-                title="Verify OTP"
-                subtitle={`Enter the code sent to ${params.phone}`}
-              />
+        ) : info ? (
+          <Notice tone="success" message={info} />
+        ) : null}
 
-              <VStack space="md">
-                <AuthFormField
-                  field={{
-                    name: 'otp',
-                    label: 'OTP Code',
-                    placeholder: '123456',
-                    icon: 'chatbubble-ellipses-outline',
-                    keyboardType: 'number-pad',
-                  }}
-                  control={control}
-                  errors={errors}
-                />
+        <AuthSubmitButton onPress={() => verify()} isLoading={verifying} text="Sign in" disabled={code.length !== CODE_LENGTH} />
 
-                <AuthSubmitButton
-                  onPress={handleSubmit(onSubmit)}
-                  isLoading={isSubmitting}
-                  text="Verify"
-                />
+        <Pressable
+          onPress={resend}
+          disabled={wait > 0}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: wait > 0 }}
+          className="min-h-[44px] items-center justify-center"
+        >
+          <Text className={wait > 0 ? 'text-typography-400' : 'text-primary-600 font-semibold'}>
+            {wait > 0 ? `Send a new code in ${wait}s` : 'Send a new code'}
+          </Text>
+        </Pressable>
 
-                <HStack className="justify-center items-center mt-4">
-                  <Text className="text-typography-500 text-sm">
-                    Didn&apos;t receive code?
-                  </Text>
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onPress={onResend}
-                    isDisabled={!canResend}
-                    className="p-0 h-auto ml-1"
-                  >
-                    <ButtonText
-                      className={`font-bold ${
-                        !canResend ? 'text-typography-400' : 'text-primary-600'
-                      }`}
-                    >
-                      Resend {resendTimer > 0 ? `(${resendTimer}s)` : ''}
-                    </ButtonText>
-                  </Button>
-                </HStack>
-              </VStack>
-            </VStack>
-          </ScrollView>
-        </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        <Pressable
+          onPress={() => router.replace({ pathname: '/login', params: { phone } })}
+          accessibilityRole="button"
+          className="min-h-[44px] items-center justify-center"
+        >
+          <Text className="text-primary-600">Use a different number</Text>
+        </Pressable>
+      </VStack>
+    </SignInScreen>
   )
 }
-
-export default VerifyOTPScreen

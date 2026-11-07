@@ -1,5 +1,4 @@
 import messaging from '@react-native-firebase/messaging'
-import * as Device from 'expo-device'
 import { Platform } from 'react-native'
 
 export async function requestNotificationPermission(): Promise<boolean> {
@@ -19,10 +18,6 @@ export async function getFCMToken(): Promise<string | null> {
     console.error('Error getting FCM token:', error)
     return null
   }
-}
-
-export function getDeviceId(): string {
-  return Device.modelId || Platform.OS
 }
 
 export function getPlatform(): 'ios' | 'android' | 'web' {

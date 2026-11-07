@@ -1162,52 +1162,6 @@ export interface CheckRoutineConflictsData {
 }
 
 // --- DEVICE TOKENS (Multi-Provider Notifications) ---
-export const UPSERT_DEVICE_TOKEN = gql`
-  mutation UpsertDeviceToken(
-    $user_id: uuid!
-    $device_id: String!
-    $provider: String!
-    $token: String!
-    $platform: String!
-  ) {
-    insert_user_device_one(
-      object: {
-        user_id: $user_id
-        device_id: $device_id
-        provider: $provider
-        token: $token
-        platform: $platform
-      }
-      on_conflict: {
-        constraint: device_user_id_device_id_provider_key
-        update_columns: [token, last_used_at, is_active]
-      }
-    ) {
-      id
-      token
-    }
-  }
-`
-
-export const DEACTIVATE_DEVICE = gql`
-  mutation DeactivateDevice(
-    $user_id: uuid!
-    $device_id: String!
-    $provider: String!
-  ) {
-    update_user_device(
-      where: {
-        user_id: { _eq: $user_id }
-        device_id: { _eq: $device_id }
-        provider: { _eq: $provider }
-      }
-      _set: { is_active: false }
-    ) {
-      affected_rows
-    }
-  }
-`
-
 // ===== SCHEDULE EXCEPTIONS =====
 export const CREATE_ROUTINE_EXCEPTION = gql`
   mutation CreateRoutineException(

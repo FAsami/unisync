@@ -68,6 +68,8 @@ for t in "${TARGETS[@]}"; do
       need_modules mobile || continue
       run "mobile: lint" mobile yarn -s lint
       run "mobile: typecheck" mobile yarn -s typecheck
+      run "mobile: test" mobile yarn -s test --ci
+      run "mobile: api types current" mobile bash -c 'yarn -s api:types >/dev/null && git diff --quiet -- lib/api/generated.ts || { echo "lib/api/generated.ts is stale: run yarn api:types"; exit 1; }'
       ;;
     *)
       echo "unknown target: $t (expected api|server|web|mobile|hasura)"

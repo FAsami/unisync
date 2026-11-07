@@ -1,18 +1,14 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { useMutation } from '@apollo/client'
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { useAuth } from './Auth'
 import {
   requestNotificationPermission,
   getFCMToken,
-  getDeviceId,
   getPlatform,
   setupTokenRefreshListener,
   setupForegroundMessageHandler,
 } from '@/lib/fcm'
-import {
-  UPSERT_DEVICE_TOKEN,
-  DEACTIVATE_DEVICE,
-} from '@/lib/graphql-operations'
+import { api, call, unwrap } from '@/lib/api'
+import { getInstallId } from '@/lib/installId'
 
 interface FCMContextType {
   hasPermission: boolean
@@ -22,93 +18,63 @@ interface FCMContextType {
 
 const FCMContext = createContext<FCMContextType | undefined>(undefined)
 
-export const FCMProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+/**
+ * Registers this install's push token for the signed-in user (PUT /me/devices).
+ * The server moves a token to whoever registered it last, and logout switches
+ * the device off in the same call, so a phone never keeps another user's pushes.
+ */
+export const FCMProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { userId, hasValidToken } = useAuth()
   const [hasPermission, setHasPermission] = useState(false)
   const [isRegistered, setIsRegistered] = useState(false)
 
-  const [upsertToken, { loading, error }] = useMutation(UPSERT_DEVICE_TOKEN)
-  const [deactivateToken] = useMutation(DEACTIVATE_DEVICE)
-
-  const registerToken = async (token: string, provider: string = 'fcm') => {
-    if (!userId) return
-
+  const registerToken = useCallback(async (token: string) => {
     try {
-      await upsertToken({
-        variables: {
-          user_id: userId,
-          device_id: getDeviceId(),
-          provider,
-          token,
-          platform: getPlatform(),
-        },
-      })
+      const deviceId = await getInstallId()
+      await call(async () => unwrap(await api.PUT('/api/v1/me/devices', { body: { deviceId, token, platform: getPlatform() } })))
       setIsRegistered(true)
     } catch (error) {
-      console.error('Failed to register FCM token:', error)
+      console.warn('Push registration failed; will retry on the next token refresh or launch.', error)
     }
-  }
+  }, [])
 
   const requestPermission = async () => {
     const granted = await requestNotificationPermission()
     setHasPermission(granted)
-
     if (granted && userId) {
       const token = await getFCMToken()
-      if (token) {
-        await registerToken(token)
-      }
+      if (token) await registerToken(token)
     }
   }
 
   useEffect(() => {
-    if (!hasValidToken || !userId) return
-    const initFCM = async () => {
+    if (!hasValidToken || !userId) {
+      setIsRegistered(false)
+      return
+    }
+
+    const init = async () => {
       const granted = await requestNotificationPermission()
       setHasPermission(granted)
-
       if (granted) {
         const token = await getFCMToken()
-        if (token) {
-          await registerToken(token)
-        }
+        if (token) await registerToken(token)
       }
     }
 
-    initFCM()
+    void init()
     const unsubscribeTokenRefresh = setupTokenRefreshListener(registerToken)
-    const unsubscribeForeground = setupForegroundMessageHandler((message) => {
-      console.log('Foreground message:', message)
+    const unsubscribeForeground = setupForegroundMessageHandler(() => {
+      // Foreground pushes: the inbox refreshes on focus; nothing to show here yet.
     })
 
     return () => {
       unsubscribeTokenRefresh()
       unsubscribeForeground()
     }
-  }, [hasValidToken, userId])
+  }, [hasValidToken, userId, registerToken])
 
-  useEffect(() => {
-    if (!hasValidToken && isRegistered) {
-      deactivateToken({
-        variables: {
-          user_id: userId,
-          device_id: getDeviceId(),
-          provider: 'fcm',
-        },
-      })
-      setIsRegistered(false)
-    }
-  }, [hasValidToken])
-
-  return (
-    <FCMContext.Provider
-      value={{ hasPermission, requestPermission, isRegistered }}
-    >
-      {children}
-    </FCMContext.Provider>
-  )
+  return <FCMContext.Provider value={{ hasPermission, requestPermission, isRegistered }}>{children}</FCMContext.Provider>
 }
 
 export const useFCM = () => {

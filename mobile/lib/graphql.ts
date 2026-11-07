@@ -10,9 +10,8 @@ import { onError } from '@apollo/client/link/error'
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions'
 import { createClient } from 'graphql-ws'
 import { getMainDefinition } from '@apollo/client/utilities'
-import { getGuestSessionToken, authEventEmitter } from './auth'
+import { session } from './api'
 import { getEnv } from '@/utils/getEnv'
-import { getSessionToken } from '@/utils/token'
 
 const httpLink = createHttpLink({
   uri: getEnv('DATAHUB'),
@@ -22,7 +21,7 @@ const wsLink = new GraphQLWsLink(
   createClient({
     url: getEnv('DATAHUB_WS'),
     connectionParams: async () => {
-      const token = (await getSessionToken()) || (await getGuestSessionToken())
+      const token = await session.getAccessToken()
       return {
         headers: {
           'x-hasura-access-token': token || '',
@@ -35,10 +34,7 @@ const wsLink = new GraphQLWsLink(
           error?.message?.includes('unauthorized') ||
           error?.message?.includes('401')
         ) {
-          authEventEmitter.emit('AUTH_ERROR', {
-            reason: 'GraphQL WebSocket unauthorized',
-            timestamp: new Date().toISOString(),
-          })
+          void session.refreshAccessToken()
         }
       },
       closed: (event) => {
@@ -57,7 +53,7 @@ const wsLink = new GraphQLWsLink(
 )
 
 const authLink = setContext(async (_, { headers }) => {
-  const token = (await getSessionToken()) || (await getGuestSessionToken())
+  const token = await session.getAccessToken()
   return {
     headers: {
       ...headers,
@@ -74,20 +70,14 @@ const errorLink = onError(
           extensions?.code === 'access-denied' ||
           message.includes('unauthorized')
         ) {
-          authEventEmitter.emit('AUTH_ERROR', {
-            reason: 'GraphQL access denied',
-            timestamp: new Date().toISOString(),
-          })
+          void session.refreshAccessToken()
         }
       })
     }
 
     if (networkError) {
       if (networkError.message.includes('401')) {
-        authEventEmitter.emit('AUTH_ERROR', {
-          reason: 'GraphQL network 401 error',
-          timestamp: new Date().toISOString(),
-        })
+        void session.refreshAccessToken()
       }
     }
   }
