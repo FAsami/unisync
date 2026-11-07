@@ -47,16 +47,24 @@ public static partial class AuthEndpoints
             return ApiResponse.Fail(http, 404, ErrorCodes.PhoneNotRegistered, "This number isn't on your department's list yet.");
         }
 
-        if (await otp.SendLimitReachedAsync(phone, OtpService.SignInPurpose, ct))
+        return await SendCodeAsync(http, otp, sms, otpOptions.Value, loggers, phone, OtpService.SignInPurpose,
+            code => $"{code} is your UniSync sign-in code. It expires in {(int)otpOptions.Value.Lifetime.TotalMinutes} minutes.", ct);
+    }
+
+    /// <summary>Per-phone limit, code creation and SMS: shared by every flow that texts a code.</summary>
+    internal static async Task<IResult> SendCodeAsync(
+        HttpContext http, OtpService otp, ISmsSender sms, OtpOptions options, ILoggerFactory loggers,
+        string phone, string purpose, Func<string, string> message, CancellationToken ct)
+    {
+        if (await otp.SendLimitReachedAsync(phone, purpose, ct))
         {
             return ApiResponse.Fail(http, 429, ErrorCodes.TooManyCodes, "Too many codes requested. Try again in an hour.");
         }
 
-        var code = await otp.CreateAsync(phone, OtpService.SignInPurpose, ct);
-        var lifetime = otpOptions.Value.Lifetime;
+        var code = await otp.CreateAsync(phone, purpose, ct);
         try
         {
-            await sms.SendAsync(phone, $"{code} is your UniSync sign-in code. It expires in {(int)lifetime.TotalMinutes} minutes.", ct);
+            await sms.SendAsync(phone, message(code), ct);
         }
         catch (SmsDeliveryException ex)
         {
@@ -64,7 +72,7 @@ public static partial class AuthEndpoints
             return ApiResponse.Fail(http, 502, ErrorCodes.SmsFailed, "We couldn't send the code. Try again in a minute.");
         }
 
-        return ApiResponse.Ok(http, "Code sent", new CodeSent(phone, (int)lifetime.TotalSeconds));
+        return ApiResponse.Ok(http, "Code sent", new CodeSent(phone, (int)options.Lifetime.TotalSeconds));
     }
 
     private static async Task<IResult> VerifyCodeAsync(

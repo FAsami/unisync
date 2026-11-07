@@ -14,6 +14,8 @@ public sealed class Account
     public string? Password { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTimeOffset? DeletedAt { get; set; }
+    /// <summary>For role "admin": the department this admin manages. Null = no department scope.</summary>
+    public Guid? ManagedDepartmentId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 
@@ -65,11 +67,57 @@ public sealed class Profile
     public Guid? SectionId { get; set; }
 }
 
+public sealed class Department
+{
+    public Guid Id { get; set; }
+    public string Code { get; set; } = "";
+    public string Name { get; set; } = "";
+    public bool IsActive { get; set; }
+}
+
+public sealed class Batch
+{
+    public Guid Id { get; set; }
+    /// <summary>Column is misspelled <c>departmant_id</c> in the legacy schema.</summary>
+    public Guid DepartmentId { get; set; }
+    public string Name { get; set; } = "";
+    public bool IsActive { get; set; }
+}
+
 public sealed class Section
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = "";
     public Guid BatchId { get; set; }
+    public bool IsActive { get; set; }
+}
+
+public static class AccessRequestStatus
+{
+    public const string Pending = "pending";
+    public const string Approved = "approved";
+    public const string Rejected = "rejected";
+}
+
+/// <summary>A request to join from a phone that is not on any department roster.</summary>
+public sealed class AccessRequest
+{
+    public Guid Id { get; set; }
+    public string Phone { get; set; } = "";
+    public string FirstName { get; set; } = "";
+    public string LastName { get; set; } = "";
+    public string StudentId { get; set; } = "";
+    public Guid DepartmentId { get; set; }
+    public Guid BatchId { get; set; }
+    public Guid SectionId { get; set; }
+    public string Status { get; set; } = AccessRequestStatus.Pending;
+    public string? RejectionReason { get; set; }
+    public Guid? DecidedBy { get; set; }
+    public DateTimeOffset? DecidedAt { get; set; }
+    /// <summary>The account created on approval.</summary>
+    public Guid? AccountId { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
 }
 
 /// <summary>A student marked as class representative for one section (not a separate role).</summary>

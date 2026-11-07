@@ -22,7 +22,7 @@ The backend is moving from Hasura + `server/` to `api/` (.NET), feature by featu
 
 **New backend work goes in `api/`.** Change `server/` or Hasura only to keep today's apps working. All three share one Postgres and one JWT secret until the cut-over.
 
-Done in `api/`: health, `/auth/code`, `/auth/verify`, `/auth/refresh`, `/auth/logout`, `/me`. Next up: access requests, `/me/today`, the inbox, and class changes.
+Done in `api/`: health, `/auth/code`, `/auth/verify`, `/auth/refresh`, `/auth/logout`, `/me`, `/directory`, and access requests (`/access-requests/code`, submit, plus the department admin queue with approve and reject). Next up: `/me/today`, the inbox, and class changes. The apps still call the legacy stack; switching them over is a separate step.
 
 ## How the pieces talk (legacy stack)
 

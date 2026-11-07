@@ -5,6 +5,8 @@ namespace UniSync.Api.Tests.Infrastructure;
 
 public sealed record SeededStudent(Guid UserId, string Phone, Guid SectionId, Guid BatchId, string SectionName);
 
+public sealed record SeededPlacement(Guid DepartmentId, Guid BatchId, Guid SectionId);
+
 /// <summary>Inserts roster data the way a department import will: an account with no password plus a profile.</summary>
 public static class Seed
 {
@@ -33,6 +35,38 @@ public static class Seed
         await using var reader = await command.ExecuteReaderAsync(ct);
         await reader.ReadAsync(ct);
         return new SeededStudent(reader.GetGuid(0), phone, reader.GetGuid(1), reader.GetGuid(2), "A");
+    }
+
+    /// <summary>A fresh active department with one batch ("2026") and one section ("A").</summary>
+    public static async Task<SeededPlacement> PlacementAsync(string connectionString, CancellationToken ct = default)
+    {
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(ct);
+        await using var command = new NpgsqlCommand("""
+            WITH d AS (INSERT INTO academic.department (code, name) VALUES ('D' || @s, 'Department ' || @s) RETURNING id),
+                 b AS (INSERT INTO academic.batch (departmant_id, name, current_semester, year, semester_count) SELECT id, '2026', 1, 2026, 8 FROM d RETURNING id, departmant_id),
+                 s AS (INSERT INTO academic.section (name, batch_id) SELECT 'A', id FROM b RETURNING id, batch_id)
+            SELECT b.departmant_id, b.id, s.id FROM b, s
+            """, connection);
+        command.Parameters.AddWithValue("s", suffix);
+        await using var reader = await command.ExecuteReaderAsync(ct);
+        await reader.ReadAsync(ct);
+        return new SeededPlacement(reader.GetGuid(0), reader.GetGuid(1), reader.GetGuid(2));
+    }
+
+    /// <summary>An account with role admin; <paramref name="managedDepartmentId"/> null = no department scope.</summary>
+    public static async Task<string> AdminAsync(string connectionString, Guid? managedDepartmentId, CancellationToken ct = default)
+    {
+        var phone = RandomPhone();
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(ct);
+        await using var command = new NpgsqlCommand(
+            """INSERT INTO "user".account (phone, role, managed_department_id) VALUES (@phone, 'admin', @dept)""", connection);
+        command.Parameters.AddWithValue("phone", phone);
+        command.Parameters.AddWithValue("dept", (object?)managedDepartmentId ?? DBNull.Value);
+        await command.ExecuteNonQueryAsync(ct);
+        return phone;
     }
 
     public static async Task ExecuteAsync(string connectionString, string sql, CancellationToken ct, params (string Name, object Value)[] parameters)

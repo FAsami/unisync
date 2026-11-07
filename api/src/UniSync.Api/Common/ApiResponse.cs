@@ -34,6 +34,7 @@ public static class ApiResponse
 public static class ErrorCodes
 {
     public const string InvalidRequest = "INVALID_REQUEST";
+    public const string ValidationFailed = "VALIDATION_FAILED";
     public const string InvalidPhone = "INVALID_PHONE";
     public const string PhoneNotRegistered = "PHONE_NOT_REGISTERED";
     public const string TooManyCodes = "TOO_MANY_CODES";
@@ -41,6 +42,11 @@ public static class ErrorCodes
     public const string InvalidCode = "INVALID_CODE";
     public const string CodeExpired = "CODE_EXPIRED";
     public const string TooManyAttempts = "TOO_MANY_ATTEMPTS";
+    public const string AlreadyRegistered = "ALREADY_REGISTERED";
+    public const string RequestPending = "REQUEST_PENDING";
+    public const string StudentIdTaken = "STUDENT_ID_TAKEN";
+    public const string InvalidSection = "INVALID_SECTION";
+    public const string AlreadyDecided = "ALREADY_DECIDED";
     public const string Unauthorized = "UNAUTHORIZED";
     public const string TokenExpired = "TOKEN_EXPIRED";
     public const string SessionRevoked = "SESSION_REVOKED";

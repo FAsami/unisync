@@ -4,10 +4,12 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Npgsql;
+using UniSync.Api.AccessRequests;
 using UniSync.Api.Auth;
 using UniSync.Api.Common;
 using UniSync.Api.Configuration;
 using UniSync.Api.Data;
+using UniSync.Api.Academic;
 using UniSync.Api.Health;
 using UniSync.Api.CurrentUser;
 using UniSync.Api.Sms;
@@ -52,7 +54,7 @@ services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
         jwt.TokenValidationParameters = TokenService.CreateValidationParameters(auth.Value);
         jwt.Events = new BearerEvents();
     });
-services.AddAuthorization();
+services.AddAuthorizationBuilder().AddUniSyncPolicies();
 
 // ---- SMS
 services.AddHttpClient<BulkSmsBdSender>(c => c.Timeout = TimeSpan.FromSeconds(15));
@@ -123,6 +125,8 @@ var api = app.MapGroup("/api/v1");
 api.MapHealthEndpoints();
 api.MapAuthEndpoints();
 api.MapMeEndpoints();
+api.MapDirectoryEndpoints();
+api.MapAccessRequestEndpoints();
 
 await app.RunAsync();
 
