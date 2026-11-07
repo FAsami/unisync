@@ -1,0 +1,133 @@
+using System.Security.Claims;
+using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using UniSync.Api.Common;
+using UniSync.Api.Configuration;
+using UniSync.Api.Data;
+using UniSync.Api.Sms;
+
+namespace UniSync.Api.Auth;
+
+public sealed record RequestCodeBody(string? Phone);
+public sealed record CodeSent(string Phone, int ExpiresInSeconds);
+public sealed record VerifyCodeBody(string? Phone, string? Code);
+public sealed record RefreshBody(string? RefreshToken);
+
+/// <summary>Passwordless sign-in: phone → one-time code → session (UX review decision 1).</summary>
+public static partial class AuthEndpoints
+{
+    public const string CodePolicy = "auth-code";
+    public const string VerifyPolicy = "auth-verify";
+
+    public static RouteGroupBuilder MapAuthEndpoints(this RouteGroupBuilder api)
+    {
+        var auth = api.MapGroup("/auth").WithTags("Auth");
+        auth.MapPost("/code", RequestCodeAsync).RequireRateLimiting(CodePolicy);
+        auth.MapPost("/verify", VerifyCodeAsync).RequireRateLimiting(VerifyPolicy);
+        auth.MapPost("/refresh", RefreshAsync).RequireRateLimiting(VerifyPolicy);
+        auth.MapPost("/logout", LogoutAsync).RequireAuthorization();
+        return api;
+    }
+
+    private static async Task<IResult> RequestCodeAsync(
+        RequestCodeBody body, HttpContext http, UniSyncDbContext db, OtpService otp, ISmsSender sms,
+        IOptions<OtpOptions> otpOptions, ILoggerFactory loggers, CancellationToken ct)
+    {
+        if (!PhoneNumber.TryNormalize(body.Phone, out var phone))
+        {
+            return ApiResponse.Fail(http, 400, ErrorCodes.InvalidPhone, "Enter a Bangladeshi mobile number, like 01712345678.");
+        }
+
+        // Roster check: only accounts a department imported can sign in. The app
+        // offers "Request access" on this error (UX review decision 1).
+        var account = await db.Accounts.AsNoTracking().FirstOrDefaultAsync(a => a.Phone == phone, ct);
+        if (account is null || !account.CanSignIn)
+        {
+            return ApiResponse.Fail(http, 404, ErrorCodes.PhoneNotRegistered, "This number isn't on your department's list yet.");
+        }
+
+        if (await otp.SendLimitReachedAsync(phone, OtpService.SignInPurpose, ct))
+        {
+            return ApiResponse.Fail(http, 429, ErrorCodes.TooManyCodes, "Too many codes requested. Try again in an hour.");
+        }
+
+        var code = await otp.CreateAsync(phone, OtpService.SignInPurpose, ct);
+        var lifetime = otpOptions.Value.Lifetime;
+        try
+        {
+            await sms.SendAsync(phone, $"{code} is your UniSync sign-in code. It expires in {(int)lifetime.TotalMinutes} minutes.", ct);
+        }
+        catch (SmsDeliveryException ex)
+        {
+            LogSmsFailed(loggers.CreateLogger(typeof(AuthEndpoints)), ex);
+            return ApiResponse.Fail(http, 502, ErrorCodes.SmsFailed, "We couldn't send the code. Try again in a minute.");
+        }
+
+        return ApiResponse.Ok(http, "Code sent", new CodeSent(phone, (int)lifetime.TotalSeconds));
+    }
+
+    private static async Task<IResult> VerifyCodeAsync(
+        VerifyCodeBody body, HttpContext http, UniSyncDbContext db, OtpService otp, SessionService sessions,
+        IOptions<OtpOptions> otpOptions, TimeProvider time, CancellationToken ct)
+    {
+        if (!PhoneNumber.TryNormalize(body.Phone, out var phone))
+        {
+            return ApiResponse.Fail(http, 400, ErrorCodes.InvalidPhone, "Enter a Bangladeshi mobile number, like 01712345678.");
+        }
+
+        var length = otpOptions.Value.Length;
+        if (body.Code is null || body.Code.Length != length || !DigitsOnly().IsMatch(body.Code))
+        {
+            return ApiResponse.Fail(http, 400, ErrorCodes.InvalidCode, $"Enter the {length}-digit code from the SMS.");
+        }
+
+        var account = await db.Accounts.FirstOrDefaultAsync(a => a.Phone == phone, ct);
+        if (account is null || !account.CanSignIn)
+        {
+            return ApiResponse.Fail(http, 400, ErrorCodes.InvalidCode, "That code is not valid. Request a new one.");
+        }
+
+        var check = await otp.CheckAndConsumeAsync(phone, OtpService.SignInPurpose, code: body.Code, ct);
+        if (!check.Ok)
+        {
+            object? details = check.AttemptsRemaining is { } left ? new { attemptsRemaining = left } : null;
+            return ApiResponse.Fail(http, 400, check.ErrorCode!, check.Message!, details);
+        }
+
+        if (account.PhoneVerifiedAt is null)
+        {
+            account.PhoneVerifiedAt = time.GetUtcNow();
+            await db.SaveChangesAsync(ct);
+        }
+
+        var tokens = await sessions.IssueAsync(account, http, ct);
+        return ApiResponse.Ok(http, "Signed in", tokens);
+    }
+
+    private static async Task<IResult> RefreshAsync(RefreshBody body, HttpContext http, SessionService sessions, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(body.RefreshToken))
+        {
+            return ApiResponse.Fail(http, 400, ErrorCodes.InvalidRequest, "refreshToken is required.");
+        }
+
+        var result = await sessions.RefreshAsync(body.RefreshToken, ct);
+        return result.Tokens is { } tokens
+            ? ApiResponse.Ok(http, "Session refreshed", tokens)
+            : ApiResponse.Fail(http, 401, result.ErrorCode!, result.Message!);
+    }
+
+    private static async Task<IResult> LogoutAsync(ClaimsPrincipal user, HttpContext http, SessionService sessions, CancellationToken ct)
+    {
+        var sessionId = Guid.Parse(user.FindFirstValue(TokenService.SessionIdClaim)!);
+        await sessions.RevokeAsync(sessionId, ct);
+        return ApiResponse.Ok<object?>(http, "Signed out", null);
+    }
+
+    [GeneratedRegex("^[0-9]+$")]
+    private static partial Regex DigitsOnly();
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Sign-in code SMS failed")]
+    private static partial void LogSmsFailed(ILogger logger, Exception exception);
+}
