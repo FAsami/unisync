@@ -1,7 +1,7 @@
 import rateLimit from "express-rate-limit";
 
 export const webhookLimiter = rateLimit({
-  windowMs: 1,
+  windowMs: 1000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,

@@ -2,6 +2,7 @@
 import { redirect } from 'next/navigation'
 import { apiClient } from '@/lib/axios'
 import { encrypt } from '@/lib/encrypt'
+import { getApiErrorMessage } from '@/lib/apiError'
 
 const registerAction = async ({
   phone,
@@ -19,11 +20,19 @@ const registerAction = async ({
   })
   if (response.data.success) {
     try {
-      await apiClient.post('/otp/send', {
+      // apiClient never throws on HTTP errors (validateStatus: () => true), so
+      // the status must be checked or a failed/rate-limited send is ignored.
+      const otpResponse = await apiClient.post('/otp/send', {
         identifier: phone,
         identifierType: 'PHONE',
         purpose: 'SIGNUP',
       })
+      if (otpResponse.status >= 400) {
+        return {
+          success: false,
+          message: getApiErrorMessage(otpResponse.data, 'Failed to send OTP'),
+        }
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       return {
@@ -47,10 +56,7 @@ const registerAction = async ({
   } else {
     return {
       success: false,
-      message:
-        response.data.message ||
-        response.data?.error?.message ||
-        'Something went wrong!',
+      message: getApiErrorMessage(response.data, 'Something went wrong!'),
     }
   }
 }

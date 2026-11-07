@@ -3,8 +3,7 @@ import bcrypt from "bcrypt";
 import { getGraphQLClient } from "../../../lib/graphqlClient";
 import { resetPasswordVerifySchema } from "../../../schemas";
 import { GET_USER_BY_PHONE } from "../gql/queries";
-import { GET_OTP_BY_IDENTIFIER_AND_PURPOSE, VERIFY_OTP } from "../../otp/gql";
-import { verifyOTP as compareOTP } from "../../otp/utils";
+import { checkAndConsumeOTP } from "../../otp/utils";
 import { REVOKE_USER_SESSIONS, UPDATE_USER_PASSWORD } from "../gql/mutation";
 import { asyncHandler } from "../../../utils/response";
 import { ValidationError, BadRequestError } from "../../../utils/errors";
@@ -28,25 +27,16 @@ export const resetPasswordVerify = asyncHandler(
       throw new BadRequestError("Invalid or expired OTP", "INVALID_OTP");
     }
 
-    const otpRes = await graphql.request<{
-      user_otp_transaction: Array<{ id: string; otp_hash: string }>;
-    }>(GET_OTP_BY_IDENTIFIER_AND_PURPOSE, {
+    const otpCheck = await checkAndConsumeOTP({
       identifier: phone,
       purpose: "PASSWORD_RESET",
+      otp,
     });
-
-    const record = otpRes.user_otp_transaction?.[0];
-    if (!record) {
-      throw new BadRequestError("Invalid or expired OTP", "INVALID_OTP");
+    if (!otpCheck.ok) {
+      throw new BadRequestError(otpCheck.message, otpCheck.code, {
+        attemptsRemaining: otpCheck.attemptsRemaining,
+      });
     }
-
-    const ok = await compareOTP(otp, record.otp_hash);
-    if (!ok) {
-      throw new BadRequestError("Invalid or expired OTP", "INVALID_OTP");
-    }
-
-    // Mark OTP as verified
-    await graphql.request(VERIFY_OTP, { id: record.id });
 
     // Update password
     const hashed = await bcrypt.hash(newPassword, 12);

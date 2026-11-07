@@ -2,7 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict BG7cmhrUHOtWXZrqu50rGkwxXN2zT5WaqybBtQBbCHjPAofIElfvlsycrno5hJM
 
 -- Dumped from database version 17.7 (e429a59)
 -- Dumped by pg_dump version 17.7 (Homebrew)
@@ -31,13 +30,6 @@ CREATE SCHEMA academic;
 --
 
 CREATE SCHEMA event;
-
-
---
--- Name: hdb_catalog; Type: SCHEMA; Schema: -; Owner: -
---
-
-CREATE SCHEMA hdb_catalog;
 
 
 --
@@ -152,107 +144,6 @@ BEGIN
   _new."updated_at" = NOW();
   RETURN _new;
 END;
-$$;
-
-
---
--- Name: gen_hasura_uuid(); Type: FUNCTION; Schema: hdb_catalog; Owner: -
---
-
-CREATE FUNCTION hdb_catalog.gen_hasura_uuid() RETURNS uuid
-    LANGUAGE sql
-    AS $$select gen_random_uuid()$$;
-
-
---
--- Name: insert_event_log(text, text, text, text, json); Type: FUNCTION; Schema: hdb_catalog; Owner: -
---
-
-CREATE FUNCTION hdb_catalog.insert_event_log(schema_name text, table_name text, trigger_name text, op text, row_data json) RETURNS text
-    LANGUAGE plpgsql
-    AS $$
-  DECLARE
-    id text;
-    payload json;
-    session_variables json;
-    server_version_num int;
-    trace_context json;
-  BEGIN
-    id := gen_random_uuid();
-    server_version_num := current_setting('server_version_num');
-    IF server_version_num >= 90600 THEN
-      -- In some cases postgres sets the setting to an empty string, which is not a valid json.
-      -- NULLIF will convert the empty string to NULL.
-      -- Ref: https://github.com/hasura/graphql-engine/issues/8498
-      session_variables := NULLIF(current_setting('hasura.user', 't'), '');
-      trace_context := NULLIF(current_setting('hasura.tracecontext', 't'), '');
-    ELSE
-      BEGIN
-        session_variables := current_setting('hasura.user');
-      EXCEPTION WHEN OTHERS THEN
-                  session_variables := NULL;
-      END;
-      BEGIN
-        trace_context := current_setting('hasura.tracecontext');
-      EXCEPTION WHEN OTHERS THEN
-        trace_context := NULL;
-      END;
-    END IF;
-    payload := json_build_object(
-      'op', op,
-      'data', row_data,
-      'session_variables', session_variables,
-      'trace_context', trace_context
-    );
-    INSERT INTO hdb_catalog.event_log
-                (id, schema_name, table_name, trigger_name, payload)
-    VALUES
-    (id, schema_name, table_name, trigger_name, payload);
-    RETURN id;
-  END;
-$$;
-
-
---
--- Name: notify_hasura_sendNotification_INSERT(); Type: FUNCTION; Schema: hdb_catalog; Owner: -
---
-
-CREATE FUNCTION hdb_catalog."notify_hasura_sendNotification_INSERT"() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-  DECLARE
-    _old record;
-    _new record;
-    _data json;
-  BEGIN
-    IF TG_OP = 'UPDATE' THEN
-      _old := row((SELECT  "e"  FROM  (SELECT  OLD."target_type" , OLD."id" , OLD."status" , OLD."processed_at" , OLD."target_id" , OLD."failed_count" , OLD."sent_count" , OLD."image_url" , OLD."created_at" , OLD."error_message" , OLD."updated_at" , OLD."created_by" , OLD."title" , OLD."body" , OLD."data"        ) AS "e"      ) );
-      _new := row((SELECT  "e"  FROM  (SELECT  NEW."target_type" , NEW."id" , NEW."status" , NEW."processed_at" , NEW."target_id" , NEW."failed_count" , NEW."sent_count" , NEW."image_url" , NEW."created_at" , NEW."error_message" , NEW."updated_at" , NEW."created_by" , NEW."title" , NEW."body" , NEW."data"        ) AS "e"      ) );
-    ELSE
-    /* initialize _old and _new with dummy values for INSERT and UPDATE events*/
-      _old := row((select 1));
-      _new := row((select 1));
-    END IF;
-    _data := json_build_object(
-      'old', NULL,
-      'new', row_to_json((SELECT  "e"  FROM  (SELECT  NEW."target_type" , NEW."id" , NEW."status" , NEW."processed_at" , NEW."target_id" , NEW."failed_count" , NEW."sent_count" , NEW."image_url" , NEW."created_at" , NEW."error_message" , NEW."updated_at" , NEW."created_by" , NEW."title" , NEW."body" , NEW."data"        ) AS "e"      ) )
-    );
-    BEGIN
-    /* NOTE: formerly we used TG_TABLE_NAME in place of tableName here. However in the case of
-    partitioned tables this will give the name of the partitioned table and since we use the table name to
-    get the event trigger configuration from the schema, this fails because the event trigger is only created
-    on the original table.  */
-      IF (TG_OP <> 'UPDATE') OR (_old <> _new) THEN
-        PERFORM hdb_catalog.insert_event_log(CAST('notification' AS text), CAST('log' AS text), CAST('sendNotification' AS text), TG_OP, _data);
-      END IF;
-      EXCEPTION WHEN undefined_function THEN
-        IF (TG_OP <> 'UPDATE') OR (_old *<> _new) THEN
-          PERFORM hdb_catalog.insert_event_log(CAST('notification' AS text), CAST('log' AS text), CAST('sendNotification' AS text), TG_OP, _data);
-        END IF;
-    END;
-
-    RETURN NULL;
-  END;
 $$;
 
 
@@ -760,66 +651,6 @@ COMMENT ON TABLE event.routine_exception IS 'Skip dates for recurring routines (
 
 
 --
--- Name: event_invocation_logs; Type: TABLE; Schema: hdb_catalog; Owner: -
---
-
-CREATE TABLE hdb_catalog.event_invocation_logs (
-    id text DEFAULT hdb_catalog.gen_hasura_uuid() NOT NULL,
-    trigger_name text,
-    event_id text,
-    status integer,
-    request json,
-    response json,
-    created_at timestamp without time zone DEFAULT now()
-);
-
-
---
--- Name: event_log; Type: TABLE; Schema: hdb_catalog; Owner: -
---
-
-CREATE TABLE hdb_catalog.event_log (
-    id text DEFAULT hdb_catalog.gen_hasura_uuid() NOT NULL,
-    schema_name text NOT NULL,
-    table_name text NOT NULL,
-    trigger_name text NOT NULL,
-    payload jsonb NOT NULL,
-    delivered boolean DEFAULT false NOT NULL,
-    error boolean DEFAULT false NOT NULL,
-    tries integer DEFAULT 0 NOT NULL,
-    created_at timestamp without time zone DEFAULT now(),
-    locked timestamp with time zone,
-    next_retry_at timestamp without time zone,
-    archived boolean DEFAULT false NOT NULL
-);
-
-
---
--- Name: hdb_event_log_cleanups; Type: TABLE; Schema: hdb_catalog; Owner: -
---
-
-CREATE TABLE hdb_catalog.hdb_event_log_cleanups (
-    id text DEFAULT hdb_catalog.gen_hasura_uuid() NOT NULL,
-    trigger_name text NOT NULL,
-    scheduled_at timestamp without time zone NOT NULL,
-    deleted_event_logs integer,
-    deleted_event_invocation_logs integer,
-    status text NOT NULL,
-    CONSTRAINT hdb_event_log_cleanups_status_check CHECK ((status = ANY (ARRAY['scheduled'::text, 'paused'::text, 'completed'::text, 'dead'::text])))
-);
-
-
---
--- Name: hdb_source_catalog_version; Type: TABLE; Schema: hdb_catalog; Owner: -
---
-
-CREATE TABLE hdb_catalog.hdb_source_catalog_version (
-    version text NOT NULL,
-    upgraded_on timestamp with time zone NOT NULL
-);
-
-
---
 -- Name: log; Type: TABLE; Schema: notification; Owner: -
 --
 
@@ -1271,38 +1102,6 @@ ALTER TABLE ONLY event.routine
 
 
 --
--- Name: event_invocation_logs event_invocation_logs_pkey; Type: CONSTRAINT; Schema: hdb_catalog; Owner: -
---
-
-ALTER TABLE ONLY hdb_catalog.event_invocation_logs
-    ADD CONSTRAINT event_invocation_logs_pkey PRIMARY KEY (id);
-
-
---
--- Name: event_log event_log_pkey; Type: CONSTRAINT; Schema: hdb_catalog; Owner: -
---
-
-ALTER TABLE ONLY hdb_catalog.event_log
-    ADD CONSTRAINT event_log_pkey PRIMARY KEY (id);
-
-
---
--- Name: hdb_event_log_cleanups hdb_event_log_cleanups_pkey; Type: CONSTRAINT; Schema: hdb_catalog; Owner: -
---
-
-ALTER TABLE ONLY hdb_catalog.hdb_event_log_cleanups
-    ADD CONSTRAINT hdb_event_log_cleanups_pkey PRIMARY KEY (id);
-
-
---
--- Name: hdb_event_log_cleanups hdb_event_log_cleanups_trigger_name_scheduled_at_key; Type: CONSTRAINT; Schema: hdb_catalog; Owner: -
---
-
-ALTER TABLE ONLY hdb_catalog.hdb_event_log_cleanups
-    ADD CONSTRAINT hdb_event_log_cleanups_trigger_name_scheduled_at_key UNIQUE (trigger_name, scheduled_at);
-
-
---
 -- Name: log log_pkey; Type: CONSTRAINT; Schema: notification; Owner: -
 --
 
@@ -1460,34 +1259,6 @@ ALTER TABLE ONLY venue.room
 
 ALTER TABLE ONLY venue.room
     ADD CONSTRAINT room_pkey PRIMARY KEY (id);
-
-
---
--- Name: event_invocation_logs_event_id_idx; Type: INDEX; Schema: hdb_catalog; Owner: -
---
-
-CREATE INDEX event_invocation_logs_event_id_idx ON hdb_catalog.event_invocation_logs USING btree (event_id);
-
-
---
--- Name: event_log_fetch_events; Type: INDEX; Schema: hdb_catalog; Owner: -
---
-
-CREATE INDEX event_log_fetch_events ON hdb_catalog.event_log USING btree (locked NULLS FIRST, next_retry_at NULLS FIRST, created_at) WHERE ((delivered = false) AND (error = false) AND (archived = false));
-
-
---
--- Name: event_log_trigger_name_idx; Type: INDEX; Schema: hdb_catalog; Owner: -
---
-
-CREATE INDEX event_log_trigger_name_idx ON hdb_catalog.event_log USING btree (trigger_name);
-
-
---
--- Name: hdb_source_catalog_version_one_row; Type: INDEX; Schema: hdb_catalog; Owner: -
---
-
-CREATE UNIQUE INDEX hdb_source_catalog_version_one_row ON hdb_catalog.hdb_source_catalog_version USING btree (((version IS NOT NULL)));
 
 
 --
@@ -1698,13 +1469,6 @@ CREATE TRIGGER set_event_routine_updated_at BEFORE UPDATE ON event.routine FOR E
 --
 
 COMMENT ON TRIGGER set_event_routine_updated_at ON event.routine IS 'trigger to set value of column "updated_at" to current timestamp on row update';
-
-
---
--- Name: log notify_hasura_sendNotification_INSERT; Type: TRIGGER; Schema: notification; Owner: -
---
-
-CREATE TRIGGER "notify_hasura_sendNotification_INSERT" AFTER INSERT ON notification.log FOR EACH ROW EXECUTE FUNCTION hdb_catalog."notify_hasura_sendNotification_INSERT"();
 
 
 --
@@ -2049,5 +1813,4 @@ ALTER TABLE ONLY venue.room
 -- PostgreSQL database dump complete
 --
 
-\unrestrict BG7cmhrUHOtWXZrqu50rGkwxXN2zT5WaqybBtQBbCHjPAofIElfvlsycrno5hJM
 

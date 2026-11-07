@@ -1,0 +1,3 @@
+table:
+  name: otp_transaction
+  schema: user

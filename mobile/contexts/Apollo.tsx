@@ -6,7 +6,7 @@ import {
   clearApolloCache,
 } from '@/lib/graphql'
 import { useAuth } from './Auth'
-import { authEventEmitter } from '@/lib/auth'
+import { session } from '@/lib/api'
 
 interface GraphQLProviderProps {
   children: ReactNode
@@ -17,32 +17,15 @@ export const GraphQLProvider: React.FC<GraphQLProviderProps> = ({
 }) => {
   const { hasValidToken, isSessionRevoked } = useAuth()
 
-  useEffect(() => {
-    const handleAuthChange = () => {
-      console.log('Auth changed, refetching GraphQL queries')
-      refetchQueriesOnAuthChange()
-    }
-
-    const handleAuthError = () => {
-      console.log('Auth error, clearing GraphQL cache')
-      clearApolloCache()
-    }
-
-    const handleSessionRevoked = () => {
-      console.log('Session revoked, clearing GraphQL cache')
-      clearApolloCache()
-    }
-
-    authEventEmitter.on('AUTH_ERROR', handleAuthError)
-    authEventEmitter.on('SESSION_REVOKED', handleSessionRevoked)
-    authEventEmitter.on('SESSION_EXPIRED', handleAuthError)
-
-    return () => {
-      authEventEmitter.off('AUTH_ERROR', handleAuthError)
-      authEventEmitter.off('SESSION_REVOKED', handleSessionRevoked)
-      authEventEmitter.off('SESSION_EXPIRED', handleAuthError)
-    }
-  }, [])
+  // Signing out (by the user or the server) must not leave the previous
+  // user's data in the cache.
+  useEffect(
+    () =>
+      session.subscribe((event) => {
+        if (event.type === 'signed-out') clearApolloCache()
+      }),
+    []
+  )
 
   useEffect(() => {
     if (hasValidToken) {

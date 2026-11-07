@@ -3,8 +3,8 @@ import bcrypt from "bcrypt";
 import { getGraphQLClient } from "../../lib/graphqlClient";
 import { loginSchema } from "../../schemas";
 import { GET_USER_BY_PHONE } from "./gql/queries";
-import { CREATE_SESSION } from "./gql/mutation";
-import { JWTService } from "../../utils/jwt";
+import { issueSession } from "./session/issueSession";
+import { TokenPayload } from "../../types";
 import { asyncHandler } from "../../utils/response";
 import {
   ValidationError,
@@ -53,35 +53,9 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     throw new InvalidCredentialsError();
   }
 
-  const payload = {
-    sessionId: crypto.randomUUID(),
-    userId: user.id,
-    role: (user.role as "consumer") || "consumer",
-  };
-  const accessToken = JWTService.generateAccessToken(payload);
-  const refreshToken = JWTService.generateRefreshToken(payload);
-  const accessExp = JWTService.getTokenExpiration(accessToken);
-  const refreshExp = JWTService.getTokenExpiration(refreshToken);
-
-  const sessionResult = await graphql.request<{
-    insert_user_session_one: {
-      id: string;
-      access_token: string;
-      refresh_token: string;
-    };
-  }>(CREATE_SESSION, {
-    session: {
-      user_id: user.id,
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      access_token_expires_at: accessExp?.toISOString(),
-      refresh_token_expires_at: refreshExp?.toISOString(),
-      revoked: false,
-      ip_address: req.ip || "",
-      user_agent: req.headers["user-agent"] || "",
-      last_used_at: new Date().toISOString(),
-    },
-  });
+  const role = (user.role as TokenPayload["role"]) || "consumer";
+  const { accessToken, refreshToken, accessExp, refreshExp, result } =
+    await issueSession(req, { userId: user.id, role });
 
   const accessMaxAge =
     accessExp && accessExp.getTime() > Date.now()
@@ -111,10 +85,10 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
       expires: refreshExp ?? undefined,
     })
     .success("Login successful", {
-      session_id: sessionResult.insert_user_session_one.id,
+      session_id: result.insert_user_session_one.id,
       access_token: accessToken,
       refresh_token: refreshToken,
-      role: payload.role,
+      role,
       isDeleted: user.deleted_at !== null,
       isVerified: user.phone_verified_at !== null,
     });

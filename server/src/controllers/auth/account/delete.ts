@@ -1,13 +1,15 @@
 import { Request, Response } from "express";
+import { z } from "zod";
 import { getGraphQLClient } from "../../../lib/graphqlClient";
-import { verifyOTP as compareOTP, isOTPExpired } from "../../otp/utils";
+import { checkAndConsumeOTP } from "../../otp/utils";
+import { REVOKE_USER_SESSIONS } from "../gql/mutation";
 import logger from "../../../config/logger";
 import { asyncHandler } from "../../../utils/response";
-import { z } from "zod";
+import { flexibleOtpCodeSchema, phoneSchema } from "../../../schemas";
 
 const softDeleteSchema = z.object({
-  phone: z.string().trim().min(1, "Phone number is required"),
-  otp: z.string().regex(/^\d{6}$/, "OTP must be exactly 6 digits"),
+  phone: phoneSchema,
+  otp: flexibleOtpCodeSchema,
 });
 
 const GET_ACCOUNT_BY_PHONE = `
@@ -18,39 +20,6 @@ const GET_ACCOUNT_BY_PHONE = `
       is_active
       deleted_at
       role
-    }
-  }
-`;
-
-const GET_OTP_FOR_DELETE_ACCOUNT = `
-  query GetOTPForDeleteAccount($identifier: String!) {
-    user_otp_transaction(
-      where: {
-        identifier: { _eq: $identifier }
-        purpose: { _eq: "DELETE_ACCOUNT" }
-        verified: { _eq: false }
-        expires_at: { _gt: "now()" }
-      }
-      order_by: { created_at: desc }
-      limit: 1
-    ) {
-      id
-      otp_hash
-      attempts
-      expires_at
-      verified
-    }
-  }
-`;
-
-const VERIFY_OTP_MUTATION = `
-  mutation VerifyOTP($id: uuid!) {
-    update_user_otp_transaction_by_pk(
-      pk_columns: { id: $id }
-      _set: { verified: true, verified_at: "now()" }
-    ) {
-      id
-      verified
     }
   }
 `;
@@ -70,19 +39,7 @@ const SOFT_DELETE_MUTATION = `
 
 export const deleteAccount = asyncHandler(
   async (req: Request, res: Response) => {
-    const rawInput = req.body;
-
-    if (!rawInput) {
-      return res.error(
-        "Invalid request format",
-        400,
-        "INVALID_REQUEST",
-        null,
-        "ACTION_ERROR"
-      );
-    }
-
-    const parsed = softDeleteSchema.safeParse(rawInput);
+    const parsed = softDeleteSchema.safeParse(req.body ?? {});
     if (!parsed.success) {
       return res.error(
         parsed.error.issues[0]?.message || "Invalid input",
@@ -96,7 +53,6 @@ export const deleteAccount = asyncHandler(
     const { phone, otp } = parsed.data;
     const graphqlClient = getGraphQLClient();
 
-    // 1. Check if account exists and is active
     const accountResult = await graphqlClient.request<{
       user_account: Array<{
         id: string;
@@ -110,7 +66,7 @@ export const deleteAccount = asyncHandler(
     const account = accountResult.user_account[0];
 
     if (!account) {
-      logger.warn("Account not found for deletion", { phone });
+      logger.warn("Account not found for deletion");
       return res.error(
         "Account not found",
         404,
@@ -121,7 +77,6 @@ export const deleteAccount = asyncHandler(
     }
 
     if (!account.is_active || account.deleted_at) {
-      logger.warn("Account already deleted or inactive", { phone });
       return res.error(
         "Account is already deleted or inactive",
         400,
@@ -131,98 +86,24 @@ export const deleteAccount = asyncHandler(
       );
     }
 
-    // 2. Get and verify OTP
-    const otpResult = await graphqlClient.request<{
-      user_otp_transaction: Array<{
-        id: string;
-        otp_hash: string;
-        attempts: number;
-        expires_at: string;
-        verified: boolean;
-      }>;
-    }>(GET_OTP_FOR_DELETE_ACCOUNT, { identifier: phone });
+    const otpCheck = await checkAndConsumeOTP({
+      identifier: phone,
+      purpose: "DELETE_ACCOUNT",
+      otp,
+    });
 
-    const otpRecord = otpResult.user_otp_transaction[0];
-
-    if (!otpRecord) {
-      logger.warn("No valid OTP found for account deletion", { phone });
+    if (!otpCheck.ok) {
       return res.error(
-        "Invalid or expired OTP",
+        otpCheck.message,
         400,
-        "INVALID_OTP",
-        null,
+        otpCheck.code,
+        otpCheck.attemptsRemaining !== undefined
+          ? { attemptsRemaining: otpCheck.attemptsRemaining }
+          : null,
         "ACTION_ERROR"
       );
     }
 
-    // Check if OTP has expired
-    if (isOTPExpired(new Date(otpRecord.expires_at))) {
-      logger.warn("OTP expired for account deletion", { phone });
-      return res.error(
-        "OTP has expired",
-        400,
-        "OTP_EXPIRED",
-        null,
-        "ACTION_ERROR"
-      );
-    }
-
-    // Check max attempts
-    const MAX_ATTEMPTS = 5;
-    if (otpRecord.attempts >= MAX_ATTEMPTS) {
-      logger.warn("Max OTP attempts exceeded for account deletion", { phone });
-      return res.error(
-        "Maximum verification attempts exceeded",
-        400,
-        "MAX_ATTEMPTS_EXCEEDED",
-        null,
-        "ACTION_ERROR"
-      );
-    }
-
-    // Verify the OTP
-    const isValid = await compareOTP(otp, otpRecord.otp_hash);
-
-    if (!isValid) {
-      // Increment attempts
-      await graphqlClient.request(
-        `
-        mutation UpdateOTPAttempts($id: uuid!, $attempts: Int!) {
-          update_user_otp_transaction_by_pk(
-            pk_columns: { id: $id }
-            _set: { attempts: $attempts }
-          ) {
-            id
-            attempts
-          }
-        }
-      `,
-        {
-          id: otpRecord.id,
-          attempts: otpRecord.attempts + 1,
-        }
-      );
-
-      logger.warn("Invalid OTP for account deletion", {
-        phone,
-        attempts: otpRecord.attempts + 1,
-      });
-
-      return res.error(
-        "Invalid OTP",
-        400,
-        "INVALID_OTP",
-        {
-          attemptsRemaining: MAX_ATTEMPTS - (otpRecord.attempts + 1),
-        },
-        "ACTION_ERROR"
-      );
-    }
-
-    // 3. Mark OTP as verified
-    await graphqlClient.request(VERIFY_OTP_MUTATION, { id: otpRecord.id });
-
-    // 4. Soft delete the account
     const deleteResult = await graphqlClient.request<{
       update_user_account_by_pk: {
         id: string;
@@ -231,10 +112,11 @@ export const deleteAccount = asyncHandler(
       };
     }>(SOFT_DELETE_MUTATION, { userId: account.id });
 
-    logger.info("Account soft deleted successfully", {
-      userId: account.id,
-      phone,
-    });
+    // Sign the user out everywhere: otherwise existing refresh tokens keep a
+    // "deleted" account usable indefinitely.
+    await graphqlClient.request(REVOKE_USER_SESSIONS, { user_id: account.id });
+
+    logger.info("Account soft deleted successfully", { userId: account.id });
 
     res.success(
       "Account scheduled for deletion. You have 30 days to restore it by logging in.",

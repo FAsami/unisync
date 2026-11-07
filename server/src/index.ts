@@ -13,7 +13,7 @@ import { routes } from "./routes";
 import { installResponseExtensions } from "./utils/response/responseExtensions";
 import { config, validateConfig, isTest } from "./config/environment";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 validateConfig();
 

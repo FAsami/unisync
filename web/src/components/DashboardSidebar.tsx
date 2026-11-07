@@ -3,7 +3,12 @@
 import { Layout, Menu } from 'antd'
 import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
-import { BookOutlined, BuildOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons'
+import {
+  BookOutlined,
+  BuildOutlined,
+  CalendarOutlined,
+  UserOutlined,
+} from '@ant-design/icons'
 
 const { Sider } = Layout
 

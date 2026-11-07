@@ -58,11 +58,16 @@ export const generateGuestToken = asyncHandler(
       variables
     );
 
+    const session = result.insert_user_session_one;
+    if (!session) {
+      throw new Error("Failed to create guest session");
+    }
+
     res.created("Guest session created successfully", {
-      session_id: result.insert_user_session_one.id,
-      access_token: result.insert_user_session_one.access_token,
-      refresh_token: result.insert_user_session_one.refresh_token,
-      expires_at: result.insert_user_session_one.access_token_expires_at,
+      session_id: session.id,
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+      expires_at: session.access_token_expires_at,
     });
   }
 );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { ScrollView, TouchableOpacity, Linking } from 'react-native'
 import { useQuery } from '@apollo/client'
 import { Ionicons } from '@expo/vector-icons'
@@ -16,29 +16,16 @@ import { Icon } from '@/components/ui/icon'
 import { Avatar } from '@/components/ui/avatar'
 import { Button, ButtonText } from '@/components/ui/button'
 import { useAuth } from '@/contexts/Auth'
-import { getCurrentUserFromToken } from '@/utils/getUserFromToken'
 import { GET_CURRENT_USER, GetCurrentUserData } from '@/lib/graphql-operations'
 
 const ProfileScreen = () => {
-  const { logout } = useAuth()
-  const [tokenData, setTokenData] = useState<{
-    id: string
-    role: string
-  } | null>(null)
-
-  useEffect(() => {
-    const loadTokenData = async () => {
-      const data = await getCurrentUserFromToken()
-      setTokenData(data)
-    }
-    loadTokenData()
-  }, [])
+  const { logout, userId, userRole } = useAuth()
 
   const { loading, error, data } = useQuery<GetCurrentUserData>(
     GET_CURRENT_USER,
     {
-      variables: { userId: tokenData?.id },
-      skip: !tokenData?.id,
+      variables: { userId },
+      skip: !userId,
     }
   )
 
@@ -101,7 +88,7 @@ const ProfileScreen = () => {
               : user.phone}
           </Heading>
           <Text className="text-sm text-typography-500 capitalize">
-            {tokenData?.role}
+            {userRole}
           </Text>
         </VStack>
 

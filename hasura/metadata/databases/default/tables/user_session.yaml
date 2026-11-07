@@ -5,23 +5,3 @@ object_relationships:
   - name: account
     using:
       foreign_key_constraint_on: user_id
-select_permissions:
-  - role: guest-consumer
-    permission:
-      columns:
-        - revoked
-        - device_info
-        - access_token
-        - ip_address
-        - refresh_token
-        - user_agent
-        - access_token_expires_at
-        - created_at
-        - last_used_at
-        - refresh_token_expires_at
-        - updated_at
-        - id
-        - user_id
-      filter: {}
-      limit: 1
-    comment: ""

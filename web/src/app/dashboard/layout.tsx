@@ -6,7 +6,7 @@ import DashboardLayoutClient from '@/components/DashboardLayoutClient'
 const DashboardLayout = async ({ children }: { children: ReactNode }) => {
   const session = await getServerSession()
   if (!session) {
-    redirect(`/auth/login?redirect=${encodeURIComponent('/dashboard')}}`)
+    redirect(`/auth/login?redirect=${encodeURIComponent('/dashboard')}`)
   }
   return <DashboardLayoutClient>{children}</DashboardLayoutClient>
 }

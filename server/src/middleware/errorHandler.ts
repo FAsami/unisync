@@ -3,6 +3,7 @@ import { HttpError } from "../utils/errors";
 import { ZodError } from "zod";
 import logger from "../config/logger";
 import { isDevelopment } from "../config/environment";
+import { captureError } from "../config/sentry";
 
 export const errorHandler = (
   err: Error,
@@ -26,6 +27,9 @@ export const errorHandler = (
     res.error("Validation failed", 400, "VALIDATION_ERROR", err.issues);
     return;
   }
+  // Unexpected errors only: HttpError/ZodError above are expected outcomes.
+  captureError(err, { path: req.path, method: req.method });
+
   res.error(
     "Internal Server Error",
     500,

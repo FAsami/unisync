@@ -5,6 +5,7 @@ const expoConfig = require('eslint-config-expo/flat');
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ['dist/*'],
+    // Generated code (API types, GraphQL codegen) is not hand-written: don't lint it.
+    ignores: ['dist/*', '**/generated.ts'],
   },
 ]);

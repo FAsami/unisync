@@ -8,6 +8,7 @@ import { PhoneInput } from '@/components/PhoneInput'
 import { apiClient } from '@/lib/axios'
 import { setAuthTokens } from '@/lib/cookies'
 import Link from 'next/link'
+import { safeRedirectPath } from '@/lib/safeRedirect'
 
 const LoginForm = () => {
   const router = useRouter()
@@ -38,7 +39,7 @@ const LoginForm = () => {
           setAuthTokens(data.data.access_token, data.data.refresh_token)
         }
 
-        const redirect = searchParams.get('redirect') || '/'
+        const redirect = safeRedirectPath(searchParams.get('redirect'))
         router.push(redirect)
         router.refresh()
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,3 +1,4 @@
+import logger from "../config/logger";
 import { Request, Response, NextFunction } from "express";
 import { JWTService } from "../utils/jwt";
 import { ApiResponse } from "../utils/response/ApiResponse";
@@ -98,7 +99,7 @@ export const authenticate = (options: AuthOptions = {}) => {
       req.user = decoded;
       return next();
     } catch (error) {
-      console.error("Authentication error:", error);
+      logger.error("Authentication error:", error);
 
       return res
         .status(401)
@@ -178,7 +179,7 @@ export const verifyRefreshToken = (
     req.user = decoded;
     return next();
   } catch (error) {
-    console.error("Refresh token verification error:", error);
+    logger.error("Refresh token verification error:", error);
 
     return res
       .status(401)

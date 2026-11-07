@@ -8,8 +8,9 @@ yarn-error.log*
 dist/
 build/
 
-# Environment variables
+# Environment variables (templates are committed)
 .env*
+!.env.example
 
 # IDE and editor files
 .vscode/
@@ -95,8 +96,17 @@ jspm_packages/
 .cursorrules
 
 
-hasura/config.yaml
 
 .cursor/
 
 server/service-account.json
+
+# React Native bundle output (CodePush / react-native bundle); regenerate, never commit
+mobile/build-android/
+mobile/build-ios/
+
+# Claude Code personal settings (shared settings live in .claude/settings.json)
+.claude/settings.local.json
+
+# Python bytecode (hook scripts)
+__pycache__/

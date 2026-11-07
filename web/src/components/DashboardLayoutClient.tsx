@@ -30,7 +30,11 @@ const DashboardLayoutClient = ({ children }: DashboardLayoutClientProps) => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <DashboardSidebar collapsed={collapsed} onCollapse={setCollapsed} isMobile={isMobile} />
+      <DashboardSidebar
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        isMobile={isMobile}
+      />
       {isMobile && !collapsed && (
         <div
           style={{
@@ -65,7 +69,7 @@ const DashboardLayoutClient = ({ children }: DashboardLayoutClientProps) => {
             }}
           >
             <Button
-              type="text"
+              type='text'
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
               onClick={() => setCollapsed(!collapsed)}
               style={{ fontSize: 16, width: 64, height: 64 }}
@@ -88,4 +92,3 @@ const DashboardLayoutClient = ({ children }: DashboardLayoutClientProps) => {
 }
 
 export default DashboardLayoutClient
-
