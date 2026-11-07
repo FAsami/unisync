@@ -47,7 +47,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     })
   }, [readUser])
 
-  const login = useCallback((tokens: Tokens) => session.signIn(tokens), [])
+  // Resolve only once the signed-in user is in state: callers navigate right
+  // after login(), and the route guard must not see a signed-out user on the
+  // way (that bounced Home → Login → Home).
+  const login = useCallback(
+    async (tokens: Tokens) => {
+      await session.signIn(tokens)
+      await readUser()
+    },
+    [readUser]
+  )
 
   // Passing the install id makes the server stop this phone's pushes in the same call.
   const logout = useCallback(async () => session.signOut(await getInstallId()), [])

@@ -2,6 +2,9 @@ import React from 'react'
 import { Pressable, TextInput, View } from 'react-native'
 import { Text } from '@/components/ui/text'
 
+/** Placeholders must look different from typed text, or fields read as pre-filled. */
+const PLACEHOLDER = '#9CA3AF'
+
 const inputClass =
   'flex-1 text-base text-typography-900 dark:text-typography-0 py-3 px-3'
 const boxClass = (error?: string) =>
@@ -47,6 +50,7 @@ export function PhoneField({
           className={inputClass}
           value={value}
           onChangeText={(t) => onChange(t.replace(/[^\d\s-]/g, ''))}
+          placeholderTextColor={PLACEHOLDER}
           placeholder="1712 345678"
           keyboardType="phone-pad"
           textContentType="telephoneNumber"
@@ -89,6 +93,7 @@ export function CodeField({
             onChange(digits)
             if (digits.length === length) onComplete?.(digits)
           }}
+          placeholderTextColor={PLACEHOLDER}
           placeholder={'•'.repeat(length)}
           keyboardType="number-pad"
           textContentType="oneTimeCode"
@@ -126,6 +131,7 @@ export function TextField({
           className={inputClass}
           value={value}
           onChangeText={onChange}
+          placeholderTextColor={PLACEHOLDER}
           placeholder={placeholder}
           autoCapitalize={autoCapitalize}
           autoCorrect={false}
