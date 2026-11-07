@@ -6,14 +6,17 @@ import {
 } from '@apollo/client'
 import { SetContextLink } from '@apollo/client/link/context'
 import axios from 'axios'
+import Cookies from 'js-cookie'
+import { isJwtExpired } from '@/lib/jwt'
 
 let cachedToken: string | null = null
 let tokenPromise: Promise<string> | null = null
 
 const getGuestToken = async (): Promise<string> => {
-  if (cachedToken) {
+  if (cachedToken && !isJwtExpired(cachedToken)) {
     return cachedToken
   }
+  cachedToken = null
 
   if (tokenPromise) {
     return tokenPromise
@@ -56,10 +59,19 @@ const httpLink = new HttpLink({
     'http://localhost:9203/v1/graphql',
 })
 
+// Signed-in users must query Hasura with their own token: the guest role has
+// no access to dashboard tables. Fall back to a guest token only when there is
+// no usable user token (e.g. public pages, or the access token has expired).
+const getUserToken = (): string | null => {
+  if (typeof window === 'undefined') return null
+  const token = Cookies.get('access_token')
+  return token && !isJwtExpired(token) ? token : null
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const authLink = new SetContextLink(async (_prevContext, _operation) => {
   try {
-    const token = await getGuestToken()
+    const token = getUserToken() ?? (await getGuestToken())
 
     return {
       headers: {

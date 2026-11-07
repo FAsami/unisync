@@ -11,6 +11,7 @@ import {
   VerifyContext,
 } from '@/lib/verifyContext'
 import { resendOtpAction } from '@/actions/auth/resendOtp'
+import { getApiErrorMessage } from '@/lib/apiError'
 
 type VerifyFormValues = {
   otp: string
@@ -108,9 +109,7 @@ export default function RegisterVerifyForm({ context: initialContext }: Props) {
                 }
 
         if (!payload.success) {
-          throw new Error(
-            (payload as { message?: string }).message || 'Verification failed'
-          )
+          throw new Error(getApiErrorMessage(payload, 'Verification failed'))
         }
 
         clearVerifyContext()

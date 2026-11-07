@@ -51,7 +51,7 @@ const attemptTokenRefresh = async (
       return null
     }
 
-    const response = await axiosClient.post<any>('/auth/session/verify', {
+    const response = await axiosClient.post<any>('/auth/session/refresh', {
       refresh_token: refreshToken,
     })
 
