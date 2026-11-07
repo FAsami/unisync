@@ -74,6 +74,39 @@ jobs:
       - run: yarn lint
       - run: yarn typecheck
 
+  api:
+    name: API (.NET build, test, image)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      UNISYNC_TEST_DB: Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=postgres
+      # A missing database fails the job instead of silently skipping tests.
+      UNISYNC_REQUIRE_DB: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: api/global.json
+      - run: dotnet build -c Release
+      - run: dotnet test -c Release --no-build
+      - run: docker build -t unisync-api .
+
   hasura:
     name: Hasura metadata guardrails
     runs-on: ubuntu-latest

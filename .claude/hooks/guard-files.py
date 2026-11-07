@@ -84,5 +84,14 @@ if name in {"yarn.lock", "package-lock.json", "pnpm-lock.yaml"}:
 for prefix in ("mobile/build-android/", "mobile/build-ios/", "server/dist/", "web/.next/"):
     if rel.startswith(prefix):
         block("This is build output. Change the source and rebuild.")
+if rel.startswith("api/") and ("/bin/" in rel or "/obj/" in rel):
+    block("This is .NET build output. Change the source and rebuild.")
+
+# 6. Applied API migrations are immutable too.
+if rel.startswith("api/db/migrations/") and rel.endswith(".sql") and tracked(rel):
+    block(
+        "This API migration is committed and may already be applied. Add a new file "
+        "with the next number instead (see api/CLAUDE.md)."
+    )
 
 sys.exit(0)

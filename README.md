@@ -8,7 +8,8 @@ A full-stack university scheduling and notification platform: a mobile app, an a
 unisync/
 ├── mobile/          # Expo / React Native app (students, teachers, CRs)
 ├── web/             # Next.js admin dashboard + landing page
-├── server/          # Express API: auth, sessions, OTP, push, Hasura webhooks
+├── api/             # New ASP.NET Core API (replacing server/ and Hasura)
+├── server/          # Legacy Express API: auth, sessions, OTP, push, Hasura webhooks
 ├── hasura/          # Postgres migrations + GraphQL metadata/permissions
 ├── docs/            # VitePress documentation site
 ├── scripts/         # Repo-wide checks (check-all.sh, Hasura metadata guard)
@@ -55,6 +56,16 @@ yarn dev            # http://localhost:9201/api/v1/health
 
 `SERVER_AUTH_SECRET` in `server/.env` must match the value in `docker-compose.yml`. Hasura sends it on every webhook call.
 
+### 3b. Start the new .NET API (optional while the migration runs)
+
+```bash
+cd api
+dotnet run --project src/UniSync.Api -- migrate   # once, after step 2
+dotnet run --project src/UniSync.Api              # http://localhost:9202/api/v1/health
+```
+
+Needs the [.NET 10 SDK](https://dotnet.microsoft.com/download). In Development, sign-in codes are printed to the log instead of sent by SMS. See `api/CLAUDE.md`.
+
 ### 4. Start the web dashboard
 
 ```bash
@@ -81,6 +92,7 @@ cd server && yarn test        # API tests (no database needed)
 ```
 
 CI (`.github/workflows/ci.yml`) runs the following on every PR:
+- api: .NET build, tests against Postgres 17, Docker image
 - server: typecheck, tests, build
 - web: lint, typecheck, Prettier, build
 - mobile: lint, typecheck
@@ -100,7 +112,7 @@ cd mobile && yarn generate-types
 ## 🤖 Working with Claude Code
 
 `CLAUDE.md` describes the architecture and rules. `.claude/` contains:
-- project skills: `/check`, `/server-endpoint`, `/hasura-change`, `/consistency-audit`
+- project skills: `/check`, `/api-endpoint`, `/server-endpoint`, `/hasura-change`, `/consistency-audit`
 - a `security-reviewer` agent
 - hooks that install dependencies in cloud sessions, block edits to migrations, generated code, secrets and lockfiles, and format web files
 

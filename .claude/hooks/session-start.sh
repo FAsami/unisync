@@ -34,7 +34,32 @@ install_pkg() { # install_pkg <dir> [extra yarn args...]
   sha256sum "$HOOK" "$dir/package.json" "$dir/yarn.lock" > "$hashes" || rm -f "$hashes"
 }
 
+# .NET SDK for api/ (global tool: installed only when missing).
+if ! command -v dotnet >/dev/null 2>&1 && [ ! -x "$HOME/.dotnet/dotnet" ]; then
+  echo "[session-start] installing .NET 10 SDK"
+  curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+  bash /tmp/dotnet-install.sh --channel 10.0 --install-dir "$HOME/.dotnet" >/dev/null
+fi
+if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+  {
+    echo "export PATH=\"$HOME/.dotnet:\$PATH\""
+    echo "export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1"
+  } >> "$CLAUDE_ENV_FILE"
+fi
+
 install_pkg server
 install_pkg web
 # Native build scripts (pods/gradle/codegen) are not needed for lint/typecheck.
 install_pkg mobile --ignore-scripts
+
+# NuGet restore for api/, skipped when no project or package file changed.
+api_hashes=api/obj/.session-start.sha256
+if ! sha256sum --check --status "$api_hashes" 2>/dev/null; then
+  rm -f "$api_hashes"
+  echo "[session-start] api: restoring NuGet packages"
+  (cd api && "$HOME/.dotnet/dotnet" restore --nologo -v q)
+  mkdir -p api/obj
+  sha256sum "$HOOK" api/Directory.Packages.props api/*/*/*.csproj > "$api_hashes" || rm -f "$api_hashes"
+else
+  echo "[session-start] api: packages up to date"
+fi
