@@ -28,7 +28,7 @@ Still to do before cut-over:
 1. Switch the mobile and web apps to `api/`, using a client generated from `/openapi/v1.json`.
 2. Move push delivery (FCM) into `api/`. Until then the legacy Hasura trigger on `notification.log` sends pushes through `server/`.
 3. Build the web setup screens for departments, semesters and the roster import.
-4. Retire Hasura and `server/`. The apps still call the legacy stack; switching them over is a separate step.
+4. Retire Hasura and `server/`.
 
 ## How the pieces talk (legacy stack)
 
