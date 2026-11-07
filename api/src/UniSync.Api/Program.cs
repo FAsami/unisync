@@ -12,6 +12,7 @@ using UniSync.Api.Data;
 using UniSync.Api.Academic;
 using UniSync.Api.Health;
 using UniSync.Api.CurrentUser;
+using UniSync.Api.Schedule;
 using UniSync.Api.Sms;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,7 +30,12 @@ services.AddOptions<SmsOptions>().BindConfiguration(SmsOptions.SectionName).Vali
         "Sms:ApiKey, Sms:SecretKey and Sms:CallerId are required for bulksmsbd.")
     .ValidateOnStart();
 
+services.AddOptions<CampusOptions>().BindConfiguration(CampusOptions.SectionName).ValidateDataAnnotations()
+    .Validate(o => TimeZoneInfo.TryFindSystemTimeZoneById(o.TimeZone, out _), "Campus:TimeZone is not a known time zone.")
+    .ValidateOnStart();
+
 services.AddSingleton(TimeProvider.System);
+services.AddSingleton<CampusClock>();
 
 // ---- data (resolved lazily so test hosts can override the connection string)
 services.AddSingleton(sp =>
@@ -46,6 +52,7 @@ services.AddScoped<MigrationRunner>();
 services.AddScoped<TokenService>();
 services.AddScoped<OtpService>();
 services.AddScoped<SessionService>();
+services.AddScoped<ScheduleService>();
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
     .Configure<IOptions<AuthOptions>>((jwt, auth) =>
@@ -127,6 +134,7 @@ api.MapAuthEndpoints();
 api.MapMeEndpoints();
 api.MapDirectoryEndpoints();
 api.MapAccessRequestEndpoints();
+api.MapScheduleEndpoints();
 
 await app.RunAsync();
 

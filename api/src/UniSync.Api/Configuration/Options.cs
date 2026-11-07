@@ -63,3 +63,12 @@ public sealed class RateLimitOptions
 
     public int VerifyAttemptsPer15MinPerIp { get; set; } = 30;
 }
+
+public sealed class CampusOptions
+{
+    public const string SectionName = "Campus";
+
+    /// <summary>IANA zone the timetable is written in. Bangladesh has no daylight saving.</summary>
+    [Required]
+    public string TimeZone { get; set; } = "Asia/Dhaka";
+}

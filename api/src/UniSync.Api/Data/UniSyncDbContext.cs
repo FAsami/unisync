@@ -12,6 +12,13 @@ public sealed class UniSyncDbContext(DbContextOptions<UniSyncDbContext> options)
     public DbSet<Batch> Batches => Set<Batch>();
     public DbSet<Section> Sections => Set<Section>();
     public DbSet<AccessRequest> AccessRequests => Set<AccessRequest>();
+    public DbSet<Routine> Routines => Set<Routine>();
+    public DbSet<ClassChange> ClassChanges => Set<ClassChange>();
+    public DbSet<CourseOffering> CourseOfferings => Set<CourseOffering>();
+    public DbSet<Course> Courses => Set<Course>();
+    public DbSet<Room> Rooms => Set<Room>();
+    public DbSet<Building> Buildings => Set<Building>();
+    public DbSet<TeacherProfile> TeacherProfiles => Set<TeacherProfile>();
     public DbSet<ClassRepresentative> ClassRepresentatives => Set<ClassRepresentative>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -63,6 +70,23 @@ public sealed class UniSyncDbContext(DbContextOptions<UniSyncDbContext> options)
             e.Property(x => x.DepartmentId).HasColumnName("departmant_id");
         });
         modelBuilder.Entity<Section>(e => e.ToTable("section", "academic"));
+
+        modelBuilder.Entity<Routine>(e =>
+        {
+            e.ToTable("routine", "event");
+            e.Property(x => x.Metadata).HasColumnType("jsonb");
+        });
+        modelBuilder.Entity<ClassChange>(e =>
+        {
+            e.ToTable("routine_exception", "event");
+            e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+        });
+        modelBuilder.Entity<CourseOffering>(e => e.ToTable("course_offering", "academic"));
+        modelBuilder.Entity<Course>(e => e.ToTable("course", "academic"));
+        modelBuilder.Entity<Room>(e => e.ToTable("room", "venue"));
+        modelBuilder.Entity<Building>(e => e.ToTable("building", "venue"));
+        modelBuilder.Entity<TeacherProfile>(e => e.ToTable("faculty", "user"));
         modelBuilder.Entity<ClassRepresentative>(e => e.ToTable("class_representative", "academic"));
     }
 }

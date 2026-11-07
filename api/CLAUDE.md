@@ -14,6 +14,7 @@ src/UniSync.Api/
   CurrentUser/          /me
   Academic/             /directory: public list of open departments, batches and sections
   AccessRequests/       request to join, plus the department admin queue (approve / reject)
+  Schedule/             /me/today, /me/week: routines expanded into dated classes with class changes applied
   Health/               /health, /health/ready
   Sms/                  ISmsSender: BulkSMSBD (prod), console (Development only)
 db/migrations/          schema changes owned by this API (NNNN_name.sql)
@@ -45,6 +46,8 @@ missing database fails the run instead of skipping.
 - **Every authenticated request re-checks the session** (`BearerEvents`): a revoked session or a deleted account is refused immediately, not at token expiry.
 - **Tokens stay compatible with the Node server**: HS256, the same secret, and claims `sessionId`, `userId`, `role`, `typ`, plus a unique `jti`. `TokenCompatibilityTests` builds Node-format tokens byte for byte.
 - **Department admins are scoped.** An admin is role `admin` plus `account.managed_department_id`. Admin endpoints use `Policies.DepartmentAdmin` **and** filter by that department; another department's records answer 404. An admin with no department gets 403.
+- **Time is campus time.** Class times are campus-local (`event.routine` start/end are plain `time`, Asia/Dhaka). "Now" and "today" come only from `CampusClock`, never from UTC or `DateTime.Now`. Tests set `Factory.CampusTime`.
+- **One class change per occurrence** (`event.routine_exception`, mapped as `ClassChange`): `cancellation`, `reschedule` (new date and times, optional room) or `room_change`. The database checks the fields match the type. A move shows on both slots: `moved_away` on the old one, `moved` on the new one.
 - **Codes are bound to their purpose** (`LOGIN`, `ACCESS_REQUEST`): a code sent for one flow can't complete another.
 - **Never log codes, tokens or SMS gateway URLs.** The console SMS sender is refused at startup outside Development.
 

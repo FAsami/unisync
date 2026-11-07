@@ -129,3 +129,88 @@ public sealed class ClassRepresentative
     public Guid BatchId { get; set; }
     public bool IsActive { get; set; }
 }
+
+// ---- Timetable
+
+/// <summary>A weekly class slot. Times are campus-local; DayOfWeek uses 0 = Sunday, matching System.DayOfWeek.</summary>
+public sealed class Routine
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = "";
+    public Guid? CourseOfferingId { get; set; }
+    public int DayOfWeek { get; set; }
+    public TimeOnly StartTime { get; set; }
+    public TimeOnly EndTime { get; set; }
+    public string EventType { get; set; } = "lecture";
+    public DateOnly EffectiveFrom { get; set; }
+    public DateOnly EffectiveTo { get; set; }
+    public bool IsActive { get; set; }
+    public Guid? RoomId { get; set; }
+    /// <summary>Legacy JSON; may hold a free-text "room_number".</summary>
+    public string? Metadata { get; set; }
+}
+
+public static class ClassChangeType
+{
+    public const string Cancellation = "cancellation";
+    public const string Reschedule = "reschedule";
+    public const string RoomChange = "room_change";
+}
+
+/// <summary>A change to one occurrence of a routine (one per routine and date). Table: event.routine_exception.</summary>
+public sealed class ClassChange
+{
+    public Guid Id { get; set; }
+    public Guid? RoutineId { get; set; }
+    public DateOnly ExceptionDate { get; set; }
+    public string Type { get; set; } = ClassChangeType.Cancellation;
+    public string Reason { get; set; } = "";
+    public DateOnly? NewDate { get; set; }
+    public TimeOnly? NewStartTime { get; set; }
+    public TimeOnly? NewEndTime { get; set; }
+    public Guid? NewRoomId { get; set; }
+    public Guid CreatedBy { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
+public sealed class CourseOffering
+{
+    public Guid Id { get; set; }
+    public Guid CourseId { get; set; }
+    public Guid BatchId { get; set; }
+    public Guid SectionId { get; set; }
+    /// <summary>The teacher's account id.</summary>
+    public Guid TeacherId { get; set; }
+    public bool IsActive { get; set; }
+}
+
+public sealed class Course
+{
+    public Guid Id { get; set; }
+    public string Code { get; set; } = "";
+    public string Name { get; set; } = "";
+}
+
+public sealed class Room
+{
+    public Guid Id { get; set; }
+    public Guid BuildingId { get; set; }
+    public string RoomNumber { get; set; } = "";
+    public string RoomName { get; set; } = "";
+}
+
+public sealed class Building
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = "";
+    public string Code { get; set; } = "";
+}
+
+/// <summary>Teacher details (legacy table user.faculty).</summary>
+public sealed class TeacherProfile
+{
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+}

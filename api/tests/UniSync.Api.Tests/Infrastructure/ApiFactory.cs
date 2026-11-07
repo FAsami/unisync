@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using UniSync.Api.Common;
+using UniSync.Api.Configuration;
 using UniSync.Api.Sms;
 
 namespace UniSync.Api.Tests.Infrastructure;
@@ -15,6 +18,9 @@ public sealed class ApiFactory(string connectionString) : WebApplicationFactory<
 
     public FakeSmsSender Sms { get; } = new();
 
+    /// <summary>Campus "now" for schedule tests. Token lifetimes keep using the real clock.</summary>
+    public SettableTimeProvider CampusTime { get; } = new(DateTimeOffset.UtcNow);
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
@@ -24,7 +30,11 @@ public sealed class ApiFactory(string connectionString) : WebApplicationFactory<
         builder.UseSetting("Sms:Provider", "console");
         builder.UseSetting("RateLimits:CodeRequestsPerHourPerIp", "10000");
         builder.UseSetting("RateLimits:VerifyAttemptsPer15MinPerIp", "10000");
-        builder.ConfigureTestServices(services => services.AddSingleton<ISmsSender>(Sms));
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddSingleton<ISmsSender>(Sms);
+            services.AddSingleton(sp => new CampusClock(CampusTime, sp.GetRequiredService<IOptions<CampusOptions>>()));
+        });
     }
 }
 
@@ -48,4 +58,11 @@ public sealed partial class FakeSmsSender : ISmsSender
 
     [GeneratedRegex(@"^\d+")]
     private static partial Regex LeadingCode();
+}
+
+public sealed class SettableTimeProvider(DateTimeOffset now) : TimeProvider
+{
+    public DateTimeOffset Now { get; set; } = now;
+
+    public override DateTimeOffset GetUtcNow() => Now.ToUniversalTime();
 }
