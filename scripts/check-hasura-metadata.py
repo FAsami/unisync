@@ -17,6 +17,9 @@ Checks
   6. Migrations never create objects in hdb_catalog (Hasura's own schema). It
      already exists by the time migrations run, so such a migration fails on
      every fresh environment.
+  7. Migrations contain no psql meta-commands (lines starting with a backslash,
+     e.g. pg_dump's \restrict). Only psql understands them; Hasura and the API
+     send SQL straight to Postgres, which rejects them.
 """
 import re
 import sys
@@ -117,10 +120,18 @@ def check_actions():
 
 
 def check_migrations():
-    for f in sorted((ROOT / "hasura" / "migrations").rglob("up.sql")):
+    migration_files = sorted((ROOT / "hasura" / "migrations").rglob("up.sql"))
+    migration_files += sorted((ROOT / "api" / "db" / "migrations").glob("*.sql"))
+    for f in migration_files:
         for n, line in enumerate(f.read_text().splitlines(), 1):
             if line.startswith("--"):
                 continue
+            if line.startswith("\\"):
+                errors.append(
+                    f"{f.relative_to(ROOT)}:{n}: psql meta-command in a migration "
+                    "(Postgres rejects it; remove the line)"
+                )
+                break
             if "hdb_catalog" in line:
                 errors.append(
                     f"{f.relative_to(ROOT)}:{n}: migration touches hdb_catalog "

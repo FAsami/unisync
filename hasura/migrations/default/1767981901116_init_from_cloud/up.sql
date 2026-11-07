@@ -2,7 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict BG7cmhrUHOtWXZrqu50rGkwxXN2zT5WaqybBtQBbCHjPAofIElfvlsycrno5hJM
 
 -- Dumped from database version 17.7 (e429a59)
 -- Dumped by pg_dump version 17.7 (Homebrew)
@@ -1814,5 +1813,4 @@ ALTER TABLE ONLY venue.room
 -- PostgreSQL database dump complete
 --
 
-\unrestrict BG7cmhrUHOtWXZrqu50rGkwxXN2zT5WaqybBtQBbCHjPAofIElfvlsycrno5hJM
 
