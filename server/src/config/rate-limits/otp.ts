@@ -84,11 +84,9 @@ export const sendOTPLimit = async (
       typeof rawPurpose === "string" ? rawPurpose.trim().toUpperCase() : "";
 
     // Extract IP address for rate limiting
-    const ipAddress =
-      req.headers["x-forwarded-for"]?.toString().split(",")[0]?.trim() ||
-      (req.headers["x-real-ip"] as string) ||
-      req.socket?.remoteAddress ||
-      "unknown";
+    // req.ip honours `trust proxy` (set in applyRateLimiting). Reading the
+    // first X-Forwarded-For entry directly would let clients pick their own IP.
+    const ipAddress = req.ip || req.socket?.remoteAddress || "unknown";
 
     if (!ipAddress || ipAddress === "unknown") {
       logger.warn("Could not determine IP address for rate limiting", {

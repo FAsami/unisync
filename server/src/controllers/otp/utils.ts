@@ -140,3 +140,125 @@ export const incrementRateLimit = async (req: Request): Promise<void> => {
     });
   }
 };
+
+/** Wrong guesses allowed per OTP before it is locked. */
+export const MAX_OTP_ATTEMPTS = 5;
+
+const GET_ACTIVE_OTP = `
+  query GetActiveOTP($identifier: String!, $purpose: String!) {
+    user_otp_transaction(
+      where: {
+        identifier: { _eq: $identifier }
+        purpose: { _eq: $purpose }
+        verified: { _eq: false }
+        expires_at: { _gt: "now()" }
+      }
+      order_by: { created_at: desc }
+      limit: 1
+    ) {
+      id
+      otp_hash
+      attempts
+      expires_at
+      verified
+    }
+  }
+`;
+
+const SET_OTP_ATTEMPTS = `
+  mutation SetOTPAttempts($id: uuid!, $attempts: Int!) {
+    update_user_otp_transaction_by_pk(
+      pk_columns: { id: $id }
+      _set: { attempts: $attempts }
+    ) {
+      id
+      attempts
+    }
+  }
+`;
+
+const MARK_OTP_VERIFIED = `
+  mutation MarkOTPVerified($id: uuid!) {
+    update_user_otp_transaction_by_pk(
+      pk_columns: { id: $id }
+      _set: { verified: true, verified_at: "now()" }
+    ) {
+      id
+      verified
+    }
+  }
+`;
+
+export type OTPCheckFailure =
+  | "INVALID_OTP"
+  | "OTP_EXPIRED"
+  | "MAX_ATTEMPTS_EXCEEDED";
+
+export type OTPCheckResult =
+  | { ok: true; otpId: string }
+  | {
+      ok: false;
+      code: OTPCheckFailure;
+      message: string;
+      attemptsRemaining?: number;
+    };
+
+/**
+ * The one place OTPs are checked. Finds the newest live OTP for
+ * identifier+purpose, enforces expiry and MAX_OTP_ATTEMPTS, records wrong
+ * guesses, and marks the OTP used on success so it cannot be replayed.
+ *
+ * Every endpoint that accepts an OTP must go through this; otherwise that
+ * endpoint becomes an unlimited brute-force oracle for 6-digit codes.
+ */
+export const checkAndConsumeOTP = async (params: {
+  identifier: string;
+  purpose: string;
+  otp: string;
+}): Promise<OTPCheckResult> => {
+  const { identifier, purpose, otp } = params;
+  const graphqlClient = getGraphQLClient();
+
+  const { user_otp_transaction } = await graphqlClient.request<{
+    user_otp_transaction: Array<{
+      id: string;
+      otp_hash: string;
+      attempts: number;
+      expires_at: string;
+      verified: boolean;
+    }>;
+  }>(GET_ACTIVE_OTP, { identifier, purpose });
+
+  const record = user_otp_transaction?.[0];
+  if (!record || record.verified) {
+    return { ok: false, code: "INVALID_OTP", message: "Invalid or expired OTP" };
+  }
+
+  if (isOTPExpired(new Date(record.expires_at))) {
+    return { ok: false, code: "OTP_EXPIRED", message: "OTP has expired" };
+  }
+
+  if (record.attempts >= MAX_OTP_ATTEMPTS) {
+    return {
+      ok: false,
+      code: "MAX_ATTEMPTS_EXCEEDED",
+      message: "Maximum verification attempts exceeded",
+    };
+  }
+
+  const isValid = await verifyOTP(otp, record.otp_hash);
+  if (!isValid) {
+    const attempts = record.attempts + 1;
+    await graphqlClient.request(SET_OTP_ATTEMPTS, { id: record.id, attempts });
+    logger.warn("Invalid OTP provided", { purpose, attempts });
+    return {
+      ok: false,
+      code: "INVALID_OTP",
+      message: "Invalid OTP",
+      attemptsRemaining: Math.max(0, MAX_OTP_ATTEMPTS - attempts),
+    };
+  }
+
+  await graphqlClient.request(MARK_OTP_VERIFIED, { id: record.id });
+  return { ok: true, otpId: record.id };
+};

@@ -51,13 +51,13 @@ try {
   logger.error("Failed to initialize Firebase Admin SDK:", error);
 }
 
-export const messaging = firebaseInitialized
+export const messaging: admin.messaging.Messaging = firebaseInitialized
   ? admin.messaging()
   : ({
       sendEachForMulticast: async () => {
         throw new Error("Firebase not initialized");
       },
-    } as any);
+    } as unknown as admin.messaging.Messaging);
 
 export const isFirebaseInitialized = () => firebaseInitialized;
 

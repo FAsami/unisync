@@ -52,14 +52,24 @@ export const createBulkSMSBDProvider = (
       case "PASSWORD_RESET":
         return `${otp} is your OTP for unisync password reset. Valid for ${expiryMinutes} minutes. - unisync`;
       case "DELETE_ACCOUNT":
-        return `${otp} is your OTP for deleing your unisync account. Valid for ${expiryMinutes} minutes. - unisync`;
+        return `${otp} is your OTP for deleting your unisync account. Valid for ${expiryMinutes} minutes. - unisync`;
     }
   };
 
   const sendSMS = async (to: string, message: string): Promise<void> => {
     try {
-      const endpoint = `http://118.67.213.114:3775/sendtext?apikey=${config.BULK_SMS_API_KEY}&secretkey=${config.BULK_SMS_SECRET_KEY}&callerID=${config.BULK_SMS_CALLER_ID}&toUser=${to}&messageContent=${message}`;
-      const response = await axios.get(endpoint);
+      // Pass params separately so axios URL-encodes them: a raw "+" in the
+      // phone number would otherwise be decoded as a space by the gateway.
+      const response = await axios.get(config.BULK_SMS_ENDPOINT, {
+        params: {
+          apikey: config.BULK_SMS_API_KEY,
+          secretkey: config.BULK_SMS_SECRET_KEY,
+          callerID: config.BULK_SMS_CALLER_ID,
+          toUser: to,
+          messageContent: message,
+        },
+        timeout: 15000,
+      });
       logger.info(`Response from BulkSMSBD`, {
         to,
         response: response.data,
@@ -79,7 +89,12 @@ export const createBulkSMSBDProvider = (
         status: result.Text,
       });
     } catch (error) {
-      logger.error(`Failed to send SMS via BulkSMSBD`, { error, to });
+      // Log only the message: axios errors embed the request URL, which
+      // contains the API key and secret.
+      logger.error(`Failed to send SMS via BulkSMSBD`, {
+        error: error instanceof Error ? error.message : String(error),
+        to,
+      });
       throw new Error("Failed to send SMS");
     }
   };

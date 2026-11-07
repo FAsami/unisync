@@ -17,14 +17,11 @@ interface HasuraEventPayload {
   };
 }
 
+// Every audience query filters to active, non-deleted accounts.
 const GET_TARGET_USERS = `
-  query GetTargetUsers($targetType: String!, $targetId: uuid) {
+  query GetTargetUsers {
     users: user_account(
-      where: {
-        _and: [
-          { is_active: { _eq: true } }
-        ]
-      }
+      where: { is_active: { _eq: true }, deleted_at: { _is_null: true } }
     ) {
       id
     }
@@ -36,6 +33,7 @@ const GET_SECTION_USERS = `
     users: user_account(
       where: {
         is_active: { _eq: true }
+        deleted_at: { _is_null: true }
         profiles: { section_id: { _eq: $sectionId } }
       }
     ) {
@@ -49,6 +47,7 @@ const GET_BATCH_USERS = `
     users: user_account(
       where: {
         is_active: { _eq: true }
+        deleted_at: { _is_null: true }
         profiles: { batch_id: { _eq: $batchId } }
       }
     ) {
@@ -62,30 +61,8 @@ const GET_DEPARTMENT_USERS = `
     users: user_account(
       where: {
         is_active: { _eq: true }
+        deleted_at: { _is_null: true }
         profiles: { department_id: { _eq: $departmentId } }
-      }
-    ) {
-      id
-    }
-  }
-`;
-
-const UPDATE_NOTIFICATION_STATUS = `
-  mutation UpdateNotificationStatus(
-    $id: uuid!
-    $status: String!
-    $sentCount: Int
-    $failedCount: Int
-    $errorMessage: String
-  ) {
-    update_notification_log_by_pk(
-      pk_columns: { id: $id }
-      _set: {
-        status: $status
-        sent_count: $sentCount
-        failed_count: $failedCount
-        error_message: $errorMessage
-        processed_at: "now()"
       }
     ) {
       id

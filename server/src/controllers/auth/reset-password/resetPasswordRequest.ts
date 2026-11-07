@@ -3,7 +3,7 @@ import { getGraphQLClient } from "../../../lib/graphqlClient";
 import { resetPasswordRequestSchema } from "../../../schemas";
 import { GET_USER_BY_PHONE } from "../gql/queries";
 import { generateOTP, hashOTP, getOTPExpiry } from "../../otp/utils";
-import { INSERT_OTP } from "../../otp/gql";
+import { INSERT_OTP, INVALIDATE_OLD_OTPS } from "../../otp/gql";
 import { asyncHandler } from "../../../utils/response";
 import { ValidationError } from "../../../utils/errors";
 import logger from "../../../config/logger";
@@ -34,6 +34,10 @@ export const resetPasswordRequest = asyncHandler(
     const expiresAt = getOTPExpiry().toISOString();
 
     try {
+      await graphql.request(INVALIDATE_OLD_OTPS, {
+        identifier: phone,
+        purpose: "PASSWORD_RESET",
+      });
       await graphql.request(INSERT_OTP, {
         otp: {
           identifier: phone,
@@ -49,7 +53,6 @@ export const resetPasswordRequest = asyncHandler(
       logger.info("Password reset OTP created", { phone });
 
       const smsProvider = await getSMSProvider();
-      console.log("smsProvider", smsProvider);
       await smsProvider.send(phone, otp, "PASSWORD_RESET");
     } catch (error) {
       // Intentionally log but still return generic success to avoid enumeration

@@ -20,3 +20,5 @@ __tests__
 .dockerignore
 Dockerfile
 fly.toml
+tests
+vitest.config.ts

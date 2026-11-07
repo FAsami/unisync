@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import path from "path";
 
-dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+dotenv.config({ path: path.resolve(process.cwd(), ".env"), quiet: true });
 
 export const config = {
   // Server Configuration
@@ -17,6 +17,10 @@ export const config = {
   HASURA_ENDPOINT:
     process.env.HASURA_ENDPOINT || "http://localhost:9203/v1/graphql",
   HASURA_ADMIN_SECRET: process.env.HASURA_ADMIN_SECRET || "123",
+
+  // Shared secret Hasura sends (SERVER-AUTH-SECRET header) on actions and
+  // event triggers. Must match SERVER_AUTH_SECRET in the Hasura environment.
+  SERVER_AUTH_SECRET: process.env.SERVER_AUTH_SECRET,
 
   // JWT Configuration
   JWT_SECRET: process.env.JWT_SECRET || "longLongAgo",
@@ -42,6 +46,8 @@ export const config = {
   BULK_SMS_API_KEY: process.env.BULK_SMS_API_KEY,
   BULK_SMS_SECRET_KEY: process.env.BULK_SMS_SECRET_KEY,
   BULK_SMS_CALLER_ID: process.env.BULK_SMS_CALLER_ID,
+  BULK_SMS_ENDPOINT:
+    process.env.BULK_SMS_ENDPOINT || "http://118.67.213.114:3775/sendtext",
 } as const;
 
 export type Config = typeof config;
@@ -67,6 +73,14 @@ export const validateConfig = (): void => {
   if (config.NODE_ENV === "production" && config.JWT_SECRET.length < 32) {
     throw new Error(
       "JWT_SECRET must be at least 32 characters in production"
+    );
+  }
+
+  // Not fatal so a missing secret can't take the API down on deploy, but every
+  // Hasura event/action endpoint will answer 503 until it is configured.
+  if (!config.SERVER_AUTH_SECRET && config.NODE_ENV !== "test") {
+    console.warn(
+      "[config] SERVER_AUTH_SECRET is not set: Hasura webhook endpoints will reject all requests"
     );
   }
 };

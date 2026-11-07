@@ -1,5 +1,5 @@
-# Use latest Node.js Alpine for smaller image size
-FROM node:alpine AS base
+# Pinned to an LTS line: an unpinned tag can jump to an odd-numbered (non-LTS) Node
+FROM node:22-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps

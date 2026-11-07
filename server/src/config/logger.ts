@@ -1,7 +1,7 @@
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 import path from "path";
-import { isDevelopment } from "./environment";
+import { isDevelopment, isTest } from "./environment";
 
 const levels = {
   error: 0,
@@ -21,9 +21,17 @@ const colors = {
 
 winston.addColors(colors);
 
-const level = () => {
+// LOG_LEVEL (set in fly.toml) wins; otherwise verbose in dev, quiet elsewhere.
+const level = (): string => {
+  const fromEnv = process.env.LOG_LEVEL;
+  if (fromEnv && fromEnv in levels) return fromEnv;
+  if (isTest) return "error";
   return isDevelopment ? "debug" : "warn";
 };
+
+// File logs are opt-out via LOG_FILE_ENABLED=false and always off under test.
+const fileLoggingEnabled =
+  !isTest && process.env.LOG_FILE_ENABLED !== "false";
 
 const format = winston.format.combine(
   winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }),
@@ -33,71 +41,48 @@ const format = winston.format.combine(
   )
 );
 
-const transports = [
+const consoleTransport = () =>
   new winston.transports.Console({
     format: winston.format.combine(
       winston.format.colorize(),
       winston.format.simple()
     ),
-  }),
+  });
 
+const rotatingFile = (name: string, options: Record<string, unknown> = {}) =>
   new DailyRotateFile({
-    filename: path.join("logs", "error-%DATE%.log"),
-    datePattern: "YYYY-MM-DD",
-    level: "error",
-    maxSize: "20m",
-    maxFiles: "14d",
-    format: winston.format.combine(
-      winston.format.timestamp(),
-      winston.format.json()
-    ),
-  }),
-
-  new DailyRotateFile({
-    filename: path.join("logs", "combined-%DATE%.log"),
+    filename: path.join("logs", `${name}-%DATE%.log`),
     datePattern: "YYYY-MM-DD",
     maxSize: "20m",
     maxFiles: "14d",
-    format: winston.format.combine(
-      winston.format.timestamp(),
-      winston.format.json()
-    ),
-  }),
-];
+    ...options,
+  });
+
+const jsonFormat = winston.format.combine(
+  winston.format.timestamp(),
+  winston.format.json()
+);
+
+const transports: winston.transport[] = [consoleTransport()];
+const exceptionHandlers: winston.transport[] = [consoleTransport()];
+const rejectionHandlers: winston.transport[] = [consoleTransport()];
+
+if (fileLoggingEnabled) {
+  transports.push(
+    rotatingFile("error", { level: "error", format: jsonFormat }),
+    rotatingFile("combined", { format: jsonFormat })
+  );
+  exceptionHandlers.push(rotatingFile("exceptions"));
+  rejectionHandlers.push(rotatingFile("rejections"));
+}
 
 const logger = winston.createLogger({
   level: level(),
   levels,
   format,
   transports,
-  exceptionHandlers: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      ),
-    }),
-    new DailyRotateFile({
-      filename: path.join("logs", "exceptions-%DATE%.log"),
-      datePattern: "YYYY-MM-DD",
-      maxSize: "20m",
-      maxFiles: "14d",
-    }),
-  ],
-  rejectionHandlers: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      ),
-    }),
-    new DailyRotateFile({
-      filename: path.join("logs", "rejections-%DATE%.log"),
-      datePattern: "YYYY-MM-DD",
-      maxSize: "20m",
-      maxFiles: "14d",
-    }),
-  ],
+  exceptionHandlers,
+  rejectionHandlers,
 });
 
 export const stream = {

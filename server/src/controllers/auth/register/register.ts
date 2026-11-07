@@ -1,3 +1,4 @@
+import logger from "../../../config/logger";
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { z } from "zod";
@@ -93,7 +94,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
       object: userObject,
     })
     .catch((error) => {
-      console.error("Failed to create user account:", error);
+      logger.error("Failed to create user account:", error);
       // Extract meaningful error message from GraphQL error
       const graphqlError = error?.response?.errors?.[0];
       if (graphqlError) {
@@ -122,7 +123,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
         },
       });
     } catch (error: any) {
-      console.error("Failed to create faculty profile for user", userId, error);
+      logger.error("Failed to create faculty profile for user", userId, error);
 
       // Extract meaningful error message
       const graphqlError = error?.response?.errors?.[0];
@@ -132,9 +133,9 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
       // Rollback user creation
       try {
         await graphql.request(DELETE_USER, { id: userId });
-        console.log("Rolled back user creation for", userId);
+        logger.info("Rolled back user creation for", userId);
       } catch (rollbackError) {
-        console.error(
+        logger.error(
           "Critical: Failed to rollback user creation",
           userId,
           rollbackError

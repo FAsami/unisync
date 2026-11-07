@@ -17,7 +17,11 @@ export interface TokenPayload {
   role: UserRole;
 }
 
+export type TokenType = "access" | "refresh";
+
 export interface DecodedToken extends TokenPayload {
+  /** Absent on tokens issued before token typing was introduced. */
+  typ?: TokenType;
   iat: number;
   exp: number;
 }

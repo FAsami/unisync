@@ -27,11 +27,6 @@ export const sendOTP = asyncHandler(async (req: Request, res: Response) => {
 
   const parsed = sendOTPSchema.safeParse(rawInput);
   if (!parsed.success) {
-    console.log(
-      "[Validation Error]",
-      JSON.stringify(parsed.error.issues, null, 2)
-    );
-    console.log("[Input Data]", JSON.stringify(rawInput, null, 2));
     return res.error(
       parsed.error.issues[0]?.message || "Invalid input",
       400,
