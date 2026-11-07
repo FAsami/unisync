@@ -33,3 +33,19 @@ yarn api:types                    # regenerate the typed API client
 UNISYNC_LIVE_API=http://localhost:9202 UNISYNC_LIVE_SMS_LOG=/path/api.log \
 UNISYNC_LIVE_PHONE=+8801XXXXXXXXX UNISYNC_LIVE_COURSE=CSE101 npx jest lib/api/__tests__/live.test.ts
 ```
+
+## Seeing the screens without a device
+
+`web-preview/` renders the app in a phone-sized browser, so you can check a screen against a real API without an emulator. `metro.config.js` swaps the native-only modules (CodePush, Firebase, SecureStore) for the stubs in `web-preview/stubs` on web only; native builds are untouched.
+
+```bash
+# 1. Run the API in Development (it prints SMS codes to its log) against a seeded database.
+# 2. Build for web, pointing API_URL at the preview server so calls stay same-origin:
+API_URL=http://127.0.0.1:8090 npx expo export --platform web --output-dir dist-web-preview --clear
+# 3. Serve it, proxying /api/* to the API:
+node web-preview/serve.mjs 8090 http://127.0.0.1:9202
+# 4. Walk sign-in and "My day" and save screenshots:
+node web-preview/screens.mjs http://127.0.0.1:8090 /path/api.log +8801XXXXXXXXX ./screens
+```
+
+It can't show native-only behaviour: push, the real keychain, CodePush, or exact device layout.

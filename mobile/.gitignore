@@ -37,3 +37,6 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+# Web preview build (web-preview/)
+dist-web-preview/

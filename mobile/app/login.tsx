@@ -29,7 +29,9 @@ export default function Login() {
     setFieldError(undefined)
     setSending(true)
     try {
-      await call(async () => unwrap(await api.POST('/api/v1/auth/code', { body: { phone } })))
+      await call(async () =>
+        unwrap(await api.POST('/api/v1/auth/code', { body: { phone } })),
+      )
       router.push({ pathname: '/verify-otp', params: { phone } })
     } catch (error) {
       setProblem(error as ApiError)
@@ -43,27 +45,49 @@ export default function Login() {
   return (
     <SignInScreen>
       <VStack className="flex-1 justify-center" space="lg">
-        <AuthHeader title="Sign in" subtitle="Enter the mobile number your department registered. We'll text you a code." />
+        <AuthHeader
+          title="Sign in"
+          subtitle="Enter the mobile number your department registered. We'll text you a code."
+        />
 
-        <PhoneField value={local} onChange={setLocal} error={fieldError} onSubmit={submit} />
+        <PhoneField
+          value={local}
+          onChange={setLocal}
+          error={fieldError}
+          onSubmit={submit}
+        />
 
         {problem?.code === 'PHONE_NOT_REGISTERED' ? (
           <Notice
             tone="info"
             message={`${problem.message} You can ask your department to add you.`}
-            action={{ label: 'Request access', onPress: () => router.push({ pathname: '/request-access', params: { phone } }) }}
+            action={{
+              label: 'Request access',
+              onPress: () =>
+                router.push({ pathname: '/request-access', params: { phone } }),
+            }}
           />
         ) : problem ? (
           <Notice message={problem.message} />
         ) : null}
 
-        <AuthSubmitButton onPress={submit} isLoading={sending} text="Send code" />
-
-        <Notice
-          tone="info"
-          message="New here and not on your department's list?"
-          action={{ label: 'Request access', onPress: () => router.push({ pathname: '/request-access', params: { phone } }) }}
+        <AuthSubmitButton
+          onPress={submit}
+          isLoading={sending}
+          text="Send code"
         />
+
+        {problem?.code === 'PHONE_NOT_REGISTERED' ? null : (
+          <Notice
+            tone="info"
+            message="New here and not on your department's list?"
+            action={{
+              label: 'Request access',
+              onPress: () =>
+                router.push({ pathname: '/request-access', params: { phone } }),
+            }}
+          />
+        )}
       </VStack>
     </SignInScreen>
   )
