@@ -25,8 +25,8 @@ public static class ScheduleEndpoints
     public static RouteGroupBuilder MapScheduleEndpoints(this RouteGroupBuilder api)
     {
         var me = api.MapGroup("/me").WithTags("My day").RequireAuthorization();
-        me.MapGet("/today", GetTodayAsync);
-        me.MapGet("/week", GetWeekAsync);
+        me.MapGet("/today", GetTodayAsync).Returns<TodayResponse>();
+        me.MapGet("/week", GetWeekAsync).Returns<WeekResponse>();
         return api;
     }
 

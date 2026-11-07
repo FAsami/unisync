@@ -16,9 +16,9 @@ public static class DeviceEndpoints
     public static RouteGroupBuilder MapDeviceEndpoints(this RouteGroupBuilder api)
     {
         var devices = api.MapGroup("/me/devices").WithTags("Devices").RequireAuthorization();
-        devices.MapPut("/", RegisterAsync);
+        devices.MapPut("/", RegisterAsync).Returns<object>();
         devices.MapDelete("/{deviceId}", (string deviceId, ClaimsPrincipal user, HttpContext http, UniSyncDbContext db, CancellationToken ct) =>
-            DeactivateAsync(deviceId, user, http, db, ct));
+            DeactivateAsync(deviceId, user, http, db, ct)).Returns<object>();
         return api;
     }
 

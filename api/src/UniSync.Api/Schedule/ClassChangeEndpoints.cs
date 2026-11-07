@@ -26,10 +26,10 @@ public static class ClassChangeEndpoints
     {
         var classes = api.MapGroup("/classes/{routineId:guid}/{date}").WithTags("Class changes")
             .RequireAuthorization().RequireRateLimiting(Policy);
-        classes.MapPost("/cancel", CancelAsync);
-        classes.MapPost("/move", MoveAsync);
-        classes.MapPost("/room", ChangeRoomAsync);
-        classes.MapDelete("/", RestoreAsync);
+        classes.MapPost("/cancel", CancelAsync).Returns<ClassChangeResult>();
+        classes.MapPost("/move", MoveAsync).Returns<ClassChangeResult>();
+        classes.MapPost("/room", ChangeRoomAsync).Returns<ClassChangeResult>();
+        classes.MapDelete("/", RestoreAsync).Returns<ClassChangeResult>();
         return api;
     }
 

@@ -24,10 +24,10 @@ public static partial class AuthEndpoints
     public static RouteGroupBuilder MapAuthEndpoints(this RouteGroupBuilder api)
     {
         var auth = api.MapGroup("/auth").WithTags("Auth");
-        auth.MapPost("/code", RequestCodeAsync).RequireRateLimiting(CodePolicy);
-        auth.MapPost("/verify", VerifyCodeAsync).RequireRateLimiting(VerifyPolicy);
-        auth.MapPost("/refresh", RefreshAsync).RequireRateLimiting(VerifyPolicy);
-        auth.MapPost("/logout", LogoutAsync).RequireAuthorization();
+        auth.MapPost("/code", RequestCodeAsync).RequireRateLimiting(CodePolicy).Returns<CodeSent>();
+        auth.MapPost("/verify", VerifyCodeAsync).RequireRateLimiting(VerifyPolicy).Returns<AuthTokens>();
+        auth.MapPost("/refresh", RefreshAsync).RequireRateLimiting(VerifyPolicy).Returns<AuthTokens>();
+        auth.MapPost("/logout", LogoutAsync).RequireAuthorization().Returns<object>();
         return api;
     }
 

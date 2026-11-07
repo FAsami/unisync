@@ -24,7 +24,7 @@ public static class MeEndpoints
 {
     public static RouteGroupBuilder MapMeEndpoints(this RouteGroupBuilder api)
     {
-        api.MapGet("/me", GetMeAsync).WithTags("Me").RequireAuthorization();
+        api.MapGet("/me", GetMeAsync).WithTags("Me").RequireAuthorization().Returns<MeResponse>();
         return api;
     }
 

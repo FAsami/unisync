@@ -20,6 +20,8 @@ public sealed record SendBody(string? Title, string? Body, AudienceRef? Audience
 
 public sealed record SendResult(Guid Id, int Recipients);
 
+public sealed record MarkedResult(int Marked);
+
 public sealed record SentItem(
     Guid Id, string Title, string Body, string Audience, string Status,
     int SentCount, int FailedCount, int ReadCount, DateTimeOffset CreatedAt);
@@ -39,15 +41,15 @@ public static class NotificationEndpoints
     public static RouteGroupBuilder MapNotificationEndpoints(this RouteGroupBuilder api)
     {
         var inbox = api.MapGroup("/me/notifications").WithTags("Inbox").RequireAuthorization();
-        inbox.MapGet("/", GetInboxAsync);
-        inbox.MapGet("/{id:guid}", GetOneAsync);
-        inbox.MapPost("/{id:guid}/read", MarkReadAsync);
-        inbox.MapPost("/read-all", MarkAllReadAsync);
+        inbox.MapGet("/", GetInboxAsync).Returns<InboxPage>();
+        inbox.MapGet("/{id:guid}", GetOneAsync).Returns<InboxItem>();
+        inbox.MapPost("/{id:guid}/read", MarkReadAsync).Returns<object>();
+        inbox.MapPost("/read-all", MarkAllReadAsync).Returns<MarkedResult>();
 
         var send = api.MapGroup("/notifications").WithTags("Notifications").RequireAuthorization();
-        send.MapGet("/audiences", GetAudiencesAsync);
-        send.MapPost("/", SendAsync).RequireRateLimiting(SendPolicy);
-        send.MapGet("/sent", GetSentAsync);
+        send.MapGet("/audiences", GetAudiencesAsync).Returns<List<AudienceOption>>();
+        send.MapPost("/", SendAsync).RequireRateLimiting(SendPolicy).Returns<SendResult>(StatusCodes.Status201Created);
+        send.MapGet("/sent", GetSentAsync).Returns<List<SentItem>>();
         return api;
     }
 
@@ -126,7 +128,7 @@ public static class NotificationEndpoints
 
         db.NotificationReads.AddRange(unreadIds.Select(id => new NotificationRead { UserId = userId, NotificationId = id }));
         await db.SaveChangesAsync(ct);
-        return ApiResponse.Ok(http, "All caught up", new { marked = unreadIds.Count });
+        return ApiResponse.Ok(http, "All caught up", new MarkedResult(unreadIds.Count));
     }
 
     private static async Task<List<InboxItem>> ProjectAsync(

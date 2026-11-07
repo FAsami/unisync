@@ -16,7 +16,7 @@ public static class DirectoryEndpoints
 {
     public static RouteGroupBuilder MapDirectoryEndpoints(this RouteGroupBuilder api)
     {
-        api.MapGet("/directory", GetDirectoryAsync).WithTags("Directory");
+        api.MapGet("/directory", GetDirectoryAsync).WithTags("Directory").Returns<List<DepartmentItem>>();
         return api;
     }
 

@@ -13,14 +13,14 @@ public static class HealthEndpoints
 
         // Liveness: the process is up. Used by the platform health check.
         api.MapGet("/health", (HttpContext http) => ApiResponse.Ok(http, "Healthy", new HealthStatus("ok", version)))
-            .WithTags("Health");
+            .WithTags("Health").Returns<HealthStatus>();
 
         // Readiness: the database answers.
         api.MapGet("/health/ready", async (HttpContext http, UniSyncDbContext db, CancellationToken ct) =>
                 await db.Database.CanConnectAsync(ct)
                     ? ApiResponse.Ok(http, "Ready", new HealthStatus("ok", version))
                     : ApiResponse.Fail(http, 503, "DATABASE_UNAVAILABLE", "The database is not reachable."))
-            .WithTags("Health");
+            .WithTags("Health").Returns<HealthStatus>();
 
         return api;
     }

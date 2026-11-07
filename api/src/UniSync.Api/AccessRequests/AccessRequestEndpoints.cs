@@ -43,13 +43,13 @@ public static partial class AccessRequestEndpoints
         var group = api.MapGroup("/access-requests").WithTags("Access requests");
 
         // Public: the requester has no account yet.
-        group.MapPost("/code", RequestCodeAsync).RequireRateLimiting(AuthEndpoints.CodePolicy);
-        group.MapPost("/", SubmitAsync).RequireRateLimiting(AuthEndpoints.VerifyPolicy);
+        group.MapPost("/code", RequestCodeAsync).RequireRateLimiting(AuthEndpoints.CodePolicy).Returns<CodeSent>();
+        group.MapPost("/", SubmitAsync).RequireRateLimiting(AuthEndpoints.VerifyPolicy).Returns<AccessRequestCreated>(StatusCodes.Status201Created);
 
         // Department admins only, scoped to their own department.
-        group.MapGet("/", ListAsync).RequireAuthorization(Policies.DepartmentAdmin);
-        group.MapPost("/{id:guid}/approve", ApproveAsync).RequireAuthorization(Policies.DepartmentAdmin);
-        group.MapPost("/{id:guid}/reject", RejectAsync).RequireAuthorization(Policies.DepartmentAdmin);
+        group.MapGet("/", ListAsync).RequireAuthorization(Policies.DepartmentAdmin).Returns<List<AccessRequestView>>();
+        group.MapPost("/{id:guid}/approve", ApproveAsync).RequireAuthorization(Policies.DepartmentAdmin).Returns<AccessRequestView>();
+        group.MapPost("/{id:guid}/reject", RejectAsync).RequireAuthorization(Policies.DepartmentAdmin).Returns<AccessRequestView>();
         return api;
     }
 
