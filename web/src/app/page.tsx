@@ -1,4 +1,3 @@
-import { Plus_Jakarta_Sans } from 'next/font/google'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from 'antd'
@@ -18,14 +17,17 @@ import {
   UserAddOutlined,
 } from '@ant-design/icons'
 import { Reveal } from './reveal'
-
 // Scoped to this page only: a distinct, considered type voice instead of the
 // rest of the app's default Geist, without touching the shared root layout.
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  weight: ['500', '600', '700', '800'],
-  variable: '--font-jakarta',
-})
+// Self-hosted via @fontsource (not next/font/google): that loader fetches the
+// font from Google's CDN at build time, which failed in CI even though it
+// built fine here — a build should not depend on a third-party network call.
+import '@fontsource/plus-jakarta-sans/500.css'
+import '@fontsource/plus-jakarta-sans/600.css'
+import '@fontsource/plus-jakarta-sans/700.css'
+import '@fontsource/plus-jakarta-sans/800.css'
+
+const JAKARTA_FONT_FAMILY = "'Plus Jakarta Sans', sans-serif"
 
 const NAV_LINKS = [
   { href: '#tour', label: 'See it in action' },
@@ -257,7 +259,10 @@ const SectionNumber = ({ n, label }: { n: string; label: string }) => (
 
 const Home = () => {
   return (
-    <div className={`${jakarta.className} bg-white text-slate-900 antialiased`}>
+    <div
+      style={{ fontFamily: JAKARTA_FONT_FAMILY }}
+      className='bg-white text-slate-900 antialiased'
+    >
       {/* Scroll-reveal degrades to fully visible without JS. */}
       <noscript>
         <style>
