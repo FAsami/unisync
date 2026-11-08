@@ -1,6 +1,6 @@
 # UniSync consistency and security audit
 
-_Audited 2026-11-07 across `server/`, `hasura/`, `web/`, `mobile/`, CI and docs. Every finding below was verified against the code; the server findings are also covered by tests in `server/tests/`._
+_First audited 2026-11-07 across `server/`, `hasura/`, `web/`, `mobile/`, CI and docs. Updated 2026-11-08 for the move to a single backend: the .NET API in `api/` replaced Hasura and the Node server, so most of the original open items were resolved by removing the code they were about. The original findings were verified against the code; the API's behaviour is covered by its tests in `api/tests/`._
 
 The `/consistency-audit` skill describes how to repeat this audit. When you fix an open item, move it to **Fixed** and add the commit hash.
 
@@ -55,97 +55,102 @@ The `/consistency-audit` skill describes how to repeat this audit. When you fix 
 
 ---
 
-## Open
+### Resolved by the move to `api/`
 
-### Critical and high
+These were open on 2026-11-07. The code they described is gone, and the API's design and tests cover each one.
 
-1. **Users with role `admin` hold Hasura's superuser role.**
-   - **Where:** `server/src/controllers/auth/webhook/authorizeRequest.ts` passes `user.role` through, so a user whose role is `admin` gets `X-Hasura-Role: admin`.
-   - **Why it matters:** That role bypasses every permission, including reading password hashes and all sessions. The mobile manage screens and the web dashboard only work because of this: no metadata role can insert or update batch, department, section, course, routine or user_account.
-   - **Fix:** Create a scoped role (for example `university_admin`) with explicit permissions, and map app admins to it.
-2. **Web registration can never succeed.**
-   - **Where:** `web/src/actions/auth/register.ts` sends only `{phone, password, email}`.
-   - **Why it matters:** `registerSchema` requires `first_name`, `last_name`, and `student_id` (role defaults to student), so every sign-up gets a 400.
-   - **Fix:** This needs a product decision: add the fields to the web form, or give web sign-ups their own schema.
-3. **Mobile axios never throws.**
-   - **Where:** `mobile/lib/axios.ts` (`validateStatus: () => true`).
-   - **Why it matters:** Every `catch` that handles 401 or `SESSION_REVOKED` is dead code (`lib/auth.ts`, `utils/token.ts`, `app/login.tsx`). Revoked or expired sessions are never detected.
-   - **Fix:** Check `response.status`, or remove the override and audit every caller.
-4. **Mobile has two auth modules.**
-   - **Where:** `lib/auth.ts` and `utils/token.ts` duplicate the refresh logic, and each has its own `authEventEmitter`. The contexts only listen to the one in `lib/auth.ts`.
-   - **Also:** Refresh is not single-flight, and the server rotates refresh tokens, so parallel requests can log users out.
-   - **Fix:** Merge into one module with one shared in-flight refresh promise.
-5. **Device rows (`user_device.yaml`, `contexts/FCM.tsx`, `lib/fcm.ts`).**
-   - The student update permission's `check` requires `is_active: true`, so a device can never be deactivated.
-   - The update `filter: {}` lets any student rewrite any user's device row.
-   - Deactivation runs after logout has already cleared the tokens.
-   - `Device.modelId` is iOS-only, so all Android devices share the device id `"android"`.
-   - **Consequence:** Logged-out phones keep receiving the previous user's pushes, and a user's devices collapse into one row.
-6. **The auth webhook ignores session state.** It does not check `revoked`, `is_active` or `deleted_at`. Logout, account deletion and password reset do not invalidate access tokens until they expire (up to 1 h).
-   - **Fix:** Look up the session in the webhook, and return `Cache-Control: max-age=…` so Hasura caches the result.
-7. **Students cannot read notifications.** `notification_log.yaml` gives the `student` select `columns: []`, so `GET_USER_NOTIFICATIONS` errors. The filter also needs designing: `{}` would expose every notification.
-8. **Public registration accepts `role: "teacher"`** (`server/src/schemas/auth.schema.ts`). Anyone can self-register as faculty.
-
-### Medium
-
-- **Soft delete is half-built.**
-  - Login lets deleted accounts in without restoring them; restoring relies on the mobile `RESTORE_USER_ACCOUNT` mutation.
-  - Nothing purges accounts after 30 days (`cron_triggers.yaml` is empty).
-  - The admin `DELETE_USER` mutation hard-deletes, and `GET_ALL_USERS` lists deleted users.
-- **`/otp/send` doesn't check the account.** It sends an SMS for `PASSWORD_RESET` and `DELETE_ACCOUNT` to any number, even when no account exists. This is now rate-limited, but still costs SMS credits.
-- **The Hasura `sendOTP` action is broken and unused.** The server reads `req.body`, but actions wrap arguments in `input`, and the action's enum lacks `DELETE_ACCOUNT`. Clients call REST directly. Remove the action or fix it.
-- **Login leaks whether an account exists** (`USER_NOT_FOUND` vs `INVALID_CREDENTIALS`).
-- **Phone formats disagree.** Register and login accept local formats (`017…`), but `/otp/send` requires E.164, so the same user can end up with different identifiers.
-- **The server has two error envelopes.**
-  - REST: `{success:false,error:{…}}`
-  - action-style: `{message,extensions}`, from `/otp/*` and `/auth/account/delete`
-  - The mobile `verify-otp.tsx` reads `data.error?.message` and so misses action-style messages.
-- **SMS goes over plain HTTP to a raw IP**, so the API key and secret travel in cleartext. The provider config stored in `settings.config` is fetched and then ignored.
-- **Expo SDK 53 dependency drift.**
-  - `react-native-reanimated` 4.1 and `react-native-worklets` are installed, but SDK 53 expects reanimated ~3.17. The worklets babel plugin is also added a second time.
-  - `expo-linear-gradient` ^15 belongs to SDK 54.
-  - `@react-native-community/cli` is pinned to `latest`, and `react-native-codegen` is a stale extra.
-  - **Fix:** Run `npx expo install --check`, then either align with SDK 53 or upgrade to SDK 54.
-- **Android release builds are signed with the debug keystore** (`mobile/android/app/build.gradle`).
-- **Web token handling.**
-  - Tokens sit in non-httpOnly cookies for 7 days, while the access token lives for 1 hour.
-  - There is no logout UI.
-  - The Apollo client is a module singleton on the Next server.
-  - Dashboard lists ignore query `error`.
-- **`docker-compose.yml`.**
-  - `hasura/graphql-engine:latest` is unpinned.
-  - The `/hasura-metadata` volume does nothing without the `cli-migrations` image.
-  - The dev admin secret is `123`.
-- **Sentry starts after Express is imported**, so v9 auto-instrumentation is incomplete. Move initialisation into an `instrument.ts` file that is imported first.
-- **Two notification send paths** (`utils/notification.ts` and `services/notificationService.ts`). Failed FCM tokens are never deactivated (there is a TODO for it).
-
-### Low
-
-- **web:**
-  - `eslint-config-next` 16 is installed alongside `next` 15, and `tsconfig` includes `.next/dev/types`, a Next 16 path.
-  - Unused dependencies: `zod`, `react-hook-form`, `@hookform/resolvers`, `libphonenumber-js`.
-  - `transpilePackages: ['@ant-design']` is a scope, not a package, so it does nothing.
-  - `encrypt.ts` uses a fixed salt.
-  - App-store links point to `#`.
-  - Assorted dead helpers.
-- **mobile:**
-  - Unused dependencies: `react-native-vector-icons`, `react-aria`, `react-stately`, `react-native-webview`, `expo-web-browser`, `expo-image`, `expo-notifications`, `react-native-make`.
-  - Unused gluestack components and template assets.
-  - `lib/graphql/generated.ts` is never imported.
-  - `components/form/*` duplicates `components/auth/*`.
-  - The deep-link scheme is the generic `mobile`.
-  - 100 lint warnings, mostly unused variables.
-- **hasura:**
-  - The `class_representative` notification insert does not restrict which section it targets.
-  - `GET_MY_SENT_NOTIFICATIONS` is not filtered by `created_by`.
-- **server:**
-  - `codegen.yml` hardcodes the admin secret.
-  - `fly.toml` sets variables nothing reads: `RATE_LIMIT_*`, `OTP_MAX_ATTEMPTS`, `OTP_VERIFY_LIMIT_PER_15MIN`, `API_VERSION`.
+| Was open | How it's resolved |
+|---|---|
+| Users with role `admin` held Hasura's superuser role, which bypassed every permission | No Hasura. A department admin is role `admin` plus `managed_department_id`. Every setup query filters by that department, and another department's records answer 404 (`Setup/SetupScope.cs`, tests in `DepartmentSetupTests`, `PeopleSetupTests`, `TimetableSetupTests`). |
+| Web registration could never succeed | No self-registration: the department keeps the roster, and unknown numbers use **Request access**. |
+| Mobile axios never threw, so 401 handling was dead code | axios is removed. The typed client (`mobile/lib/api`) checks every status. |
+| Mobile had two auth modules and no single-flight refresh | One session module (`mobile/lib/api/session.ts`) |
+| Device rows: no deactivation, any student could rewrite any device, Android ids collided | `PUT /me/devices` under an install id; a token belongs to one person; logout, deactivation, a number change and account deletion all turn devices off. |
+| The auth webhook ignored session state | `BearerEvents` re-checks the session, account and `deleted_at` on every request. |
+| Students could not read notifications | Inbox: `GET /me/notifications`, with read state in `notification.read` |
+| Public registration accepted `role: "teacher"` | No public registration. Teachers are added by their department admin, and admins only through `create-admin`. |
+| Soft delete was half-built | `DELETE /me` sets `deleted_at` and `is_active = false`, revokes every session and turns off devices in one transaction; `/auth/code` refuses deleted accounts. The "restore within 30 days" promise was dropped. |
+| `/otp/send` sent SMS to numbers with no account | Sign-in codes go only to active roster accounts. Access-request codes are bound to that purpose and rate-limited per number and per IP. |
+| The Hasura `sendOTP` action was broken | Gone with Hasura |
+| Phone formats disagreed between endpoints | One normaliser (`Auth/PhoneNumber.cs`): every endpoint accepts local or international spellings and stores E.164. |
+| Two error envelopes | One envelope everywhere, including 401, 404, 429 and 500 |
+| Two notification send paths; failed FCM tokens never deactivated | Writers only insert into `notification.log`; `PushDispatcher` delivers and turns off dead tokens. |
+| Web tokens in non-httpOnly cookies, no logout UI | The web dashboard was rebuilt on the API: tokens stay on the Next.js server in httpOnly cookies, and it has sign out. |
+| Hasura metadata issues: CR notices could target any section; sent notices weren't filtered by sender | `AudienceService` decides who may address whom; `GET /notifications/sent` returns only your own. |
+| Server issues: Sentry initialised late, `codegen.yml` held the admin secret, `fly.toml` had unused variables | `server/` is gone. |
+| `docker-compose.yml`: unpinned `hasura/graphql-engine:latest`, a no-op metadata volume, admin secret `123` | The Hasura service is gone. Only PostgreSQL (pinned 17.5) remains. |
+| Mobile: unused `lib/graphql/generated.ts`, `components/form/*` duplicating `components/auth/*` | Removed with the GraphQL code and the setup screens |
+| "Login leaks whether an account exists" | Now deliberate: `/auth/code` answers `PHONE_NOT_REGISTERED` so the app can offer **Request access** (UX review). It is rate-limited per IP. |
 
 ---
 
-## Deploy notes for the fixes above
+## Open
 
-- **Set `SERVER_AUTH_SECRET` on the server** (`fly secrets set SERVER_AUTH_SECRET=…`) to the same value Hasura uses. Until then, Hasura event triggers get a 503 and notifications stop. This is deliberate: the alternative was leaving the endpoints open.
-- **Run `hasura metadata apply`** in each environment. This removes the guest session-token permission and tracks the OTP table again.
-- Existing tokens keep working. Tokens issued before the `typ` claim are accepted until they expire.
+### Medium
+
+- **SMS goes over plain HTTP to a raw IP.** The API's BulkSMSBD sender defaults
+  to `http://118.67.213.114:3775/sendtext` (`Sms:Endpoint`), so the API key and
+  secret travel in cleartext.
+  - **Fix:** Use the provider's HTTPS endpoint if one exists, and set `Sms__Endpoint`.
+- **Expo SDK 53 dependency drift.**
+  - `react-native-reanimated` 4.1 and `react-native-worklets` are installed, but
+    SDK 53 expects reanimated ~3.17. The worklets babel plugin is also added a
+    second time.
+  - `expo-linear-gradient` ^15 belongs to SDK 54.
+  - `@react-native-community/cli` is pinned to `latest`, and `react-native-codegen`
+    is a stale extra.
+  - **Fix:** Run `npx expo install --check`, then either align with SDK 53 or
+    upgrade to SDK 54.
+- **Android release builds are signed with the debug keystore**
+  (`mobile/android/app/build.gradle`).
+- **Rate limits are per machine.** The API's per-IP and per-user fixed windows
+  live in memory, so running N Fly machines multiplies every limit by N. The
+  per-number code limit is stored in the database, so it is unaffected.
+  - **Fix:** Keep one machine, or move the limits to Postgres or Redis before scaling out.
+
+### Low
+
+- **Legacy tables the API doesn't use.** These can be dropped in a later
+  migration once production has been switched over (`CUTOVER.md`):
+  - the `event.event*` family and `event.group_assignment`
+  - `user.otp_rate_limit`
+  - `settings.config`
+  - `academic.faculty` and `academic.department.faculty_id`
+  - `user.account.password`
+- **Setup error messages can reveal other departments' data**, to department
+  admins only:
+  - routine clash errors name another department's section and course
+  - adding a teacher or student, or importing a roster, says whether a number
+    already has an account and what kind
+  - **Fix:** Use generic messages when the clashing or existing record belongs to another department.
+- **Sent notices show "Sending push…" until push delivery is on.** While
+  `Push:Enabled` is false (until CUTOVER.md step 5), `notification.log` rows
+  stay `pending`. Notices still reach the inbox.
+- **Deleted accounts are never purged.** `DELETE /me` is a soft delete. Decide
+  whether a retention period is needed, and if so add a scheduled purge.
+- **mobile:**
+  - Unused dependencies: `react-native-vector-icons`, `react-aria`,
+    `react-stately`, `react-native-webview`, `expo-web-browser`, `expo-image`,
+    `expo-notifications`, `react-native-make`. Re-check these after the GraphQL
+    removal.
+  - Unused gluestack components and template assets.
+  - The deep-link scheme is the generic `mobile`.
+  - 58 lint warnings, mostly unused variables.
+- **web:** re-check these against the rebuilt dashboard:
+  - `eslint-config-next` 16 is installed alongside `next` 15.
+  - `transpilePackages: ['@ant-design']` is a scope, not a package, so it does nothing.
+  - App-store links point to `#`.
+
+---
+
+## Production
+
+Production still runs Hasura Cloud and the Node server until the steps in
+`CUTOVER.md` are done. Until then, the old stack's deploy notes still apply:
+
+- **Set `SERVER_AUTH_SECRET` on the server** (`fly secrets set SERVER_AUTH_SECRET=… -a unisync-server`)
+  to the same value Hasura uses. Until then, Hasura event triggers get a 503 and pushes stop.
+- **Run `hasura metadata apply`** in each environment. This removes the guest
+  session-token permission and tracks the OTP table again.
+
+After the cut-over, neither applies: the API sends pushes itself and there is no Hasura.
