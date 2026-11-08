@@ -1,11 +1,14 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react'
-import { session, type Tokens } from '@/lib/api'
+import { api, call, session, unwrap, type Tokens } from '@/lib/api'
+import type { components } from '@/lib/api/generated'
 import { getInstallId } from '@/lib/installId'
 
 interface User {
   id: string
   role: string
 }
+
+export type Me = components['schemas']['MeResponse']
 
 interface AuthContextType {
   isLoading: boolean
@@ -15,6 +18,9 @@ interface AuthContextType {
   user: User | null
   userId: string | null
   userRole: string | null
+  /** GET /me: name, section and the CR mark. Null until loaded (or when it couldn't be). */
+  me: Me | null
+  refreshMe: () => Promise<void>
   /** Call with the tokens from /auth/verify. */
   login: (tokens: Tokens) => Promise<void>
   logout: () => Promise<void>
@@ -27,6 +33,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
   const [isSessionRevoked, setIsSessionRevoked] = useState(false)
+  const [me, setMe] = useState<Me | null>(null)
 
   const readUser = useCallback(async () => {
     const signedIn = await session.isSignedIn()
@@ -46,6 +53,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     })
   }, [readUser])
+
+  const refreshMe = useCallback(async () => {
+    try {
+      setMe(await call(async () => unwrap(await api.GET('/api/v1/me'))))
+    } catch {
+      // Screens that need it show their own error; keep whatever we had.
+    }
+  }, [])
+
+  // Load /me whenever someone signs in; forget it on sign-out.
+  const userKey = user?.id
+  useEffect(() => {
+    if (userKey) void refreshMe()
+    else setMe(null)
+  }, [userKey, refreshMe])
 
   // Resolve only once the signed-in user is in state: callers navigate right
   // after login(), and the route guard must not see a signed-out user on the
@@ -68,6 +90,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     user,
     userId: user?.id ?? null,
     userRole: user?.role ?? null,
+    me,
+    refreshMe,
     login,
     logout,
   }

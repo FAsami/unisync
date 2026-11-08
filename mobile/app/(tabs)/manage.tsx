@@ -1,272 +1,98 @@
 import React from 'react'
-import { ScrollView, ActivityIndicator } from 'react-native'
+import { Linking, Pressable, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter, Href } from 'expo-router'
+import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { useQuery } from '@apollo/client'
-
-import { Text } from '@/components/ui/text'
-import { Heading } from '@/components/ui/heading'
 import { Box } from '@/components/ui/box'
-import { VStack } from '@/components/ui/vstack'
-import { Pressable } from '@/components/ui/pressable'
+import { Heading } from '@/components/ui/heading'
+import { HStack } from '@/components/ui/hstack'
 import { Icon } from '@/components/ui/icon'
-import { Card } from '@/components/ui/card'
+import { Text } from '@/components/ui/text'
+import { VStack } from '@/components/ui/vstack'
 import { useAuth } from '@/contexts/Auth'
-import { PermissionGate } from '@/components/manage/PermissionGate'
-import { PERMISSIONS, hasPermission, ROLES } from '@/constants/Permissions'
-import { GET_USER_SECTION } from '@/lib/graphql-operations'
+import { canSend, WEB_DASHBOARD_URL } from '@/lib/roles'
 
-const ManagementCard = ({
-  icon,
-  title,
-  description,
-  route,
-  color,
-}: {
-  icon: any
-  title: string
-  description: string
-  route: Href
-  color: string
-}) => {
-  const router = useRouter()
+function Action({ icon, title, description, onPress, color }: { icon: string; title: string; description: string; onPress: () => void; color: string }) {
   return (
-    <Pressable className="w-[31%] mb-3" onPress={() => router.push(route)}>
-      <Card
-        size="lg"
-        variant="elevated"
-        className="p-3 aspect-square justify-center items-center bg-white border border-outline-100 dark:bg-background-900 dark:border-outline-800"
-      >
-        <Box
-          className="rounded-full flex items-center justify-center mb-2"
-          style={{ backgroundColor: `${color}15`, padding: 8 }}
-        >
-          <Icon as={Ionicons} name={icon} size={24} style={{ color: color }} />
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}. ${description}`}
+      className="rounded-2xl border border-outline-100 dark:border-outline-800 bg-white dark:bg-background-900 p-4 mb-3"
+    >
+      <HStack space="md" className="items-center">
+        <Box className="h-12 w-12 rounded-full items-center justify-center" style={{ backgroundColor: `${color}1A` }}>
+          <Icon as={Ionicons} name={icon} size={24} style={{ color }} />
         </Box>
-        <VStack space="xs" className="items-center w-full">
-          <Heading
-            size="xs"
-            className="font-bold text-typography-900 text-center w-full"
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {title}
-          </Heading>
-          <Text
-            className="text-[10px] text-typography-500 text-center w-full"
-            numberOfLines={2}
-          >
-            {description}
-          </Text>
+        <VStack className="flex-1">
+          <Text className="text-base font-bold text-typography-900">{title}</Text>
+          <Text className="text-typography-500 text-sm">{description}</Text>
         </VStack>
-      </Card>
+        <Icon as={Ionicons} name="chevron-forward" size={20} className="text-typography-400" />
+      </HStack>
     </Pressable>
   )
 }
 
-const ClassRepresentativeSection = () => {
-  const router = useRouter()
-  const { user } = useAuth()
-
-  const { data: userSectionData, loading } = useQuery(GET_USER_SECTION, {
-    variables: { userId: user?.id },
-    skip: !user?.id,
-  })
-
-  const sectionId = userSectionData?.user_profile?.[0]?.section_id
-
-  if (loading) {
-    return (
-      <VStack className="items-center py-8">
-        <ActivityIndicator size="small" color="#8B5CF6" />
-      </VStack>
-    )
-  }
-
-  if (!sectionId) {
-    return (
-      <VStack className="items-center py-8 bg-white dark:bg-background-900 rounded-xl border border-outline-100 dark:border-outline-800">
-        <Text className="text-4xl mb-4">⚠️</Text>
-        <Text className="text-center text-typography-500 px-4">
-          No section assigned. Contact your administrator.
-        </Text>
-      </VStack>
-    )
-  }
+/**
+ * The Send tab: notices for teachers, department admins and CRs. Changing a
+ * class happens on the class itself (Today or Schedule). Department setup
+ * (batches, courses, roster, routine) lives on the web dashboard.
+ */
+export default function ManageScreen() {
+  const { userRole, me } = useAuth()
+  const allowed = canSend(userRole, me?.isClassRepresentative)
 
   return (
-    <VStack space="md">
-      <Text className="text-xs font-bold uppercase tracking-widest text-typography-400">
-        Management
-      </Text>
-      <Box className="flex-row flex-wrap justify-between">
-        <ManagementCard
-          icon="book"
-          title="Offerings"
-          description="Course Offerings"
-          route={`/manage/sections/offerings?id=${sectionId}` as Href}
-          color="#8B5CF6"
-        />
-        <ManagementCard
-          icon="calendar"
-          title="Schedule"
-          description="Class Schedule"
-          route={`/manage/sections/routine?id=${sectionId}` as Href}
-          color="#059669"
-        />
-        <ManagementCard
-          icon="notifications"
-          title="Notify"
-          description="Send Alert"
-          route={'/manage/notifications' as Href}
-          color="#EF4444"
-        />
-      </Box>
-    </VStack>
-  )
-}
-
-const ManageScreen = () => {
-  const { userRole } = useAuth()
-
-  return (
-    <SafeAreaView
-      className="flex-1 bg-white dark:bg-background-950"
-      edges={['top']}
-    >
-      <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
-        <Box className="px-5 pt-6 pb-6">
-          <Heading
-            size="3xl"
-            className="font-extrabold text-typography-900 mb-2"
-          >
-            Manage
+    <SafeAreaView className="flex-1 bg-white dark:bg-background-950" edges={['top']}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+        <VStack className="mb-6">
+          <Heading size="2xl" className="font-extrabold text-typography-900">
+            Send
           </Heading>
-          <Text className="text-typography-500 text-base">
-            Quick access to your tools
-          </Text>
-        </Box>
-
-        <VStack space="2xl" className="px-5">
-          <PermissionGate permission={PERMISSIONS.MANAGE_USERS}>
-            <VStack space="md">
-              <Text className="text-xs font-bold uppercase tracking-widest text-typography-400">
-                Administration
-              </Text>
-              <Box className="flex-row flex-wrap justify-between">
-                <ManagementCard
-                  icon="people"
-                  title="Students"
-                  description="Manage Students"
-                  route={'/manage/students' as Href}
-                  color="#10B981"
-                />
-                <ManagementCard
-                  icon="school"
-                  title="Faculty"
-                  description="Manage Faculty"
-                  route={'/manage/faculty' as Href}
-                  color="#F59E0B"
-                />
-                <ManagementCard
-                  icon="business"
-                  title="Depts"
-                  description="Departments"
-                  route={'/manage/departments' as Href}
-                  color="#F97316"
-                />
-                <ManagementCard
-                  icon="people-circle"
-                  title="Batches"
-                  description="Student Groups"
-                  route={'/manage/batches' as Href}
-                  color="#10B981"
-                />
-                <ManagementCard
-                  icon="file-tray-full"
-                  title="Sections"
-                  description="Class Sections"
-                  route={'/manage/sections' as Href}
-                  color="#8B5CF6"
-                />
-                <ManagementCard
-                  icon="library"
-                  title="Courses"
-                  description="Offerings"
-                  route="/manage/courses"
-                  color="#6366F1"
-                />
-                <ManagementCard
-                  icon="notifications"
-                  title="Notify"
-                  description="Broadcast"
-                  route={'/manage/notifications' as Href}
-                  color="#EF4444"
-                />
-                <Box className="w-[31%]" />
-              </Box>
-            </VStack>
-          </PermissionGate>
-
-          {/* Teacher Features */}
-          <PermissionGate permission={PERMISSIONS.MANAGE_OWN_COURSES}>
-            <VStack space="md">
-              <Text className="text-xs font-bold uppercase tracking-widest text-typography-400">
-                Teaching
-              </Text>
-              <Box className="flex-row flex-wrap justify-between">
-                <ManagementCard
-                  icon="easel"
-                  title="My Courses"
-                  description="Assigned classes"
-                  route={'/manage/my-courses' as Href}
-                  color="#F59E0B"
-                />
-                <ManagementCard
-                  icon="medal"
-                  title="Grades"
-                  description="Grading"
-                  route={'/manage/grades' as Href}
-                  color="#6366F1"
-                />
-                <ManagementCard
-                  icon="notifications"
-                  title="Notify"
-                  description="Send Alert"
-                  route={'/manage/notifications' as Href}
-                  color="#EF4444"
-                />
-              </Box>
-            </VStack>
-          </PermissionGate>
-
-          {/* Class Representative Features - Direct Access to Offerings & Schedule */}
-          {userRole === ROLES.CLASS_REPRESENTATIVE && (
-            <ClassRepresentativeSection />
-          )}
-          {!hasPermission(userRole, PERMISSIONS.MANAGE_USERS) &&
-            !hasPermission(userRole, PERMISSIONS.MANAGE_OWN_COURSES) &&
-            !hasPermission(userRole, PERMISSIONS.MANAGE_SECTION_ATTENDANCE) &&
-            userRole !== ROLES.CLASS_REPRESENTATIVE && (
-              <VStack className="items-center justify-center py-16 bg-white dark:bg-background-900 rounded-3xl border border-outline-100 dark:border-outline-800">
-                <Text className="text-6xl mb-6">🔒</Text>
-                <Heading
-                  size="lg"
-                  className="text-center font-bold text-typography-900 mb-2"
-                >
-                  No Access
-                </Heading>
-                <Text className="text-center text-typography-500 px-8 leading-relaxed">
-                  You don&apos;t have permission to manage any resources. Contact
-                  your administrator.
-                </Text>
-              </VStack>
-            )}
+          <Text className="text-typography-500 mt-1">Tell your students what&apos;s happening.</Text>
         </VStack>
+
+        {allowed ? (
+          <>
+            <Action
+              icon="megaphone-outline"
+              title="Send a notice"
+              description="To a section, batch or your department, as you're allowed"
+              color="#2563EB"
+              onPress={() => router.push('/manage/notifications/compose')}
+            />
+            <Action
+              icon="time-outline"
+              title="Sent notices"
+              description="What you sent, who got it and how many read it"
+              color="#059669"
+              onPress={() => router.push('/manage/notifications/history')}
+            />
+            <VStack className="rounded-2xl bg-background-50 dark:bg-background-900 p-4 mt-3" space="xs">
+              <Text className="text-typography-900 font-semibold">Cancelling or moving a class?</Text>
+              <Text className="text-typography-600">Tap the class on Today or Schedule. Students are told automatically.</Text>
+            </VStack>
+          </>
+        ) : (
+          <VStack className="rounded-2xl border border-outline-200 p-6 items-center" space="sm">
+            <Icon as={Ionicons} name="lock-closed-outline" size={32} className="text-typography-400" />
+            <Text className="text-typography-700 text-center">Only teachers, CRs and department admins send notices.</Text>
+          </VStack>
+        )}
+
+        {userRole === 'admin' ? (
+          <VStack className="rounded-2xl border border-outline-200 dark:border-outline-800 p-4 mt-6" space="sm">
+            <Text className="text-typography-900 font-semibold">Department setup is on the web</Text>
+            <Text className="text-typography-600">
+              Batches, sections, courses, teachers, the student roster, the routine and access requests are managed from the web dashboard.
+            </Text>
+            <Pressable onPress={() => Linking.openURL(WEB_DASHBOARD_URL)} accessibilityRole="link" className="min-h-[44px] justify-center">
+              <Text className="text-primary-600 font-semibold">Open the web dashboard</Text>
+            </Pressable>
+          </VStack>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   )
 }
-
-export default ManageScreen

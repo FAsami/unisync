@@ -1,4 +1,4 @@
-import { classTitle, describeClass, shortDate, type ClassOccurrence } from '../schedule'
+import { addDays, classTitle, dayChip, describeClass, shortDate, type ClassOccurrence } from '../schedule'
 
 const base: ClassOccurrence = {
   routineId: 'r1',
@@ -38,4 +38,11 @@ it('describes each class status in words a student understands', () => {
 it('titles a class by its course, or its kind when it has none', () => {
   expect(classTitle(base)).toBe('CSE101 · Programming')
   expect(classTitle({ ...base, course: null })).toBe('lecture')
+})
+
+it('moves through weeks by calendar date, across months and years', () => {
+  expect(addDays('2026-11-09', 7)).toBe('2026-11-16')
+  expect(addDays('2026-11-30', 1)).toBe('2026-12-01')
+  expect(addDays('2026-01-02', -7)).toBe('2025-12-26')
+  expect(dayChip('2026-11-12')).toEqual({ weekday: 'Thu', day: 12 })
 })

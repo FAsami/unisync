@@ -32,6 +32,20 @@ public sealed class OpenApiContractTests
     }
 
     [Fact]
+    public void No_two_public_types_share_a_name()
+    {
+        // OpenAPI schema names are the short type name, so two records called
+        // RoomBody in different namespaces silently share one schema and one of
+        // the endpoints is documented with the other's body.
+        var clashes = typeof(Program).Assembly.GetExportedTypes()
+            .GroupBy(t => t.Name)
+            .Where(g => g.Count() > 1)
+            .Select(g => $"{g.Key}: {string.Join(", ", g.Select(t => t.FullName))}")
+            .ToList();
+        Assert.Empty(clashes);
+    }
+
+    [Fact]
     public async Task The_committed_spec_matches_the_code()
     {
         var generated = (await GenerateAsync()).ToJsonString(Indented) + "\n";

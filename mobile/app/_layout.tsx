@@ -27,7 +27,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { useColorScheme } from '@/hooks/useColorScheme'
 import { AuthProvider, useAuth } from '@/contexts/Auth'
-import { GraphQLProvider } from '@/contexts/Apollo'
 import { FCMProvider } from '@/contexts/FCM'
 import { AlertProvider } from '@/contexts/AlertContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
@@ -135,46 +134,56 @@ const RootLayout = () => {
       <ThemeProvider>
         <GluestackUIProvider mode="system">
           <AuthProvider>
-            <GraphQLProvider>
-              <FCMProvider>
-                <AlertProvider>
-                  <NavThemeProvider value={navigationTheme}>
-                    <OnboardingGuard>
-                      <AuthGuard>
-                        <Stack>
-                          <Stack.Screen
-                            name="onboarding"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen
-                            name="(tabs)"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen
-                            name="login"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen
-                            name="verify-otp"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen
-                            name="request-access"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen
-                            name="profile"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen name="+not-found" />
-                        </Stack>
-                      </AuthGuard>
-                    </OnboardingGuard>
-                    <StatusBar style="auto" />
-                  </NavThemeProvider>
-                </AlertProvider>
-              </FCMProvider>
-            </GraphQLProvider>
+            <FCMProvider>
+              <AlertProvider>
+                <NavThemeProvider value={navigationTheme}>
+                  <OnboardingGuard>
+                    <AuthGuard>
+                      <Stack>
+                        <Stack.Screen
+                          name="onboarding"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="(tabs)"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="login"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="verify-otp"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="request-access"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="profile"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="notification/[id]"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="manage/notifications/compose"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                          name="manage/notifications/history"
+                          options={{ headerShown: false }}
+                        />
+                        <Stack.Screen name="+not-found" />
+                      </Stack>
+                    </AuthGuard>
+                  </OnboardingGuard>
+                  <StatusBar style="auto" />
+                </NavThemeProvider>
+              </AlertProvider>
+            </FCMProvider>
           </AuthProvider>
         </GluestackUIProvider>
       </ThemeProvider>

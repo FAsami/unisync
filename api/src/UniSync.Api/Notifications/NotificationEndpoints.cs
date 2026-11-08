@@ -241,7 +241,7 @@ public static class NotificationEndpoints
         });
         await db.SaveChangesAsync(ct);
 
-        return ApiResponse.Ok(http, $"Sent to {target.Recipients} people.", new SendResult(id, target.Recipients), StatusCodes.Status201Created);
+        return ApiResponse.Ok(http, $"Sent to {target.Recipients} {(target.Recipients == 1 ? "person" : "people")}.", new SendResult(id, target.Recipients), StatusCodes.Status201Created);
     }
 
     private static async Task<IResult> GetSentAsync(

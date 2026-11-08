@@ -1,285 +1,170 @@
-import React, { useMemo } from 'react'
-import { ScrollView, TouchableOpacity } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { router, Stack } from 'expo-router'
-import { useMutation } from '@apollo/client'
+import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import {
-  SEND_CUSTOM_NOTIFICATION,
-  GET_ALL_SECTIONS,
-  GET_ALL_BATCHES,
-  GET_DEPARTMENTS,
-} from '@/lib/graphql-operations'
-
-import { Text } from '@/components/ui/text'
 import { Heading } from '@/components/ui/heading'
-import { VStack } from '@/components/ui/vstack'
 import { HStack } from '@/components/ui/hstack'
-import { useTheme } from '@/contexts/ThemeContext'
-import { useHaptics } from '@/hooks/useHaptics'
-import { useAuth } from '@/contexts/Auth'
-import { useAlert } from '@/contexts/AlertContext'
-import { FormFieldRenderer, type FormConfig } from '@/components/form'
+import { Icon } from '@/components/ui/icon'
+import { Spinner } from '@/components/ui/spinner'
+import { Text } from '@/components/ui/text'
+import { VStack } from '@/components/ui/vstack'
 import { AuthSubmitButton } from '@/components/auth'
+import { FieldError, Label, Notice, TextField } from '@/components/signin/Fields'
+import { api, ApiError, call, unwrap, unwrapWithMessage } from '@/lib/api'
+import type { components } from '@/lib/api/generated'
 
-const notificationSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(100, 'Title too long'),
-  body: z.string().min(1, 'Message is required').max(500, 'Message too long'),
-  target_type: z.enum(['section', 'batch', 'department', 'all']),
-  target_id: z.string().uuid().optional(),
-})
+type Audience = components['schemas']['AudienceOption']
 
-type NotificationFormValues = z.infer<typeof notificationSchema>
+// The API's limits (NotificationEndpoints).
+const MAX_TITLE = 100
+const MAX_BODY = 1000
 
-const TARGET_TYPES = [
-  { label: 'My Section', value: 'section' },
-  { label: 'Whole Batch', value: 'batch' },
-  { label: 'Department', value: 'department' },
-  { label: 'All Users', value: 'all' },
-]
+const audienceIcon: Record<string, string> = { section: 'people-outline', batch: 'school-outline', department: 'business-outline' }
 
-export default function ComposeNotificationScreen() {
-  const { userRole, userId } = useAuth()
-  const haptics = useHaptics()
-  const { showAlert } = useAlert()
-  const { currentMode } = useTheme()
+/**
+ * Send a notice to one audience the API says I may address (GET /notifications/audiences):
+ * a teacher their sections, a CR their own section, a department admin the
+ * department, its batches and sections. It lands in each inbox and as a push.
+ */
+export default function ComposeScreen() {
+  const [audiences, setAudiences] = useState<Audience[]>()
+  const [audience, setAudience] = useState<Audience>()
+  const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [problem, setProblem] = useState<ApiError>()
+  const [sent, setSent] = useState<string>()
+  const [busy, setBusy] = useState(false)
 
-  const [sendNotification, { loading: sending }] = useMutation(
-    SEND_CUSTOM_NOTIFICATION
-  )
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-    watch,
-    reset,
-  } = useForm<NotificationFormValues>({
-    defaultValues: {
-      title: '',
-      body: '',
-      target_type: 'section',
-      target_id: '',
-    },
-    resolver: zodResolver(notificationSchema) as any,
-  })
-
-  const watchedTargetType = watch('target_type')
-  const watchedTargetId = watch('target_id')
-  const availableTargetTypes = useMemo(() => {
-    if (userRole === 'class_representative') {
-      return TARGET_TYPES.filter((t) => t.value === 'section')
-    }
-    return TARGET_TYPES
-  }, [userRole])
-
-  const getTargetDisplayName = (items: any[]) => {
-    if (watchedTargetType === 'all') return 'All Users'
-    if (!watchedTargetId) return 'Select Target'
-
-    const item = items.find((i: any) => i.id === watchedTargetId)
-    if (!item) return 'Select Target'
-
-    switch (watchedTargetType) {
-      case 'section':
-        return `${item.batch?.department?.name} - ${item.batch?.name} - ${item.name}`
-      case 'batch':
-        return `${item.department?.name} - ${item.name}`
-      case 'department':
-        return item.name
-      default:
-        return 'Select Target'
-    }
-  }
-
-  const fields: FormConfig<NotificationFormValues>[] = [
-    {
-      type: 'input',
-      name: 'title' as const,
-      label: 'Title',
-      placeholder: 'e.g., Quiz Tomorrow',
-      required: true,
-      maxLength: 100,
-    },
-    {
-      type: 'textarea',
-      name: 'body' as const,
-      label: 'Message',
-      placeholder: 'Enter your message here...',
-      required: true,
-      maxLength: 500,
-      minHeight: 128,
-    },
-    {
-      type: 'select',
-      name: 'target_type' as const,
-      label: 'Send To',
-      placeholder: 'Select Target Type',
-      icon: 'people-outline',
-      items: availableTargetTypes,
-      getValue: () =>
-        availableTargetTypes.find((t) => t.value === watchedTargetType)
-          ?.label || 'Select',
-      modalTitle: 'Send To',
-      keyExtractor: (item: any) => item.value,
-      renderItem: (item: any) => (
-        <Text className="text-typography-900">{item.label}</Text>
-      ),
-      selectedItem: availableTargetTypes.find(
-        (t) => t.value === watchedTargetType
-      )
-        ? { value: watchedTargetType }
-        : undefined,
-    },
-    {
-      type: 'select',
-      name: 'target_id' as const,
-      label: `Select ${
-        watchedTargetType.charAt(0).toUpperCase() + watchedTargetType.slice(1)
-      }`,
-      placeholder: 'Select Target',
-      required: true,
-      shouldRender: watchedTargetType !== 'all',
-      getValue: (items: any[]) => getTargetDisplayName(items),
-      modalTitle: `Select ${
-        watchedTargetType.charAt(0).toUpperCase() + watchedTargetType.slice(1)
-      }`,
-      query: {
-        query:
-          watchedTargetType === 'section'
-            ? GET_ALL_SECTIONS
-            : watchedTargetType === 'batch'
-            ? GET_ALL_BATCHES
-            : GET_DEPARTMENTS,
-        dataPath:
-          watchedTargetType === 'section'
-            ? 'academic_section'
-            : watchedTargetType === 'batch'
-            ? 'academic_batch'
-            : 'academic_department',
-      },
-      keyExtractor: (item: any) => item.id,
-      renderItem: (item: any, isSelected: boolean) => {
-        let label = ''
-        switch (watchedTargetType) {
-          case 'section':
-            label = `${item.batch?.department?.name} - ${item.batch?.name} - ${item.name}`
-            break
-          case 'batch':
-            label = `${item.department?.name} - ${item.name}`
-            break
-          case 'department':
-            label = item.name
-            break
-        }
-        return (
-          <Text
-            className={`text-base ${
-              isSelected ? 'font-bold text-primary-600' : 'text-typography-900'
-            }`}
-          >
-            {label}
-          </Text>
-        )
-      },
-      selectedItem: watchedTargetId ? { id: watchedTargetId } : undefined,
-    },
-  ]
-
-  const onSubmit = async (data: NotificationFormValues) => {
-    haptics.medium()
-    try {
-      const { data: response, errors } = await sendNotification({
-        variables: {
-          object: {
-            title: data.title,
-            body: data.body,
-            target_type: data.target_type,
-            target_id: data.target_type === 'all' ? null : data.target_id,
-            ...(userRole === 'admin' && userId ? { created_by: userId } : {}),
-          },
-        },
-      })
-      if (response?.insert_notification_log_one?.id) {
-        haptics.success()
-        showAlert({
-          title: 'Success',
-          description: 'Notification sent successfully',
-          type: 'success',
-          onConfirm: () => {
-            reset()
-            router.back()
-          },
-        })
-      } else {
-        haptics.error()
-        showAlert({
-          title: 'Failed to Send',
-          description: 'Something went wrong while sending the notification.',
-          type: 'error',
-        })
+  useEffect(() => {
+    void (async () => {
+      try {
+        const options = await call(async () => unwrap(await api.GET('/api/v1/notifications/audiences')))
+        setAudiences(options)
+        if (options.length === 1) setAudience(options[0])
+      } catch (error) {
+        setProblem(error as ApiError)
       }
-    } catch (error: any) {
-      haptics.error()
-      console.error('Error sending notification:', error)
-      showAlert({
-        title: 'Failed to Send',
-        description:
-          error?.message ||
-          error?.graphQLErrors?.[0]?.message ||
-          'An error occurred while sending the notification. Please try again.',
-        type: 'error',
-      })
+    })()
+  }, [])
+
+  const submit = async () => {
+    const found: Record<string, string> = {}
+    if (!audience) found.audience = 'Choose who gets it.'
+    if (!title.trim()) found.title = 'Give it a short title.'
+    if (!body.trim()) found.body = 'Write the message.'
+    setErrors(found)
+    if (Object.keys(found).length) return
+
+    setBusy(true)
+    setProblem(undefined)
+    try {
+      const { data, message } = await call(async () =>
+        unwrapWithMessage(
+          await api.POST('/api/v1/notifications', {
+            body: { title: title.trim(), body: body.trim(), audience: { type: audience!.type, id: audience!.id } },
+          })
+        )
+      )
+      const count = Number(data.recipients)
+      setSent(message || `Sent to ${count} ${count === 1 ? 'person' : 'people'}.`)
+      setTitle('')
+      setBody('')
+    } catch (error) {
+      const e = error as ApiError
+      setErrors(e.fieldErrors)
+      setProblem(e)
+    } finally {
+      setBusy(false)
     }
   }
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-background-950">
-      <Stack.Screen options={{ headerShown: false }} />
-
-      {/* Header */}
-      <HStack className="items-center justify-between px-4 py-3 bg-white dark:bg-background-900 border-b border-outline-100 dark:border-outline-800">
-        <HStack className="items-center flex-1">
-          <TouchableOpacity
-            onPress={() => {
-              haptics.light()
-              router.back()
-            }}
-            className="p-2 rounded-full mr-2"
-          >
-            <Ionicons
-              name="arrow-back"
-              size={24}
-              color={currentMode === 'dark' ? '#F1F5F9' : '#1E293B'}
-            />
-          </TouchableOpacity>
-          <Heading size="md" className="font-bold text-typography-900">
-            Send Notification
-          </Heading>
-        </HStack>
+      <HStack className="items-center px-2 py-2">
+        <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back" className="p-3">
+          <Icon as={Ionicons} name="arrow-back" size={22} className="text-typography-900" />
+        </Pressable>
+        <Heading size="md" className="text-typography-900">
+          Send a notice
+        </Heading>
       </HStack>
 
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <VStack space="lg">
-          <FormFieldRenderer
-            fields={fields}
-            control={control}
-            errors={errors}
-            setValue={setValue}
-          />
+      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+          <VStack space="lg">
+            {sent ? (
+              <Notice message={sent} tone="success" action={{ label: 'See sent notices', onPress: () => router.replace('/manage/notifications/history') }} />
+            ) : null}
 
-          {/* Send Button */}
-          <AuthSubmitButton
-            onPress={handleSubmit(onSubmit)}
-            isLoading={sending}
-            text="Send Notification"
-          />
-        </VStack>
-      </ScrollView>
+            <View>
+              <Label>Send to</Label>
+              {!audiences && !problem ? <Spinner className="self-start my-2" /> : null}
+              {audiences?.length === 0 ? (
+                <Text className="text-typography-500">There&apos;s no one you can send to yet. Your department links you to sections on the web dashboard.</Text>
+              ) : null}
+              <VStack className="rounded-xl border border-outline-200 overflow-hidden">
+                {audiences?.map((a, i) => {
+                  const selected = audience?.type === a.type && audience.id === a.id
+                  const count = Number(a.recipients)
+                  return (
+                    <Pressable
+                      key={`${a.type}-${a.id}`}
+                      onPress={() => setAudience(a)}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: selected }}
+                      accessibilityLabel={`${a.label}, ${count} ${count === 1 ? 'person' : 'people'}`}
+                      className={`flex-row items-center px-3 min-h-[56px] ${i ? 'border-t border-outline-100 dark:border-outline-800' : ''} ${
+                        selected ? 'bg-primary-50 dark:bg-primary-900/20' : ''
+                      }`}
+                    >
+                      <Icon as={Ionicons} name={audienceIcon[a.type] ?? 'people-outline'} size={20} className="text-typography-500 mr-3" />
+                      <VStack className="flex-1">
+                        <Text className="text-typography-900 font-semibold">{a.label}</Text>
+                        <Text className="text-typography-500 text-xs">
+                          {count} {count === 1 ? 'person' : 'people'}
+                        </Text>
+                      </VStack>
+                      <Icon
+                        as={Ionicons}
+                        name={selected ? 'radio-button-on' : 'radio-button-off'}
+                        size={22}
+                        className={selected ? 'text-primary-600' : 'text-typography-300'}
+                      />
+                    </Pressable>
+                  )
+                })}
+              </VStack>
+              <FieldError message={errors.audience} />
+            </View>
+
+            <TextField
+              label="Title"
+              value={title}
+              onChange={(t) => setTitle(t.slice(0, MAX_TITLE))}
+              error={errors.title}
+              placeholder="e.g. Quiz on Thursday"
+              autoCapitalize="sentences"
+              maxLength={MAX_TITLE}
+            />
+            <TextField
+              label="Message"
+              value={body}
+              onChange={setBody}
+              error={errors.body}
+              placeholder="What do students need to know?"
+              autoCapitalize="sentences"
+              multiline
+              maxLength={MAX_BODY}
+            />
+
+            {problem ? <Notice message={problem.message} /> : null}
+            <AuthSubmitButton onPress={submit} isLoading={busy} text="Send" disabled={audiences?.length === 0} />
+            <Text className="text-typography-500 text-center text-sm">It goes to their inbox and as a push notification.</Text>
+          </VStack>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }

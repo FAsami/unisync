@@ -5,7 +5,6 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useFocusEffect } from 'expo-router'
 import { Box } from '@/components/ui/box'
 import { Heading } from '@/components/ui/heading'
-import { HStack } from '@/components/ui/hstack'
 import { Spinner } from '@/components/ui/spinner'
 import { Text } from '@/components/ui/text'
 import { VStack } from '@/components/ui/vstack'
@@ -13,26 +12,14 @@ import { useTheme } from '@/contexts/ThemeContext'
 import { api, ApiError, call, unwrap } from '@/lib/api'
 import type { components } from '@/lib/api/generated'
 import { classTitle, describeClass, hhmm, shortDate, type ClassOccurrence } from '@/lib/schedule'
+import { ClassRow } from '@/components/classes/ClassRow'
+import { ClassActionsSheet } from '@/components/classes/ClassActionsSheet'
+import { ConfirmationBanner } from '@/components/classes/ConfirmationBanner'
 
 type Today = components['schemas']['TodayResponse']
 
 /** While Home is open, refetch so "Now" and "Next" move on as classes start and end. */
 const REFRESH_MS = 60_000
-
-const badgeStyle = {
-  normal: { box: '', text: '' },
-  cancelled: { box: 'bg-error-100', text: 'text-error-700' },
-  changed: { box: 'bg-warning-100', text: 'text-warning-800' },
-}
-
-function StatusBadge({ c }: { c: ClassOccurrence }) {
-  const { badge, tone } = describeClass(c)
-  return badge ? (
-    <Box className={`self-start rounded-full px-2 py-0.5 mt-1 ${badgeStyle[tone].box}`}>
-      <Text className={`text-xs font-bold ${badgeStyle[tone].text}`}>{badge}</Text>
-    </Box>
-  ) : null
-}
 
 /** The big "Now" / "Next" card. */
 function HighlightCard({ c, title, colors }: { c: ClassOccurrence; title: string; colors: [string, string] }) {
@@ -55,38 +42,15 @@ function HighlightCard({ c, title, colors }: { c: ClassOccurrence; title: string
   )
 }
 
-function ClassRow({ c, isLast, highlight }: { c: ClassOccurrence; isLast: boolean; highlight: boolean }) {
-  const { detail, struck } = describeClass(c)
-  return (
-    <HStack
-      className={`items-start py-4 ${isLast ? '' : 'border-b border-outline-100 dark:border-outline-800'}`}
-      accessible
-      accessibilityLabel={`${classTitle(c)}, ${hhmm(c.start)} to ${hhmm(c.end)}. ${describeClass(c).badge ?? ''} ${detail ?? ''}`}
-    >
-      <VStack className="w-16 mr-3 pt-0.5">
-        <Text className={`font-bold text-sm text-typography-900 ${struck ? 'line-through text-typography-400' : ''}`}>{hhmm(c.start)}</Text>
-        <Text className="text-typography-400 text-xs">{hhmm(c.end)}</Text>
-      </VStack>
-      <VStack className="flex-1">
-        <Text className={`font-semibold text-base ${highlight ? 'text-primary-600 dark:text-primary-400' : 'text-typography-900'} ${struck ? 'line-through' : ''}`}>
-          {classTitle(c)}
-        </Text>
-        <Text className="text-typography-500 text-xs">
-          {[c.room, c.teacher].filter(Boolean).join(' · ') || c.kind}
-        </Text>
-        <StatusBadge c={c} />
-        {detail ? <Text className="text-typography-600 text-sm mt-1">{detail}</Text> : null}
-      </VStack>
-    </HStack>
-  )
-}
-
 /** "My day" (UX review decision 2): only my classes, with every change already applied by the server. */
 export default function HomeScreen() {
   const { currentMode } = useTheme()
   const [today, setToday] = useState<Today>()
   const [problem, setProblem] = useState<ApiError>()
   const [refreshing, setRefreshing] = useState(false)
+  const [changing, setChanging] = useState<ClassOccurrence | null>(null)
+  const [confirmation, setConfirmation] = useState<string>()
+  const hideConfirmation = useCallback(() => setConfirmation(undefined), [])
 
   const load = useCallback(async () => {
     try {
@@ -113,6 +77,12 @@ export default function HomeScreen() {
     setRefreshing(true)
     await load()
     setRefreshing(false)
+  }
+
+  const onChanged = async (message: string) => {
+    setChanging(null)
+    setConfirmation(message)
+    await load()
   }
 
   if (!today && !problem) {
@@ -175,6 +145,9 @@ export default function HomeScreen() {
             ) : (
               <VStack className="mt-2">
                 <Text className="text-xs font-bold uppercase tracking-widest text-typography-500 mb-2 px-1">All of today</Text>
+                {today.canChange ? (
+                  <Text className="text-typography-500 text-sm mb-2 px-1">Tap a class to cancel it, move it or change its room.</Text>
+                ) : null}
                 <VStack className="bg-white dark:bg-background-900 rounded-2xl px-4 border border-outline-100 dark:border-outline-800">
                   {today.classes.map((c, i) => (
                     <ClassRow
@@ -182,6 +155,7 @@ export default function HomeScreen() {
                       c={c}
                       isLast={i === today.classes.length - 1}
                       highlight={c.routineId === today.current?.routineId && c.status === today.current?.status}
+                      onPress={today.canChange ? () => setChanging(c) : undefined}
                     />
                   ))}
                 </VStack>
@@ -190,6 +164,8 @@ export default function HomeScreen() {
           </>
         ) : null}
       </ScrollView>
+      <ConfirmationBanner message={confirmation} onHide={hideConfirmation} />
+      <ClassActionsSheet cls={changing} onClose={() => setChanging(null)} onChanged={onChanged} />
     </SafeAreaView>
   )
 }

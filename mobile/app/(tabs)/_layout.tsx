@@ -9,13 +9,14 @@ import { Colors, AppColors } from '@/constants/Colors'
 import { useColorScheme } from '@/hooks/useColorScheme'
 import { Fonts } from '@/constants/Fonts'
 import { useAuth } from '@/contexts/Auth'
-import { canManage } from '@/constants/Permissions'
+import { canSend } from '@/lib/roles'
 
 const TabLayout = () => {
   const colorScheme = useColorScheme()
   const insets = useSafeAreaInsets()
-  const { userRole } = useAuth()
-  const showManageTab = canManage(userRole)
+  const { userRole, me } = useAuth()
+  // Teachers, department admins and CRs send notices; setup itself is on the web.
+  const showManageTab = canSend(userRole, me?.isClassRepresentative)
 
   return (
     <Tabs
@@ -33,13 +34,13 @@ const TabLayout = () => {
         tabBarLabelStyle: {
           fontSize: 11,
           fontFamily: Fonts.light,
-          letterSpacing: 0.5,
+          letterSpacing: 0,
           marginTop: 2,
           marginBottom: 0,
         },
         tabBarItemStyle: {
           paddingVertical: 2,
-          paddingHorizontal: 2,
+          paddingHorizontal: 0,
         },
       }}
     >
@@ -73,11 +74,11 @@ const TabLayout = () => {
         name="manage"
         options={{
           href: showManageTab ? undefined : null,
-          title: 'MANAGE',
+          title: 'SEND',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               size={22}
-              name={focused ? 'briefcase' : 'briefcase-outline'}
+              name={focused ? 'megaphone' : 'megaphone-outline'}
               color={color}
             />
           ),
