@@ -12,8 +12,8 @@ public sealed class DatabaseTests : ICollectionFixture<PostgresFixture>
 }
 
 /// <summary>
-/// One throwaway database per test run, built from the real schema: the legacy
-/// Hasura migrations (the baseline) and then this API's own migrations.
+/// One throwaway database per test run, built only by this API's migrations
+/// (0000_baseline is Hasura's schema), exactly as a fresh environment is.
 ///
 /// UNISYNC_TEST_DB = an admin connection string, e.g.
 ///   Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=postgres
@@ -24,6 +24,7 @@ public sealed class PostgresFixture : IAsyncLifetime
 {
     private string? _adminConnectionString;
     private string? _databaseName;
+    private readonly List<string> _extraDatabases = [];
 
     public bool Unavailable { get; private set; }
 
@@ -44,36 +45,30 @@ public sealed class PostgresFixture : IAsyncLifetime
         }
 
         _databaseName = $"unisync_test_{Guid.NewGuid():N}";
-        await using (var admin = new NpgsqlConnection(_adminConnectionString))
-        {
-            await admin.OpenAsync();
-            await using var create = new NpgsqlCommand($"CREATE DATABASE \"{_databaseName}\"", admin);
-            await create.ExecuteNonQueryAsync();
-        }
-
-        ConnectionString = new NpgsqlConnectionStringBuilder(_adminConnectionString) { Database = _databaseName }.ConnectionString;
+        ConnectionString = await CreateDatabaseAsync(_databaseName);
 
         await using var dataSource = NpgsqlDataSource.Create(ConnectionString);
-        await ApplyLegacyMigrationsAsync(dataSource);
         await new MigrationRunner(dataSource, NullLogger<MigrationRunner>.Instance).ApplyPendingAsync();
     }
 
-    private static async Task ApplyLegacyMigrationsAsync(NpgsqlDataSource dataSource)
+    /// <summary>An extra empty database, dropped with the fixture (for migration tests).</summary>
+    public async Task<string> CreateEmptyDatabaseAsync()
     {
-        var root = Path.Combine(AppContext.BaseDirectory, "legacy-migrations");
-        var files = Directory.GetFiles(root, "up.sql", SearchOption.AllDirectories)
-            .OrderBy(f => Path.GetFileName(Path.GetDirectoryName(f)), StringComparer.Ordinal); // version prefix
+        var name = $"unisync_test_{Guid.NewGuid():N}";
+        _extraDatabases.Add(name);
+        return await CreateDatabaseAsync(name);
+    }
 
-        await using var connection = await dataSource.OpenConnectionAsync();
-        foreach (var file in files)
+    private async Task<string> CreateDatabaseAsync(string name)
+    {
+        await using (var admin = new NpgsqlConnection(_adminConnectionString))
         {
-            // transaction_timeout exists from Postgres 17 (production); drop it so
-            // older local servers can run the suite too.
-            var sql = string.Join('\n', (await File.ReadAllLinesAsync(file))
-                .Where(l => !l.Contains("transaction_timeout", StringComparison.Ordinal)));
-            await using var command = new NpgsqlCommand(sql, connection);
-            await command.ExecuteNonQueryAsync();
+            await admin.OpenAsync();
+            await using var create = new NpgsqlCommand($"CREATE DATABASE \"{name}\"", admin);
+            await create.ExecuteNonQueryAsync();
         }
+
+        return new NpgsqlConnectionStringBuilder(_adminConnectionString) { Database = name }.ConnectionString;
     }
 
     public async ValueTask DisposeAsync()
@@ -86,7 +81,10 @@ public sealed class PostgresFixture : IAsyncLifetime
         NpgsqlConnection.ClearAllPools();
         await using var admin = new NpgsqlConnection(_adminConnectionString);
         await admin.OpenAsync();
-        await using var drop = new NpgsqlCommand($"DROP DATABASE IF EXISTS \"{_databaseName}\" WITH (FORCE)", admin);
-        await drop.ExecuteNonQueryAsync();
+        foreach (var name in _extraDatabases.Append(_databaseName))
+        {
+            await using var drop = new NpgsqlCommand($"DROP DATABASE IF EXISTS \"{name}\" WITH (FORCE)", admin);
+            await drop.ExecuteNonQueryAsync();
+        }
     }
 }

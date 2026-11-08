@@ -240,6 +240,85 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Me"
+        ],
+        "summary": "Delete my account",
+        "description": "Soft delete (the store-required in-app deletion): the account can no longer sign in, every session is revoked and every device stops getting pushes. The roster record stays with the department.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelopeOfAccountDeleted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelopeOfObject"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelopeOfObject"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelopeOfObject"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelopeOfObject"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelopeOfObject"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelopeOfObject"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/directory": {
@@ -2609,6 +2688,18 @@
           }
         }
       },
+      "AccountDeleted": {
+        "required": [
+          "deletedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "ApiEnvelopeOfAccessRequestCreated": {
         "required": [
           "success",
@@ -2679,6 +2770,50 @@
               },
               {
                 "$ref": "#/components/schemas/AccessRequestView"
+              }
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ApiError"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
+        }
+      },
+      "ApiEnvelopeOfAccountDeleted": {
+        "required": [
+          "success",
+          "message",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AccountDeleted"
               }
             ]
           },

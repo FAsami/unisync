@@ -13,6 +13,7 @@ using UniSync.Api.Academic;
 using UniSync.Api.Health;
 using UniSync.Api.CurrentUser;
 using UniSync.Api.Notifications;
+using UniSync.Api.Notifications.Push;
 using UniSync.Api.Schedule;
 using UniSync.Api.Sms;
 
@@ -72,6 +73,18 @@ services.AddSingleton<ConsoleSmsSender>();
 services.AddScoped<ISmsSender>(sp => sp.GetRequiredService<IOptions<SmsOptions>>().Value.Provider == "console"
     ? sp.GetRequiredService<ConsoleSmsSender>()
     : sp.GetRequiredService<BulkSmsBdSender>());
+
+// ---- push delivery (notification.log -> FCM); off until the cut-over, see PushOptions
+services.AddOptions<PushOptions>().BindConfiguration(PushOptions.SectionName).ValidateDataAnnotations()
+    .Validate(o => !o.Enabled || builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing") || FcmCredentialsLoad(o),
+        "Push:Enabled needs a valid Firebase service-account key in Push:FcmServiceAccountJson (JSON or base64).")
+    .ValidateOnStart();
+services.AddHttpClient<FcmPushSender>(c => c.Timeout = TimeSpan.FromSeconds(15));
+services.AddSingleton<LogPushSender>();
+services.AddScoped<IPushSender>(sp => sp.GetRequiredService<IOptions<PushOptions>>().Value.ServiceAccountJson() is null
+    ? sp.GetRequiredService<LogPushSender>()
+    : sp.GetRequiredService<FcmPushSender>());
+services.AddHostedService<PushDispatcher>();
 
 // ---- cross-cutting
 services.AddExceptionHandler<EnvelopeExceptionHandler>();
@@ -157,6 +170,19 @@ api.MapNotificationEndpoints();
 api.MapDeviceEndpoints();
 
 await app.RunAsync();
+
+static bool FcmCredentialsLoad(PushOptions options)
+{
+    try
+    {
+        _ = FcmPushSender.Load(options);
+        return true;
+    }
+    catch (Exception ex) when (ex is InvalidOperationException or ArgumentException or FormatException or System.Text.Json.JsonException or Newtonsoft.Json.JsonException)
+    {
+        return false;
+    }
+}
 
 /// <summary>Entry point; public so integration tests can host the app.</summary>
 public partial class Program;
