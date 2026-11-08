@@ -1,415 +1,128 @@
 # Authentication
 
-Unisync uses JWT (JSON Web Tokens) for authentication with OTP (One-Time Password) verification for user authentication, and supports guest sessions for unauthenticated access.
+Sign-in is passwordless and limited to the roster. A person signs in with the
+mobile number their department registered, plus a one-time code sent to it by
+SMS. There are no passwords, no self-registration and no guest sessions.
 
-## Authentication Methods
+## Sign in
 
-### 1. Guest Session (Unauthenticated Access)
-
-For users who don't need to authenticate, you can create a guest session.
-
-### 2. Phone + Password Authentication (Users)
-
-For authenticated users, registration is validated by OTP, then users login with phone + password. OTP is also used for password reset. The generic OTP route only sends OTPs.
-
-## Guest Session Flow
-
-Create a guest session to get access tokens without authentication:
+### 1. Ask for a code
 
 ```http
-POST /api/v1/auth/session/guest
+POST /api/v1/auth/code
+Content-Type: application/json
+
+{ "phone": "01712345678" }
 ```
 
-**Response:**
+`data` is `{ "phone": "+8801712345678", "expiresInSeconds": 300 }`.
+
+| Error | When |
+| --- | --- |
+| `INVALID_PHONE` | Not a Bangladeshi mobile number |
+| `PHONE_NOT_REGISTERED` | No active account has this number. The apps offer **Request access**. |
+| `TOO_MANY_CODES` | Three codes per number per hour |
+| `RATE_LIMITED` | Too many requests from this IP |
+| `SMS_FAILED` | The SMS gateway refused |
+
+### 2. Verify it
+
+```http
+POST /api/v1/auth/verify
+Content-Type: application/json
+
+{ "phone": "01712345678", "code": "123456" }
+```
+
+`data` is the token pair:
 
 ```json
 {
-  "data": {
-    "session_id": "550e8400-e29b-41d4-a716-446655440000",
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "expires_at": "2025-10-19T13:34:56.789Z",
-    "user_type": "guest"
-  },
-  "meta": {
-    "message": "Guest session created successfully",
-    "timestamp": "2025-10-19T12:34:56.789Z"
-  }
+  "sessionId": "…",
+  "accessToken": "eyJ…",
+  "accessTokenExpiresAt": "2026-11-08T10:00:00+00:00",
+  "refreshToken": "eyJ…",
+  "refreshTokenExpiresAt": "2026-12-08T09:00:00+00:00",
+  "role": "student"
 }
 ```
 
-## OTP (send-only)
+- Codes are six digits and expire after five minutes.
+- A code allows five wrong guesses.
+- A code is used up the moment it's accepted, and it only works for the purpose
+  it was sent for: a sign-in code can't complete an access request.
+- Errors: `INVALID_CODE`, `CODE_EXPIRED`, `TOO_MANY_ATTEMPTS`.
 
-Use for registration verification and password reset.
+### 3. Call the API
 
-### Send OTP
-
-Request an OTP to be sent to the user's email or phone:
+Send the access token as a bearer token:
 
 ```http
-POST /api/v1/otp/send
-Content-Type: application/json
-
-{
-  "input": {
-    "identifier": "user@example.com",
-    "identifierType": "EMAIL",
-    "purpose": "LOGIN"
-  }
-}
+GET /api/v1/me
+Authorization: Bearer eyJ…
 ```
 
-**Parameters:**
+Every authenticated request re-checks the session in the database. A revoked
+session, a deactivated person or a deleted account is refused immediately with
+`401 SESSION_REVOKED`, without waiting for the token to expire.
 
-- `identifier` (string, required): Email address or phone number
-- `identifierType` (string, required): `"EMAIL"` or `"PHONE"`
-- `purpose` (string, required): `"LOGIN"`, `"SIGNUP"`, or `"PASSWORD_RESET"`
+## Refresh
 
-**Response:**
-
-```json
-{
-  "data": {
-    "message": "OTP sent successfully to email",
-    "otpId": "550e8400-e29b-41d4-a716-446655440000",
-    "expiresAt": "2025-10-19T12:39:56.789Z"
-  },
-  "meta": {
-    "message": "OTP created successfully",
-    "timestamp": "2025-10-19T12:34:56.789Z"
-  }
-}
-```
-
-Note: Verification is handled by the dedicated auth endpoints below, not by an OTP route.
-
-## Registration
-
-### Start registration
+Access tokens last one hour and refresh tokens 30 days. On `401 TOKEN_EXPIRED`:
 
 ```http
-POST /api/v1/auth/register
+POST /api/v1/auth/refresh
 Content-Type: application/json
 
-{
-  "phone": "+15555550123",
-  "password": "P@ssw0rd!",
-  "email": "student@example.edu" // optional
-}
+{ "refreshToken": "eyJ…" }
 ```
 
-Response: 201 Created. Server stores hashed password and expects you to send an OTP using `/otp/send` with `purpose=SIGNUP`.
+The response is a new token pair, and both tokens rotate. Using a refresh token
+that has already been used revokes the whole session (replay protection), so
+clients must run only one refresh at a time. The mobile session module and the
+web server both do.
 
-### Verify registration
-
-```http
-POST /api/v1/auth/register/verify
-Content-Type: application/json
-
-{
-  "phone": "+15555550123",
-  "otp": "123456"
-}
-```
-
-Response: 200 OK with `access_token` and `refresh_token`.
-
-## Login
-
-```http
-POST /api/v1/auth/login
-Content-Type: application/json
-
-{
-  "phone": "+15555550123",
-  "password": "P@ssw0rd!"
-}
-```
-
-Response: 200 OK with `access_token`, `refresh_token`, and `session_id`.
-
-## Reset password
-
-### Request reset (send OTP)
-
-```http
-POST /api/v1/auth/reset-password
-Content-Type: application/json
-
-{
-  "phone": "+15555550123"
-}
-```
-
-Always returns 200 to avoid enumeration.
-
-### Verify reset (set new password)
-
-```http
-POST /api/v1/auth/reset-password/verify
-Content-Type: application/json
-
-{
-  "phone": "+15555550123",
-  "otp": "123456",
-  "newPassword": "N3wP@ssw0rd!"
-}
-```
-
-Response: 200 OK and revokes existing sessions.
-
-## Logout
+## Sign out
 
 ```http
 POST /api/v1/auth/logout
-Authorization: Bearer <access_token>
-```
-
-Response: 200 OK and revokes the current session.
-
-## Using JWT Tokens
-
-After obtaining tokens (via guest session or OTP verification + session creation), include the access token in API requests:
-
-### GraphQL Requests
-
-```http
-POST /v1/graphql
-Authorization: Bearer <access_token>
+Authorization: Bearer eyJ…
 Content-Type: application/json
 
-{
-  "query": "query { user_session { id user_id } }"
-}
+{ "deviceId": "<install id>" }
 ```
 
-### REST Requests
+This revokes the session. With `deviceId`, that device's push registration is
+also turned off, so the phone stops receiving the account's notices.
 
-```http
-GET /api/v1/protected-endpoint
-Authorization: Bearer <access_token>
-```
+## Request access (numbers not on a roster)
 
-## Refresh Tokens
+1. `POST /api/v1/access-requests/code` with `{ "phone" }` sends a code for this purpose only.
+2. `GET /api/v1/directory` lists the open departments, batches and sections to choose from.
+3. `POST /api/v1/access-requests` with
+   `{ "phone", "code", "firstName", "lastName", "studentId", "sectionId" }`
+   creates a pending request (`201`). Errors include `REQUEST_PENDING`,
+   `ALREADY_REGISTERED`, `STUDENT_ID_TAKEN` and `INVALID_SECTION`.
+4. The department admin approves or rejects it in the dashboard
+   (`GET /access-requests`, `POST /access-requests/{id}/approve` or `/reject`).
+   Approval creates the student account. The person then signs in normally.
 
-When the access token expires, use the refresh token to get new tokens:
+## Roles
 
-```http
-POST /api/v1/auth/session/refresh
-Content-Type: application/json
-Authorization: Bearer <refresh_token>
+| Role | Notes |
+| --- | --- |
+| `student` | On a section's roster. A student may carry the **CR mark** (`isClassRepresentative` on `/me`). |
+| `teacher` | Created by a department admin |
+| `admin` | A department admin: role `admin` plus the department they manage. Created only by the `create-admin` command, which is how a department's first admin is made. |
 
-{
-  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
+`GET /me` returns the person's id, phone, role, names, student ID, department,
+batch, section and CR mark. `DELETE /me` deletes the account. It's a soft delete:
+every session is revoked and every device turned off.
 
-**Response:**
+## Tokens
 
-```json
-{
-  "data": {
-    "session_id": "550e8400-e29b-41d4-a716-446655440000",
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "expires_at": "2025-10-19T13:34:56.789Z",
-    "user_type": "user"
-  },
-  "meta": {
-    "message": "Tokens refreshed successfully",
-    "timestamp": "2025-10-19T12:34:56.789Z"
-  }
-}
-```
-
-## Token Configuration
-
-Default token expiration times (configurable via environment variables):
-
-- **Access Token**: 1 hour (default)
-- **Refresh Token**: 30 days (default)
-- **OTP Code**: 5 minutes
-
-## OTP Configuration
-
-- **OTP Length**: 6 digits
-- **Max Verification Attempts**: 5 attempts
-- **Rate Limits**:
-  - Send OTP: 3 requests per hour per identifier
-  - Send OTP per IP: 10 requests per hour
-  - Verify OTP: 5 requests per 15 minutes
-
-## Security Best Practices
-
-1. **Store tokens securely**: Use secure storage mechanisms
-
-   - iOS: Keychain
-   - Android: Keystore
-   - Web: httpOnly cookies or secure storage libraries
-
-2. **HTTPS only**: Always use HTTPS in production
-
-3. **Token rotation**: Implement token rotation when refreshing
-
-4. **Logout**: Clear all tokens on logout and revoke session in backend
-
-5. **Rate limiting**: OTP endpoints are rate-limited to prevent abuse
-
-6. **OTP best practices**:
-   - OTPs are hashed using bcrypt before storage
-   - OTPs expire after 5 minutes
-   - Generic error messages prevent user enumeration
-   - Failed attempts are tracked and limited
-
-## Error Codes
-
-| Code                   | Description                                      |
-| ---------------------- | ------------------------------------------------ |
-| `INVALID_REQUEST`      | Request format is invalid                        |
-| `MISSING_FIELDS`       | Required fields are missing                      |
-| `INVALID_IDENTIFIER`   | Email or phone number format is invalid          |
-| `INVALID_PURPOSE`      | Purpose must be LOGIN, SIGNUP, or PASSWORD_RESET |
-| `INVALID_OTP`          | OTP code is incorrect                            |
-| `INVALID_OTP_FORMAT`   | OTP format is invalid (must be 6 digits)         |
-| `OTP_EXPIRED`          | OTP code has expired                             |
-| `OTP_ALREADY_USED`     | OTP has already been verified                    |
-| `MAX_ATTEMPTS_REACHED` | Maximum verification attempts reached            |
-| `OTP_SEND_FAILED`      | Failed to send OTP via email/SMS provider        |
-| `RATE_LIMIT_EXCEEDED`  | Too many requests                                |
-| `SESSION_NOT_FOUND`    | Session does not exist                           |
-| `SESSION_REVOKED`      | Session has been revoked                         |
-| `SESSION_MISMATCH`     | Session ID doesn't match token                   |
-
-## Example: Mobile App Implementation
-
-Here's how to implement OTP authentication in a React Native app:
-
-```typescript
-import axios from "axios";
-import * as SecureStore from "expo-secure-store";
-
-const API_URL = "http://localhost:9201/api/v1";
-
-// Create guest session
-export async function createGuestSession() {
-  const response = await axios.post(`${API_URL}/auth/session/guest`);
-  const { access_token, refresh_token } = response.data.data;
-
-  await SecureStore.setItemAsync("accessToken", access_token);
-  await SecureStore.setItemAsync("refreshToken", refresh_token);
-
-  return response.data.data;
-}
-
-// Send OTP
-export async function sendOTP(
-  identifier: string,
-  identifierType: "EMAIL" | "PHONE",
-  purpose: "LOGIN" | "SIGNUP" | "PASSWORD_RESET"
-) {
-  const response = await axios.post(`${API_URL}/otp/send`, {
-    input: {
-      identifier,
-      identifierType,
-      purpose,
-    },
-  });
-  return response.data.data;
-}
-
-// Login with phone and password
-export async function login(phone: string, password: string) {
-  const response = await axios.post(`${API_URL}/auth/login`, {
-    phone,
-    password,
-  });
-
-  const { access_token, refresh_token } = response.data.data;
-
-  await SecureStore.setItemAsync("accessToken", access_token);
-  await SecureStore.setItemAsync("refreshToken", refresh_token);
-
-  return response.data.data;
-}
-
-// Register new user
-export async function register(
-  phone: string,
-  password: string,
-  email?: string
-) {
-  const response = await axios.post(`${API_URL}/auth/register`, {
-    phone,
-    password,
-    email,
-  });
-  return response.data.data;
-}
-
-// Verify registration with OTP
-export async function verifyRegistration(phone: string, otp: string) {
-  const response = await axios.post(`${API_URL}/auth/register/verify`, {
-    phone,
-    otp,
-  });
-
-  const { access_token, refresh_token } = response.data.data;
-
-  await SecureStore.setItemAsync("accessToken", access_token);
-  await SecureStore.setItemAsync("refreshToken", refresh_token);
-
-  return response.data.data;
-}
-
-// Refresh tokens
-export async function refreshTokens() {
-  const refreshToken = await SecureStore.getItemAsync("refreshToken");
-
-  const response = await axios.post(
-    `${API_URL}/auth/session/refresh`,
-    { refresh_token: refreshToken },
-    {
-      headers: {
-        Authorization: `Bearer ${refreshToken}`,
-      },
-    }
-  );
-
-  const { access_token, refresh_token } = response.data.data;
-
-  await SecureStore.setItemAsync("accessToken", access_token);
-  await SecureStore.setItemAsync("refreshToken", refresh_token);
-
-  return response.data.data;
-}
-
-// Get stored access token
-export async function getAccessToken() {
-  return await SecureStore.getItemAsync("accessToken");
-}
-```
-
-## OTP Delivery Providers
-
-### SMS Providers
-
-The server supports SMS OTP delivery through database-configured providers:
-
-- **BulkSMS Bangladesh** (`bulksmsbd`): ✅ Fully implemented
-
-For detailed configuration instructions, see the [Provider Configuration Guide](/guide/providers).
-
-### Email Providers
-
-Email OTP delivery is planned but not yet implemented. The system will:
-
-- ✅ Create and store OTP records
-- ✅ Validate and verify OTP codes
-- ⏳ Skip sending actual emails (coming soon)
-
-For more details about email provider implementation status and configuration, see the [Provider Configuration Guide](/guide/providers).
-
-## Next Steps
-
-- [API Reference](/api/)
-- [Installation Guide](/guide/installation)
+Tokens are HS256 JWTs signed with `Auth:JwtSecret`. They carry `sessionId`,
+`userId`, `role`, `typ` (`access` or `refresh`) and a unique `jti`. A refresh
+token is never accepted as an access token. The format is the same one the old
+Node server used, so existing sessions survive the switch as long as the secret
+stays the same.

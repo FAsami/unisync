@@ -1,123 +1,86 @@
 # UniSync
 
-A full-stack university scheduling and notification platform: a mobile app, an admin web dashboard, a REST API server and Hasura GraphQL.
+UniSync runs a university department's class routine:
 
-## 🏗️ Architecture
+- A department admin sets up batches, sections, courses, teachers, the student
+  roster and the weekly routine on the **web**.
+- Students and teachers use the **mobile app** on the day. They see "My day" and
+  the week, a teacher or class representative cancels, moves or re-rooms a class
+  in two taps, and every student in the section gets a notice in their inbox and
+  as a push.
+
+Sign-in is passwordless: a code is sent by SMS to the number on the
+department's roster.
+
+## Layout
 
 ```
 unisync/
-├── mobile/          # Expo / React Native app (students, teachers, CRs)
-├── web/             # Next.js admin dashboard + landing page
-├── api/             # New ASP.NET Core API (replacing server/ and Hasura)
-├── server/          # Legacy Express API: auth, sessions, OTP, push, Hasura webhooks
-├── hasura/          # Postgres migrations + GraphQL metadata/permissions
-├── docs/            # VitePress documentation site
-├── scripts/         # Repo-wide checks (check-all.sh, Hasura metadata guard)
-└── docker-compose.yml
+├── api/       # The backend: ASP.NET Core 10, EF Core + PostgreSQL, SQL migrations, xUnit tests
+├── mobile/    # Expo (React Native) app: students, teachers, class representatives
+├── web/       # Next.js dashboard for department admins, plus the landing page
+├── docs/      # VitePress documentation, published to GitHub Pages
+└── scripts/   # check-all.sh (everything CI runs) and repo guardrails
 ```
 
-Each app has its own `yarn.lock`. Run `yarn` inside the app directory; there is no root package.
+There is one backend, the API. Its contract, `api/openapi/v1.json`, is
+committed and drift-checked, and both apps generate typed clients from it.
+Each app has its own `yarn.lock`: run `yarn` inside the app's directory.
 
-## 🚀 Quick Start
+## Quick start
 
-### Prerequisites
-
-- Node.js 20+ (22 recommended) and Yarn 1
-- Docker & Docker Compose
-- [Hasura CLI](https://hasura.io/docs/latest/hasura-cli/install-hasura-cli/)
-- Python 3 with PyYAML (only for `scripts/check-hasura-metadata.py`)
-
-### 1. Start Postgres and Hasura
+You need the .NET 10 SDK, Docker, and Node.js 22 with Yarn 1.
 
 ```bash
-docker-compose up -d
-```
+docker-compose up -d postgres                       # PostgreSQL on localhost:9200
 
-- PostgreSQL: `localhost:9200`
-- Hasura: http://localhost:9203 (dev admin secret: `123`)
-
-### 2. Apply the schema and metadata
-
-```bash
-cd hasura
-export HASURA_GRAPHQL_ENDPOINT=http://localhost:9203 HASURA_GRAPHQL_ADMIN_SECRET=123
-hasura migrate apply --database-name default
-hasura metadata apply
-```
-
-### 3. Start the API server
-
-```bash
-cd server
-cp env.example .env
-yarn install
-yarn dev            # http://localhost:9201/api/v1/health
-```
-
-`SERVER_AUTH_SECRET` in `server/.env` must match the value in `docker-compose.yml`. Hasura sends it on every webhook call.
-
-### 3b. Start the new .NET API (optional while the migration runs)
-
-```bash
 cd api
-dotnet run --project src/UniSync.Api -- migrate   # once, after step 2
-dotnet run --project src/UniSync.Api              # http://localhost:9202/api/v1/health
+dotnet run --project src/UniSync.Api -- migrate     # build the schema
+dotnet run --project src/UniSync.Api -- create-admin --phone 01712345678 \
+  --first-name Ada --last-name Rahman --department-code CSE --department-name "Computer Science and Engineering"
+dotnet run --project src/UniSync.Api                # http://localhost:9202/api/v1/health
+
+cd web && cp .env.example .env.local && yarn install && yarn dev   # http://localhost:3000
+cd mobile && cp .env.example .env && yarn install && yarn start    # set API_URL to your LAN IP on a phone
 ```
 
-Needs the [.NET 10 SDK](https://dotnet.microsoft.com/download). In Development, sign-in codes are printed to the log instead of sent by SMS. See `api/CLAUDE.md`.
+In Development, sign-in codes are printed to the API's console instead of
+being sent by SMS, and push delivery is off. Sign in to the web at
+`/auth/login` with the admin's number.
 
-### 4. Start the web dashboard
+The full guide is at https://fasami.github.io/unisync/ (source in `docs/`).
+
+## Checks
 
 ```bash
-cd web
-cp .env.example .env.local
-yarn install
-yarn dev            # http://localhost:3000
+scripts/check-all.sh    # what CI runs: API build and tests, web and mobile lint, typecheck and tests, contract checks
+cd api && UNISYNC_TEST_DB="Host=localhost;Port=9200;Username=postgres;Password=postgrespassword;Database=postgres" dotnet test
 ```
 
-### 5. Start the mobile app
+## Production
 
-```bash
-cd mobile
-cp .env.example .env    # use your LAN IP instead of localhost on a real device
-yarn install
-yarn start
-```
+| Part | Where |
+| --- | --- |
+| API | Fly.io app `unisync-api` (`api/fly.toml`, `.github/workflows/deploy-api.yml`) |
+| Web | Vercel (www.uni-sync.site) |
+| Docs | GitHub Pages |
+| Mobile | EAS builds to the app stores |
 
-## ✅ Checks and tests
+Production previously ran on Hasura Cloud and a Node server. `CUTOVER.md` is
+the runbook for switching it to the API, step by step, with how to undo each step.
 
-```bash
-scripts/check-all.sh          # everything CI runs
-cd server && yarn test        # API tests (no database needed)
-```
+## Working with Claude Code
 
-CI (`.github/workflows/ci.yml`) runs the following on every PR:
-- api: .NET build, tests against Postgres 17, Docker image
-- server: typecheck, tests, build
-- web: lint, typecheck, Prettier, build
-- mobile: lint, typecheck
-- Hasura metadata guardrails
+`CLAUDE.md` (plus `api/CLAUDE.md` and `mobile/CLAUDE.md`) describes the
+architecture and the rules. `.claude/` holds:
 
-Server deploys to Fly.io only after the same checks pass.
-
-## 🔧 Code generation
-
-With Hasura running:
-
-```bash
-cd server && yarn codegen
-cd mobile && yarn generate-types
-```
-
-## 🤖 Working with Claude Code
-
-`CLAUDE.md` describes the architecture and rules. `.claude/` contains:
-- project skills: `/check`, `/api-endpoint`, `/server-endpoint`, `/hasura-change`, `/consistency-audit`
+- project skills: `/check`, `/api-endpoint`, `/consistency-audit`
 - a `security-reviewer` agent
-- hooks that install dependencies in cloud sessions, block edits to migrations, generated code, secrets and lockfiles, and format web files
+- hooks that install dependencies in cloud sessions, block edits to committed
+  migrations, generated code, secrets and lockfiles, and format web files
 
-Known issues and their status are tracked in `AUDIT.md`.
+Known issues and follow-ups are tracked in `AUDIT.md`.
 
-## 📞 Support
+## Support
 
-- Contact: foysal.developer@gmail.com
+Contact: foysal.developer@gmail.com

@@ -1,401 +1,99 @@
-# API Reference
+# API reference
 
-Unisync provides a REST API for authentication and OTP operations, along with a GraphQL API powered by Hasura for data operations.
+The UniSync API is an ASP.NET Core application in `api/`. All routes are under
+`/api/v1`.
 
-## REST API
+| Environment | Base URL |
+| --- | --- |
+| Local | `http://localhost:9202/api/v1` |
+| Production | `https://unisync-api.fly.dev/api/v1` (planned custom domain: `api.uni-sync.site`) |
 
-### Base URL
+## The contract
 
-```
-http://localhost:9201/api/v1
-```
+The full, always-current list of endpoints, request bodies and responses is the
+OpenAPI document
+[`api/openapi/v1.json`](https://github.com/FAsami/unisync/blob/main/api/openapi/v1.json).
+It is generated from the code and committed, and a test fails when the two
+differ. Both apps generate their typed clients from it, so read that file
+rather than a hand-written copy. The running API also serves it at `/openapi/v1.json`.
 
-### Endpoints
+## Response envelope
 
-#### Health Check
-
-```http
-GET /api/v1/health
-```
-
-Returns the server status and uptime information.
-
-**Response:**
-
-```json
-{
-  "data": {
-    "status": "OK",
-    "uptime": 123.456,
-    "environment": "development",
-    "version": "1.0.0"
-  },
-  "meta": {
-    "message": "Server is healthy",
-    "timestamp": "2025-10-19T12:34:56.789Z",
-    "duration": 5
-  }
-}
-```
-
-#### Generate Guest Session
-
-```http
-POST /api/v1/auth/session/guest
-```
-
-Creates a guest session and returns access and refresh tokens.
-
-**Response:**
+Every response uses the same envelope. That includes 401, 404, 429 and 500.
 
 ```json
 {
-  "data": {
-    "session_id": "uuid",
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "expires_at": "2025-10-19T13:34:56.789Z",
-    "user_type": "guest"
-  },
-  "meta": {
-    "message": "Guest session created successfully",
-    "timestamp": "2025-10-19T12:34:56.789Z"
-  }
+  "success": true,
+  "message": "Saved",
+  "data": { "...": "..." },
+  "error": null,
+  "meta": { "timestamp": "2026-11-08T09:00:00Z", "path": "/api/v1/me", "requestId": "…" }
 }
 ```
-
-#### Refresh Tokens
-
-```http
-POST /api/v1/auth/session/refresh
-Content-Type: application/json
-Authorization: Bearer <refresh_token>
-
-{
-  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-Refreshes the access and refresh tokens.
-
-**Response:**
 
 ```json
 {
-  "data": {
-    "session_id": "uuid",
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "expires_at": "2025-10-19T13:34:56.789Z",
-    "user_type": "user"
-  },
-  "meta": {
-    "message": "Tokens refreshed successfully",
-    "timestamp": "2025-10-19T12:34:56.789Z"
-  }
+  "success": false,
+  "message": null,
+  "data": null,
+  "error": { "code": "VALIDATION_FAILED", "message": "Some fields need fixing.", "details": { "phone": "Enter a Bangladeshi mobile number, like 01712345678." } },
+  "meta": { "timestamp": "…", "path": "/api/v1/students", "requestId": "…" }
 }
 ```
 
-#### Send OTP
-
-```http
-POST /api/v1/otp/send
-Content-Type: application/json
-
-{
-  "input": {
-    "identifier": "user@example.com",
-    "identifierType": "EMAIL",
-    "purpose": "LOGIN"
-  }
-}
-```
-
-**Parameters:**
-
-- `identifier` (string): Email address or phone number
-- `identifierType` (string): Either "EMAIL" or "PHONE"
-- `purpose` (string): One of "LOGIN", "SIGNUP", or "PASSWORD_RESET"
-
-**Response:**
-
-```json
-{
-  "data": {
-    "message": "OTP sent successfully to email",
-    "otpId": "uuid",
-    "expiresAt": "2025-10-19T12:39:56.789Z"
-  },
-  "meta": {
-    "message": "OTP created successfully",
-    "timestamp": "2025-10-19T12:34:56.789Z"
-  }
-}
-```
-
-**Note:** OTP verification is handled through specific authentication endpoints:
-
-- For registration: `/api/v1/auth/register/verify`
-- For password reset: `/api/v1/auth/reset-password/verify`
-- For login: Use `/api/v1/auth/login` with phone + password
-
-#### Register User
-
-```http
-POST /api/v1/auth/register
-Content-Type: application/json
-
-{
-  "phone": "+15555550123",
-  "password": "P@ssw0rd!",
-  "email": "user@example.com"  // optional
-}
-```
-
-Creates a new user account. The password is hashed and stored. After registration, send an OTP using `/otp/send` with `purpose: "SIGNUP"`, then verify using the endpoint below.
-
-**Response:**
-
-```json
-{
-  "data": {
-    "userId": "uuid"
-  },
-  "meta": {
-    "message": "Registration initiated. Please verify OTP.",
-    "timestamp": "2025-10-21T12:34:56.789Z"
-  }
-}
-```
-
-#### Verify Registration
-
-```http
-POST /api/v1/auth/register/verify
-Content-Type: application/json
-
-{
-  "phone": "+15555550123",
-  "otp": "123456"
-}
-```
-
-Verifies the OTP code for registration and returns authentication tokens.
-
-**Response:**
-
-```json
-{
-  "data": {
-    "insert_user_session_one": {
-      "id": "session-uuid",
-      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "access_token_expires_at": "2025-10-21T13:34:56.789Z",
-      "refresh_token_expires_at": "2025-11-20T12:34:56.789Z"
-    }
-  },
-  "meta": {
-    "message": "Registration verified successfully",
-    "timestamp": "2025-10-21T12:34:56.789Z"
-  }
-}
-```
-
-#### Login
-
-```http
-POST /api/v1/auth/login
-Content-Type: application/json
-
-{
-  "phone": "+15555550123",
-  "password": "P@ssw0rd!"
-}
-```
-
-Authenticates a user with phone and password.
-
-**Response:**
-
-```json
-{
-  "data": {
-    "session_id": "uuid",
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "role": "consumer"
-  },
-  "meta": {
-    "message": "Login successful",
-    "timestamp": "2025-10-21T12:34:56.789Z"
-  }
-}
-```
-
-#### Logout
-
-```http
-POST /api/v1/auth/logout
-Authorization: Bearer <access_token>
-```
-
-Revokes the current session.
-
-**Response:**
-
-```json
-{
-  "meta": {
-    "message": "Logout successful",
-    "timestamp": "2025-10-21T12:34:56.789Z"
-  }
-}
-```
-
-#### Reset Password Request
-
-```http
-POST /api/v1/auth/reset-password
-Content-Type: application/json
-
-{
-  "phone": "+15555550123"
-}
-```
-
-Initiates a password reset by sending an OTP. Always returns success to prevent user enumeration.
-
-**Response:**
-
-```json
-{
-  "meta": {
-    "message": "If this phone number exists, an OTP has been sent",
-    "timestamp": "2025-10-21T12:34:56.789Z"
-  }
-}
-```
-
-#### Reset Password Verify
-
-```http
-POST /api/v1/auth/reset-password/verify
-Content-Type: application/json
-
-{
-  "phone": "+15555550123",
-  "otp": "123456",
-  "newPassword": "N3wP@ssw0rd!"
-}
-```
-
-Verifies the OTP and sets a new password. Revokes all existing sessions for the user.
-
-**Response:**
-
-```json
-{
-  "meta": {
-    "message": "Password reset successful",
-    "timestamp": "2025-10-21T12:34:56.789Z"
-  }
-}
-```
-
-#### Hasura Authorization Webhook
-
-```http
-POST /api/v1/auth/webhook/authorize
-```
-
-Internal endpoint used by Hasura to authorize GraphQL requests. Not intended for direct use.
-
-## GraphQL API
-
-### Hasura Console
-
-The Hasura GraphQL API is accessible at:
-
-```
-http://localhost:9203/v1/graphql
-```
-
-### GraphQL Playground
-
-You can explore the API interactively using the Hasura Console:
-
-```
-http://localhost:9203/console
-```
-
-**Admin Secret:** `123`
-
-### Schema
-
-The GraphQL schema is automatically generated from the PostgreSQL database with the following schemas:
-
-- **user**: User sessions
-- **platform**: OTP transactions and rate limiting
-- **settings**: Application configuration
-
-## Rate Limiting
-
-OTP endpoints are rate-limited to prevent abuse:
-
-- **Send OTP**: 3 requests per hour per identifier
-- **Send OTP (per IP)**: 10 requests per hour
-- **Verify OTP**: 5 requests per 15 minutes
-
-## Error Handling
-
-All API responses follow a consistent format:
-
-### Success Response
-
-```json
-{
-  "data": {
-    /* response data */
-  },
-  "meta": {
-    "message": "Success message",
-    "timestamp": "2025-10-19T12:34:56.789Z",
-    "duration": 5
-  }
-}
-```
-
-### Error Response
-
-```json
-{
-  "error": {
-    "message": "Human-readable error message",
-    "code": "ERROR_CODE",
-    "details": null
-  },
-  "meta": {
-    "timestamp": "2025-10-19T12:34:56.789Z",
-    "path": "/api/v1/otp/send",
-    "method": "POST"
-  }
-}
-```
-
-### Common Error Codes
-
-- `INVALID_REQUEST`: Request format is invalid
-- `MISSING_FIELDS`: Required fields are missing
-- `INVALID_IDENTIFIER`: Email or phone number format is invalid
-- `INVALID_OTP`: OTP code is incorrect
-- `OTP_EXPIRED`: OTP has expired
-- `OTP_ALREADY_USED`: OTP has already been verified
-- `MAX_ATTEMPTS_REACHED`: Maximum verification attempts exceeded
-- `RATE_LIMIT_EXCEEDED`: Too many requests
-- `SESSION_NOT_FOUND`: Session does not exist
-- `SESSION_REVOKED`: Session has been revoked
-
-## Next Steps
-
-- [Authentication Guide](/api/authentication)
+`error.message` is written for the person using the app, so clients show it
+as is. `error.code` is stable and part of the contract. `error.details` carries
+per-field messages (validation) or per-row results (roster import).
+
+## Error codes
+
+| Code | Meaning |
+| --- | --- |
+| `INVALID_REQUEST`, `VALIDATION_FAILED` | The body is malformed, or fields are invalid (see `details`) |
+| `INVALID_PHONE` | Not a Bangladeshi mobile number |
+| `PHONE_NOT_REGISTERED` | No active account has this number. Offer "Request access". |
+| `TOO_MANY_CODES`, `TOO_MANY_ATTEMPTS`, `RATE_LIMITED` | Limits on codes, guesses or requests |
+| `SMS_FAILED` | The SMS gateway didn't accept the message |
+| `INVALID_CODE`, `CODE_EXPIRED` | Wrong or expired one-time code |
+| `ALREADY_REGISTERED`, `ALREADY_EXISTS` | The number already has an account, or the record already exists |
+| `REQUEST_PENDING`, `ALREADY_DECIDED` | Access request already waiting, or already approved or rejected |
+| `STUDENT_ID_TAKEN`, `INVALID_SECTION` | Access request problems |
+| `NOT_A_CLASS_DAY`, `CLASS_IN_PAST` | The class doesn't happen on that date, or has already finished |
+| `SECTION_BUSY`, `TEACHER_BUSY`, `ROOM_TAKEN` | A clash, when moving a class or adding a routine slot |
+| `AUDIENCE_NOT_ALLOWED`, `EMPTY_AUDIENCE` | You can't send to that audience, or nobody is in it |
+| `IN_USE` | Can't delete something still in use. Mark it inactive instead. |
+| `UNAUTHORIZED`, `TOKEN_EXPIRED`, `SESSION_REVOKED` | No valid token. On `TOKEN_EXPIRED`, refresh. On `SESSION_REVOKED`, sign in again. |
+| `FORBIDDEN` | Signed in, but not allowed (for example an admin without a department) |
+| `NOT_FOUND` | Doesn't exist, or belongs to another department |
+| `DATABASE_UNAVAILABLE` | `/health/ready` only: the database can't be reached (503) |
+| `INTERNAL_ERROR` | Unexpected failure |
+
+## Endpoint groups
+
+| Group | Routes | Who |
+| --- | --- | --- |
+| Health | `GET /health`, `GET /health/ready` (checks the database) | anyone |
+| Sign-in | `POST /auth/code`, `/auth/verify`, `/auth/refresh`, `/auth/logout` | anyone; logout signed in |
+| Access requests | `POST /access-requests/code`, `POST /access-requests`; queue: `GET /access-requests`, `POST /access-requests/{id}/approve`, `.../reject` | anyone; queue: department admin |
+| Directory | `GET /directory` (open departments, batches and sections) | anyone |
+| Me | `GET /me`, `DELETE /me` | signed in |
+| Schedule | `GET /me/today`, `GET /me/week` | signed in |
+| Class changes | `POST /classes/{routineId}/{date}/cancel`, `/move`, `/room`; `DELETE /classes/{routineId}/{date}` (undo) | the class's teacher, a CR of its section, its department's admin |
+| Inbox | `GET /me/notifications`, `GET /me/notifications/{id}`, `POST .../{id}/read`, `POST /me/notifications/read-all` | signed in |
+| Devices | `PUT /me/devices`, `DELETE /me/devices/{deviceId}` | signed in |
+| Sending | `GET /notifications/audiences`, `POST /notifications`, `GET /notifications/sent` | teachers, CRs, department admins |
+| Department setup | `/department`, `/batches`, `/sections`, `/courses`, `/teachers`, `/students` (with `/import` and `/{id}/class-representative`), `/offerings`, `/routines` | department admin, limited to their department |
+| Venues | `GET /buildings`, `GET /rooms`; writes on both | anyone signed in reads; department admins write |
+
+## Conventions
+
+- **JSON in camelCase.** Dates are `YYYY-MM-DD`, times `HH:mm` in campus time
+  (Asia/Dhaka), and timestamps ISO 8601 with an offset.
+- **Bangladeshi numbers** are accepted as `01712345678`, `1712345678`,
+  `8801712345678` or `+8801712345678` (spaces and dashes allowed), and returned in E.164 (`+8801712345678`).
+- **Rate limits** apply to code requests and verifications (per IP), to class
+  changes and to sending (per person). Over a limit you get `429 RATE_LIMITED`.
+- **Updates.** `PATCH` changes only the fields sent. A routine slot is replaced
+  whole with `PUT`.
+
+See [Authentication](./authentication) for the sign-in and session flow.
