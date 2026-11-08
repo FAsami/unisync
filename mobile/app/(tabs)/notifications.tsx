@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react'
 import { FlatList, Pressable, RefreshControl, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, useFocusEffect } from 'expo-router'
-import { Ionicons } from '@expo/vector-icons'
+import { BellOff } from 'lucide-react-native'
 import { Box } from '@/components/ui/box'
 import { Heading } from '@/components/ui/heading'
 import { HStack } from '@/components/ui/hstack'
@@ -13,6 +13,7 @@ import { VStack } from '@/components/ui/vstack'
 import { Notice } from '@/components/signin/Fields'
 import { api, ApiError, call, unwrap } from '@/lib/api'
 import { emptyInbox, inboxIcon, markAllRead, mergePage, relativeTime, type InboxItem, type InboxState } from '@/lib/inbox'
+import { INBOX_ICONS } from '@/lib/inboxIcons'
 
 const PAGE = 30
 
@@ -30,7 +31,7 @@ function Row({ item }: { item: InboxItem }) {
     >
       <HStack space="md" className="items-start">
         <Box className={`h-10 w-10 rounded-full items-center justify-center ${item.read ? 'bg-background-100' : 'bg-primary-100'}`}>
-          <Icon as={Ionicons} name={inboxIcon(item)} size={20} className={item.read ? 'text-typography-500' : 'text-primary-600'} />
+          <Icon as={INBOX_ICONS[inboxIcon(item)]} size={20} className={item.read ? 'text-typography-500' : 'text-primary-600'} />
         </Box>
         <VStack className="flex-1">
           <HStack className="justify-between items-start">
@@ -142,7 +143,7 @@ export default function NotificationsScreen() {
           ListEmptyComponent={
             inbox ? (
               <VStack className="items-center py-20" space="sm">
-                <Icon as={Ionicons} name="notifications-off-outline" size={44} className="text-typography-300" />
+                <Icon as={BellOff} size={40} className="text-typography-300" />
                 <Text className="text-typography-700 font-semibold">No notifications yet</Text>
                 <Text className="text-typography-500 text-center px-8">Class changes and notices from your teachers and department show up here.</Text>
               </VStack>

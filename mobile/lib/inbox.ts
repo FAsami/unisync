@@ -36,23 +36,25 @@ export const markAllRead = (state: InboxState): InboxState => ({
   unreadCount: 0,
 })
 
+export type InboxIconKind = 'cancelled' | 'moved' | 'roomChanged' | 'restored' | 'classChange' | 'announcement'
+
 /** Icon for a notice, from its kind ("class_change", "announcement", ...) and class-change data. */
-export const inboxIcon = (item: InboxItem): string => {
+export const inboxIcon = (item: InboxItem): InboxIconKind => {
   if (item.kind === 'class_change' || item.data.change) {
     switch (item.data.change) {
       case 'cancelled':
-        return 'close-circle-outline'
+        return 'cancelled'
       case 'moved':
-        return 'swap-horizontal-outline'
+        return 'moved'
       case 'room_changed':
-        return 'business-outline'
+        return 'roomChanged'
       case 'restored':
-        return 'checkmark-circle-outline'
+        return 'restored'
       default:
-        return 'calendar-outline'
+        return 'classChange'
     }
   }
-  return 'megaphone-outline'
+  return 'announcement'
 }
 
 export type SentItem = components['schemas']['SentItem']

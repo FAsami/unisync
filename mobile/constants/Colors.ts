@@ -1,26 +1,28 @@
+// Mirrors the UniSync design system (tokens.json): brand blue, slate
+// neutrals, and the same semantic reds/greens/ambers in both themes.
 export const AppColors = {
-  primary: '#2491ff',
-  secondary: '#F59E0B',
-  background: '#F9F7FD',
+  primary: '#2563EB',
+  secondary: '#4F46E5',
+  background: '#F8FAFC',
   surface: '#FFFFFF',
-  textPrimary: '#374151',
-  textSecondary: '#6B7280',
-  success: '#10B981',
-  error: '#EF4444',
-  info: '#2491ff',
-  divider: '#F3F4F6',
+  textPrimary: '#0F172A',
+  textSecondary: '#64748B',
+  success: '#15803D',
+  error: '#B91C1C',
+  info: '#2563EB',
+  divider: '#E2E8F0',
 
-  primaryLight: '#59adff',
-  primaryDark: '#0077e6',
-  accent: '#EC4899',
-  accentLight: '#F472B6',
-  warning: '#F97316',
-  tertiary: '#EF4444',
+  primaryLight: '#5B8DFF',
+  primaryDark: '#1D4ED8',
+  accent: '#4F46E5',
+  accentLight: '#818CF8',
+  warning: '#B45309',
+  tertiary: '#4F46E5',
 
-  backgroundDark: '#1F1B24',
-  surfaceDark: '#2D1B3D',
-  textPrimaryDark: '#F9FAFB',
-  textSecondaryDark: '#D1D5DB',
+  backgroundDark: '#0B1220',
+  surfaceDark: '#121B2E',
+  textPrimaryDark: '#EEF2FA',
+  textSecondaryDark: '#93A3BF',
 } as const
 
 export const Colors = {

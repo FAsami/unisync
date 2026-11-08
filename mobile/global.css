@@ -4,31 +4,31 @@
 
 @layer base {
   :root {
-    /* Primary Brand Colors - Blue */
-    --color-primary-0: 245 251 255; /* #f5fbff */
-    --color-primary-50: 238 247 255; /* #eef7ff */
-    --color-primary-100: 217 237 255; /* #d9edff */
-    --color-primary-200: 188 224 255; /* #bce0ff */
-    --color-primary-300: 142 202 255; /* #8ecaff */
-    --color-primary-400: 89 173 255; /* #59adff */
-    --color-primary-500: 36 145 255; /* #2491ff - Main Brand */
-    --color-primary-600: 0 119 230; /* #0077e6 */
-    --color-primary-700: 0 95 184; /* #005fb8 */
-    --color-primary-800: 0 80 153; /* #005099 */
-    --color-primary-900: 0 66 122; /* #00427a */
-    --color-primary-950: 0 41 82; /* #002952 */
+    /* Primary Brand Colors - Blue (matches tokens.json: brand = #2563EB) */
+    --color-primary-0: 239 246 255; /* #eff6ff */
+    --color-primary-50: 239 246 255; /* #eff6ff - brand-soft */
+    --color-primary-100: 219 234 254; /* #dbeafe */
+    --color-primary-200: 191 219 254; /* #bfdbfe */
+    --color-primary-300: 147 197 253; /* #93c5fd */
+    --color-primary-400: 96 165 250; /* #60a5fa */
+    --color-primary-500: 59 130 246; /* #3b82f6 */
+    --color-primary-600: 37 99 235; /* #2563eb - Main Brand */
+    --color-primary-700: 29 78 216; /* #1d4ed8 - brand-pressed */
+    --color-primary-800: 30 64 175; /* #1e40af */
+    --color-primary-900: 30 58 138; /* #1e3a8a */
+    --color-primary-950: 23 37 84; /* #172554 */
 
-    /* Success Colors - Green */
-    --color-success-50: 236 253 245; /* #ECFDF5 */
-    --color-success-100: 209 250 229; /* #D1FAE5 */
-    --color-success-200: 167 243 208; /* #A7F3D0 */
-    --color-success-300: 110 231 183; /* #6EE7B7 */
-    --color-success-400: 52 211 153; /* #34D399 */
-    --color-success-500: 16 185 129; /* #10B981 - Main Success */
-    --color-success-600: 5 150 105; /* #059669 */
-    --color-success-700: 4 120 87; /* #047857 */
-    --color-success-800: 6 95 70; /* #065F46 */
-    --color-success-900: 6 78 59; /* #064E3B */
+    /* Success Colors - Green (matches tokens.json: success = #15803D) */
+    --color-success-50: 240 253 244; /* #F0FDF4 */
+    --color-success-100: 220 252 231; /* #DCFCE7 - success-soft */
+    --color-success-200: 187 247 208; /* #BBF7D0 */
+    --color-success-300: 134 239 172; /* #86EFAC */
+    --color-success-400: 74 222 128; /* #4ADE80 - success (dark theme) */
+    --color-success-500: 34 197 94; /* #22C55E */
+    --color-success-600: 22 163 74; /* #16A34A */
+    --color-success-700: 21 128 61; /* #15803D - Main Success */
+    --color-success-800: 22 101 52; /* #166534 */
+    --color-success-900: 20 83 45; /* #14532D */
 
     /* Info Colors - Blue */
     --color-info-50: 239 246 255; /* #EFF6FF */
@@ -117,14 +117,14 @@
     --color-typography-800: 241 245 249; /* #F1F5F9 */
     --color-typography-900: 248 250 252; /* #F8FAFC (swapped) */
 
-    /* Outline/Border for Dark */
-    --color-outline-200: 51 65 85; /* #334155 */
-    --color-outline-300: 71 85 105; /* #475569 */
+    /* Outline/Border for Dark (tokens.json: line-dark, line-strong-dark) */
+    --color-outline-200: 34 48 74; /* #22304A */
+    --color-outline-300: 81 101 140; /* #51658C */
 
-    /* Background for Dark */
-    --color-background-0: 15 23 42; /* #0F172A */
-    --color-background-50: 30 41 59; /* #1E293B */
-    --color-background-100: 51 65 85; /* #334155 */
+    /* Background for Dark (tokens.json: surface-raised/sunken/surface dark) */
+    --color-background-0: 18 27 46; /* #121B2E - surface-raised */
+    --color-background-50: 15 23 38; /* #0F1726 - surface-sunken */
+    --color-background-100: 11 18 32; /* #0B1220 - surface */
   }
 
   /* Base Styles */
@@ -134,8 +134,8 @@
 
   body {
     @apply bg-background-0 text-typography-900;
-    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI',
-      sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont,
+      'Segoe UI', sans-serif;
   }
 
   /* Rounded Design Utilities */

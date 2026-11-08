@@ -1,11 +1,7 @@
 'use client'
 
 import { Layout, Button, Typography } from 'antd'
-import {
-  LogoutOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-} from '@ant-design/icons'
+import { LogOut, Menu as MenuIcon, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import DashboardSidebar from './DashboardSidebar'
 import {
@@ -49,7 +45,7 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0, 0, 0, 0.45)',
+            background: 'var(--color-overlay)',
             zIndex: 99,
           }}
           onClick={() => setCollapsed(true)}
@@ -59,26 +55,27 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
         style={{
           marginLeft: isMobile ? 0 : collapsed ? 80 : 250,
           transition: 'margin-left 0.2s',
+          background: 'var(--color-surface)',
         }}
       >
         <Header
           style={{
             padding: '0 16px',
-            background: '#fff',
+            background: 'var(--color-surface-raised)',
             display: 'flex',
             alignItems: 'center',
             gap: 12,
             position: 'sticky',
             top: 0,
             zIndex: 98,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+            borderBottom: '1px solid var(--color-line)',
           }}
         >
           {isMobile && (
             <Button
               type='text'
               aria-label='Menu'
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              icon={collapsed ? <MenuIcon size={18} /> : <X size={18} />}
               onClick={() => setCollapsed(!collapsed)}
             />
           )}
@@ -88,7 +85,11 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
           {!isMobile && name ? (
             <Typography.Text type='secondary'>{name}</Typography.Text>
           ) : null}
-          <Button icon={<LogoutOutlined />} loading={pending} onClick={signOut}>
+          <Button
+            icon={<LogOut size={16} />}
+            loading={pending}
+            onClick={signOut}
+          >
             {isMobile ? null : 'Sign out'}
           </Button>
         </Header>
@@ -97,7 +98,9 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
             margin: isMobile ? '16px' : '24px 16px',
             padding: isMobile ? 16 : 24,
             minHeight: 280,
-            background: '#fff',
+            background: 'var(--color-surface-raised)',
+            borderRadius: 16,
+            border: '1px solid var(--color-line)',
           }}
         >
           {children}

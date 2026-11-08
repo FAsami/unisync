@@ -127,9 +127,9 @@ export default function HomeScreen() {
           </VStack>
         ) : today ? (
           <>
-            {today.current ? <HighlightCard c={today.current} title="Now" colors={['#2563EB', '#60A5FA']} /> : null}
+            {today.current ? <HighlightCard c={today.current} title="Now" colors={['#2563EB', '#4F46E5']} /> : null}
             {today.next ? (
-              <HighlightCard c={today.next} title="Next" colors={today.current ? ['#059669', '#34D399'] : ['#2563EB', '#60A5FA']} />
+              <HighlightCard c={today.next} title="Next" colors={today.current ? ['#4F46E5', '#818CF8'] : ['#2563EB', '#4F46E5']} />
             ) : null}
 
             {today.classes.length === 0 ? (

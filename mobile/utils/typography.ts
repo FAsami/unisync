@@ -7,17 +7,6 @@ import { Fonts } from '@/constants/Fonts'
  */
 
 export const typography = {
-  // Serif fonts (Libre Bodoni) - for elegant headings
-  serifBold: (fontSize?: number): TextStyle => ({
-    fontFamily: Fonts.serifBold,
-    ...(fontSize && { fontSize }),
-  }),
-  serifSemiBold: (fontSize?: number): TextStyle => ({
-    fontFamily: Fonts.serifSemiBold,
-    ...(fontSize && { fontSize }),
-  }),
-
-  // Sans-serif fonts (Montserrat) - for body text
   regular: (fontSize?: number): TextStyle => ({
     fontFamily: Fonts.regular,
     ...(fontSize && { fontSize }),
@@ -48,10 +37,9 @@ export const typography = {
  * Shorthand for common typography patterns
  */
 export const text = {
-  // Headings with serif font
-  h1: { fontFamily: Fonts.serifBold, fontSize: 32, lineHeight: 38 },
-  h2: { fontFamily: Fonts.serifBold, fontSize: 28, lineHeight: 34 },
-  h3: { fontFamily: Fonts.serifSemiBold, fontSize: 24, lineHeight: 30 },
+  h1: { fontFamily: Fonts.extraBold, fontSize: 26, lineHeight: 32 },
+  h2: { fontFamily: Fonts.bold, fontSize: 19, lineHeight: 26 },
+  h3: { fontFamily: Fonts.bold, fontSize: 15, lineHeight: 20 },
   h4: { fontFamily: Fonts.bold, fontSize: 20, lineHeight: 26 },
   h5: { fontFamily: Fonts.medium, fontSize: 18, lineHeight: 24 },
   h6: { fontFamily: Fonts.medium, fontSize: 16, lineHeight: 22 },

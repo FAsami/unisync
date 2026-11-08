@@ -1,6 +1,6 @@
 import React from 'react'
 import { Pressable } from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
+import { MoreHorizontal } from 'lucide-react-native'
 import { Box } from '@/components/ui/box'
 import { HStack } from '@/components/ui/hstack'
 import { Icon } from '@/components/ui/icon'
@@ -56,7 +56,7 @@ export function ClassRow({
         <StatusBadge c={c} />
         {detail ? <Text className="text-typography-600 text-sm mt-1">{detail}</Text> : null}
       </VStack>
-      {onPress ? <Icon as={Ionicons} name="ellipsis-horizontal" size={20} className="text-typography-400 ml-2 mt-1" /> : null}
+      {onPress ? <Icon as={MoreHorizontal} size={20} className="text-typography-400 ml-2 mt-1" /> : null}
     </HStack>
   )
 

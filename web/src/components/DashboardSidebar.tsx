@@ -4,17 +4,17 @@ import { Badge, Layout, Menu } from 'antd'
 import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
 import {
-  ApartmentOutlined,
-  BookOutlined,
-  BuildOutlined,
-  CalendarOutlined,
-  DashboardOutlined,
-  IdcardOutlined,
-  LinkOutlined,
-  TeamOutlined,
-  UserAddOutlined,
-  UserOutlined,
-} from '@ant-design/icons'
+  Building2,
+  BookOpen,
+  Building,
+  Calendar,
+  LayoutDashboard,
+  IdCard,
+  Link as LinkIcon,
+  Users,
+  UserPlus,
+  User,
+} from 'lucide-react'
 import { useDashboardSession } from './DashboardSession'
 
 const { Sider } = Layout
@@ -25,39 +25,57 @@ interface DashboardSidebarProps {
   isMobile?: boolean
 }
 
+const ICON_SIZE = 18
+
 const ROUTES = [
-  { key: '/dashboard', icon: <DashboardOutlined />, label: 'Overview' },
+  {
+    key: '/dashboard',
+    icon: <LayoutDashboard size={ICON_SIZE} />,
+    label: 'Overview',
+  },
   {
     key: '/dashboard/access-requests',
-    icon: <UserAddOutlined />,
+    icon: <UserPlus size={ICON_SIZE} />,
     label: 'Access requests',
   },
   {
     key: '/dashboard/department',
-    icon: <ApartmentOutlined />,
+    icon: <Building2 size={ICON_SIZE} />,
     label: 'Department',
   },
   {
     key: '/dashboard/batches',
-    icon: <TeamOutlined />,
+    icon: <Users size={ICON_SIZE} />,
     label: 'Batches & sections',
   },
-  { key: '/dashboard/courses', icon: <BookOutlined />, label: 'Courses' },
-  { key: '/dashboard/teachers', icon: <IdcardOutlined />, label: 'Teachers' },
-  { key: '/dashboard/students', icon: <UserOutlined />, label: 'Students' },
+  {
+    key: '/dashboard/courses',
+    icon: <BookOpen size={ICON_SIZE} />,
+    label: 'Courses',
+  },
+  {
+    key: '/dashboard/teachers',
+    icon: <IdCard size={ICON_SIZE} />,
+    label: 'Teachers',
+  },
+  {
+    key: '/dashboard/students',
+    icon: <User size={ICON_SIZE} />,
+    label: 'Students',
+  },
   {
     key: '/dashboard/offerings',
-    icon: <LinkOutlined />,
+    icon: <LinkIcon size={ICON_SIZE} />,
     label: 'Course offerings',
   },
   {
     key: '/dashboard/routine',
-    icon: <CalendarOutlined />,
+    icon: <Calendar size={ICON_SIZE} />,
     label: 'Weekly routine',
   },
   {
     key: '/dashboard/venue',
-    icon: <BuildOutlined />,
+    icon: <Building size={ICON_SIZE} />,
     label: 'Buildings & rooms',
   },
 ]
@@ -109,6 +127,8 @@ const DashboardSidebar = ({
         bottom: 0,
         zIndex: 100,
         transition: 'left 0.2s',
+        background: 'var(--color-surface-sunken)',
+        borderRight: '1px solid var(--color-line)',
       }}
     >
       <div
@@ -131,7 +151,7 @@ const DashboardSidebar = ({
         />
       </div>
       <Menu
-        theme='dark'
+        theme='light'
         mode='inline'
         selectedKeys={[selected]}
         items={items}
@@ -139,7 +159,7 @@ const DashboardSidebar = ({
           router.push(key)
           if (isMobile) onCollapse(true)
         }}
-        style={{ borderRight: 0 }}
+        style={{ borderRight: 0, background: 'transparent' }}
       />
     </Sider>
   )
