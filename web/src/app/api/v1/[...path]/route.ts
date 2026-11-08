@@ -3,8 +3,12 @@ import {
   ACCESS_COOKIE,
   apiUrl,
   envelopeError,
+  forwardedClientHeaders,
   isSameOrigin,
 } from '@/lib/session/server'
+
+/** Larger than any real request (the roster import is the biggest). */
+const MAX_BODY_BYTES = 5 * 1024 * 1024
 
 export const dynamic = 'force-dynamic'
 
@@ -19,8 +23,9 @@ const handler = async (
   context: { params: Promise<{ path: string[] }> }
 ) => {
   const { path } = await context.params
+  // ASP.NET routing ignores case, so /Auth/verify must be refused as well.
   if (
-    path[0] === 'auth' ||
+    path[0]?.toLowerCase() === 'auth' ||
     path.some((segment) => segment === '.' || segment === '..')
   ) {
     return NextResponse.json(envelopeError('NOT_FOUND', 'Not found.'), {
@@ -35,8 +40,18 @@ const handler = async (
     })
   }
 
+  if (Number(request.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) {
+    return NextResponse.json(
+      envelopeError('PAYLOAD_TOO_LARGE', 'That request is too large.'),
+      { status: 413 }
+    )
+  }
+
   const target = `${apiUrl()}/api/v1/${path.map(encodeURIComponent).join('/')}${request.nextUrl.search}`
-  const headers = new Headers({ Accept: 'application/json' })
+  const headers = new Headers({
+    Accept: 'application/json',
+    ...forwardedClientHeaders(request.headers),
+  })
   const contentType = request.headers.get('content-type')
   if (contentType) headers.set('Content-Type', contentType)
   const token = request.cookies.get(ACCESS_COOKIE)?.value

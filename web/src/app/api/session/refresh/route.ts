@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import type { AuthTokens } from '@/lib/api/schema'
 import {
@@ -13,25 +14,36 @@ export const dynamic = 'force-dynamic'
 
 /**
  * Refresh tokens are single-use: presenting one twice revokes the session. Two
- * tabs can still refresh at nearly the same moment, so within this server
- * process the same old token gets the same answer for a short while instead of
- * a second call to the API.
+ * tabs can still refresh within the same moment, so within this server process
+ * the same old token shares one API call for a few seconds. The window is short
+ * (a stolen token replayed inside it gets the same answer), the key is a hash
+ * (raw tokens aren't kept), and only successes are reused.
  */
-const REUSE_MS = 30_000
-const recent = new Map<string, Promise<AuthTokens | null>>()
+const REUSE_MS = 5_000
+type Outcome = { tokens: AuthTokens } | { status: number }
+const recent = new Map<string, Promise<Outcome>>()
 
-const refresh = (refreshToken: string): Promise<AuthTokens | null> => {
-  const known = recent.get(refreshToken)
+const refresh = async (refreshToken: string): Promise<Outcome> => {
+  const key = createHash('sha256').update(refreshToken).digest('hex')
+  const known = recent.get(key)
   if (known) return known
-  const pending = serverApi()
-    .POST('/api/v1/auth/refresh', { body: { refreshToken } })
-    .then(({ data, response }) =>
-      response.ok && data?.success && data.data ? data.data : null
-    )
-    .catch(() => null)
-  recent.set(refreshToken, pending)
-  setTimeout(() => recent.delete(refreshToken), REUSE_MS)
-  return pending
+  const pending = (async (): Promise<Outcome> => {
+    try {
+      const { data, response } = await (
+        await serverApi()
+      ).POST('/api/v1/auth/refresh', { body: { refreshToken } })
+      return response.ok && data?.success && data.data
+        ? { tokens: data.data }
+        : { status: response.status }
+    } catch {
+      return { status: 502 }
+    }
+  })()
+  recent.set(key, pending)
+  const outcome = await pending
+  if ('tokens' in outcome) setTimeout(() => recent.delete(key), REUSE_MS)
+  else recent.delete(key)
+  return outcome
 }
 
 export const POST = async (request: NextRequest) => {
@@ -42,15 +54,28 @@ export const POST = async (request: NextRequest) => {
   }
 
   const { refreshToken } = await readTokens()
-  const tokens = refreshToken ? await refresh(refreshToken) : null
-  if (!tokens) {
-    await clearTokens()
+  const outcome: Outcome = refreshToken
+    ? await refresh(refreshToken)
+    : { status: 401 }
+  if (!('tokens' in outcome)) {
+    // Only a refusal ends the session here. A rate limit or an outage keeps the
+    // cookies, so a busy or unreachable API doesn't sign everyone out.
+    if (outcome.status === 401) {
+      await clearTokens()
+      return NextResponse.json(
+        envelopeError('UNAUTHORIZED', 'Your session has ended. Sign in again.'),
+        { status: 401 }
+      )
+    }
     return NextResponse.json(
-      envelopeError('UNAUTHORIZED', 'Your session has ended. Sign in again.'),
-      { status: 401 }
+      envelopeError(
+        'API_UNREACHABLE',
+        'UniSync is busy or not reachable right now. Try again in a moment.'
+      ),
+      { status: 503 }
     )
   }
 
-  await storeTokens(tokens)
+  await storeTokens(outcome.tokens)
   return NextResponse.json({ success: true }, { status: 200 })
 }

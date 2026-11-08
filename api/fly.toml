@@ -5,6 +5,7 @@
 #   Sms__ApiKey, Sms__SecretKey, Sms__CallerId   BulkSMSBD
 #   Push__FcmServiceAccountJson  Firebase service-account JSON (raw or base64)
 #   Push__Enabled                'true' from CUTOVER.md step 5
+#   RateLimits__TrustedProxySecret  32+ random characters, same value as API_PROXY_SECRET in Vercel
 app = 'unisync-api'
 primary_region = 'sin'
 

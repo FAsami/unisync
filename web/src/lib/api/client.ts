@@ -10,16 +10,20 @@ import type { paths } from './generated'
  * are single-use, and parallel requests each refreshing with the same token
  * would look like a replay and get the whole session revoked.
  */
-let refreshing: Promise<boolean> | null = null
+type RefreshResult = 'ok' | 'ended' | 'unavailable'
+let refreshing: Promise<RefreshResult> | null = null
 
-const refreshOnce = (): Promise<boolean> => {
+const refreshOnce = (): Promise<RefreshResult> => {
   refreshing ??= fetch('/api/session/refresh', { method: 'POST' })
-    .then(async (r) => {
+    .then(async (r): Promise<RefreshResult> => {
       // Read the body so the connection is released.
       await r.text().catch(() => '')
-      return r.ok
+      if (r.ok) return 'ok'
+      // 401: the session is over. Anything else (rate limit, API down) keeps
+      // the session; the page shows the error and a retry can succeed.
+      return r.status === 401 ? 'ended' : 'unavailable'
     })
-    .catch(() => false)
+    .catch((): RefreshResult => 'unavailable')
     .finally(() => {
       refreshing = null
     })
@@ -35,8 +39,9 @@ const fetchWithRefresh = async (request: Request): Promise<Response> => {
   const retry = request.clone()
   const response = await fetch(request)
   if (response.status !== 401) return response
-  if (!(await refreshOnce())) {
-    signedOut()
+  const refreshed = await refreshOnce()
+  if (refreshed !== 'ok') {
+    if (refreshed === 'ended') signedOut()
     return response
   }
   await response.body?.cancel().catch(() => undefined)

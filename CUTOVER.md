@@ -30,8 +30,13 @@ fly secrets set -a unisync-api \
   ConnectionStrings__Default="Host=<host>;Port=5432;Database=<db>;Username=<user>;Password=<password>;SSL Mode=Require" \
   Auth__JwtSecret="<at least 32 characters>" \
   Sms__ApiKey="<key>" Sms__SecretKey="<secret>" Sms__CallerId="<caller id>" \
-  Push__FcmServiceAccountJson="$(base64 -w0 < service-account.json)"
+  Push__FcmServiceAccountJson="$(base64 -w0 < service-account.json)" \
+  RateLimits__TrustedProxySecret="$(openssl rand -hex 32)"
 ```
+
+- `RateLimits__TrustedProxySecret`: the web app forwards each visitor's address with
+  this secret, so sign-in limits apply per visitor rather than to the web server as a
+  whole. Copy the value for step 3 (`fly secrets list` won't show it again).
 
 - `Auth__JwtSecret`: if you still have the Node server's `JWT_SECRET`, reuse it and
   existing sessions stay valid. Fly can't show it back to you (`fly secrets list`
@@ -73,6 +78,7 @@ backup if you need the exact old schema.
 Vercel → unisync → Settings → Environment Variables:
 
 - set `API_URL` = `https://unisync-api.fly.dev`
+- set `API_PROXY_SECRET` = the `RateLimits__TrustedProxySecret` value from step 1
 - remove `NEXT_PUBLIC_HASURA_ENDPOINT` and `NEXT_PUBLIC_API_URL`
 - redeploy
 

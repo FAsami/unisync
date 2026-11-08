@@ -1,5 +1,5 @@
 import createClient from 'openapi-fetch'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import type { NextRequest } from 'next/server'
 import type { paths } from '@/lib/api/generated'
 import type { AuthTokens } from '@/lib/api/schema'
@@ -19,11 +19,34 @@ export const apiUrl = (): string => {
   return url.replace(/\/+$/, '')
 }
 
+/**
+ * The API rate-limits sign-in per client address. Every call from this server
+ * would otherwise share the server's address (one bucket for every admin), so
+ * the real client address is forwarded, signed with API_PROXY_SECRET (the
+ * API's RateLimits__TrustedProxySecret). Set the secret only where the host
+ * sets x-real-ip / x-forwarded-for itself (Vercel does), or clients could pick
+ * their own address.
+ */
+export const forwardedClientHeaders = (
+  incoming: Pick<Headers, 'get'>
+): Record<string, string> => {
+  const secret = process.env.API_PROXY_SECRET
+  const ip =
+    incoming.get('x-real-ip') ??
+    incoming.get('x-forwarded-for')?.split(',')[0]?.trim()
+  return secret && ip
+    ? { 'X-UniSync-Client-IP': ip, 'X-UniSync-Proxy-Secret': secret }
+    : {}
+}
+
 /** A typed client for calls made by this server (not the browser). */
-export const serverApi = (accessToken?: string) =>
+export const serverApi = async (accessToken?: string) =>
   createClient<paths>({
     baseUrl: apiUrl(),
-    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    headers: {
+      ...forwardedClientHeaders(await headers()),
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
     cache: 'no-store',
   })
 

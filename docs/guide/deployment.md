@@ -3,7 +3,7 @@
 | Part | Where | How it deploys |
 | --- | --- | --- |
 | API | Fly.io app `unisync-api` (`api/fly.toml`) | `.github/workflows/deploy-api.yml` runs on pushes to `main` that touch `api/`, once the repository variable `API_DEPLOY_ENABLED` is `true`. It runs the tests, then `flyctl deploy`. Migrations run as Fly's release command before the new version takes traffic. |
-| Web | Vercel | Vercel builds `web/` on every push to `main` |
+| Web | Vercel | Vercel builds `web/` on every push to `main`; set `API_URL` (the API's origin) and `API_PROXY_SECRET` |
 | Docs | GitHub Pages | `.github/workflows/deploy-docs.yml` |
 | Mobile | App stores (EAS builds) | `eas build` with `API_URL` set in the EAS environment |
 
@@ -18,6 +18,7 @@ Production settings are Fly secrets, never committed:
 | `Sms__ApiKey`, `Sms__SecretKey`, `Sms__CallerId` | BulkSMSBD credentials |
 | `Push__FcmServiceAccountJson` | Firebase service-account JSON, raw or base64 |
 | `Push__Enabled` | `true` to deliver pushes |
+| `RateLimits__TrustedProxySecret` | 32+ random characters; the same value is `API_PROXY_SECRET` in Vercel, so sign-in limits apply per visitor |
 
 The API refuses to start when a required setting is missing or invalid. For
 example, push turned on without a usable Firebase key, or the console SMS

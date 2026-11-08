@@ -43,7 +43,9 @@ export const requestCode = async (
   phone: string
 ): Promise<ActionResult<{ phone: string; expiresInSeconds: number }>> => {
   try {
-    const result = await serverApi().POST('/api/v1/auth/code', {
+    const result = await (
+      await serverApi()
+    ).POST('/api/v1/auth/code', {
       body: { phone },
     })
     if (result.response.ok && result.data?.success && result.data.data) {
@@ -76,7 +78,9 @@ export const verifyCode = async (
   purpose: SignInPurpose
 ): Promise<ActionResult<{ role: string }>> => {
   try {
-    const result = await serverApi().POST('/api/v1/auth/verify', {
+    const result = await (
+      await serverApi()
+    ).POST('/api/v1/auth/verify', {
       body: { phone, code },
     })
     const tokens = result.data?.data
@@ -85,7 +89,7 @@ export const verifyCode = async (
     }
 
     if (purpose === 'dashboard') {
-      const signedIn = serverApi(tokens.accessToken)
+      const signedIn = await serverApi(tokens.accessToken)
       const refusal =
         tokens.role !== 'admin'
           ? NOT_FOR_WEB
@@ -107,13 +111,29 @@ export const verifyCode = async (
 
 /** Ends the session on the API (best effort) and clears the cookies. */
 export const signOut = async (): Promise<void> => {
-  const { accessToken } = await readTokens()
-  if (accessToken) {
-    try {
-      await serverApi(accessToken).POST('/api/v1/auth/logout', { body: null })
-    } catch {
-      // The cookies are cleared either way.
+  const { accessToken, refreshToken } = await readTokens()
+  try {
+    let result = accessToken
+      ? await (
+          await serverApi(accessToken)
+        ).POST('/api/v1/auth/logout', { body: null })
+      : null
+    // An expired access token can't log out: refresh once so the session is
+    // really revoked on the API, not just forgotten by this browser.
+    if ((!result || result.response.status === 401) && refreshToken) {
+      const refreshed = await (
+        await serverApi()
+      ).POST('/api/v1/auth/refresh', {
+        body: { refreshToken },
+      })
+      const fresh = refreshed.data?.data?.accessToken
+      if (fresh)
+        result = await (
+          await serverApi(fresh)
+        ).POST('/api/v1/auth/logout', { body: null })
     }
+  } catch {
+    // The cookies are cleared either way.
   }
   await clearTokens()
 }
@@ -128,14 +148,20 @@ export const deleteAccount = async (): Promise<
   try {
     let { accessToken } = await readTokens()
     const { refreshToken } = await readTokens()
-    let result = await serverApi(accessToken).DELETE('/api/v1/me')
+    let result = await (await serverApi(accessToken)).DELETE('/api/v1/me')
     if (result.response.status === 401 && refreshToken) {
-      const refreshed = await serverApi().POST('/api/v1/auth/refresh', {
+      const refreshed = await (
+        await serverApi()
+      ).POST('/api/v1/auth/refresh', {
         body: { refreshToken },
       })
-      accessToken = refreshed.data?.data?.accessToken
+      const tokens = refreshed.data?.data
+      // The old refresh token is spent: keep the new pair, or the next refresh
+      // would replay the old one and end the session.
+      if (tokens) await storeTokens(tokens)
+      accessToken = tokens?.accessToken
       if (accessToken)
-        result = await serverApi(accessToken).DELETE('/api/v1/me')
+        result = await (await serverApi(accessToken)).DELETE('/api/v1/me')
     }
     if (result.response.ok && result.data?.success && result.data.data) {
       await clearTokens()

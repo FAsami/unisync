@@ -24,7 +24,7 @@ var services = builder.Services;
 // ---- configuration (validated at startup: a bad config fails the deploy, not a request)
 services.AddOptions<AuthOptions>().BindConfiguration(AuthOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
 services.AddOptions<OtpOptions>().BindConfiguration(OtpOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
-services.AddOptions<RateLimitOptions>().BindConfiguration(RateLimitOptions.SectionName);
+services.AddOptions<RateLimitOptions>().BindConfiguration(RateLimitOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
 services.AddOptions<SmsOptions>().BindConfiguration(SmsOptions.SectionName).ValidateDataAnnotations()
     .Validate(o => o.Provider is "bulksmsbd" or "console", "Sms:Provider must be 'bulksmsbd' or 'console'.")
     .Validate(o => o.Provider != "console" || builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing"),
@@ -105,28 +105,28 @@ services.AddRateLimiter(o =>
     o.OnRejected = (ctx, _) => new ValueTask(ApiResponse.WriteFailAsync(ctx.HttpContext, StatusCodes.Status429TooManyRequests,
         ErrorCodes.RateLimited, "Too many requests. Please wait and try again."));
     o.AddPolicy(AuthEndpoints.CodePolicy, http => RateLimitPartition.GetFixedWindowLimiter(
-        http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        ClientIp.For(http),
         _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = http.RequestServices.GetRequiredService<IOptions<RateLimitOptions>>().Value.CodeRequestsPerHourPerIp,
             Window = TimeSpan.FromHours(1),
         }));
     o.AddPolicy(NotificationEndpoints.SendPolicy, http => RateLimitPartition.GetFixedWindowLimiter(
-        http.User.FindFirst(TokenService.UserIdClaim)?.Value ?? http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        http.User.FindFirst(TokenService.UserIdClaim)?.Value ?? ClientIp.For(http),
         _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = http.RequestServices.GetRequiredService<IOptions<RateLimitOptions>>().Value.NotificationsPerHourPerUser,
             Window = TimeSpan.FromHours(1),
         }));
     o.AddPolicy(ClassChangeEndpoints.Policy, http => RateLimitPartition.GetFixedWindowLimiter(
-        http.User.FindFirst(TokenService.UserIdClaim)?.Value ?? http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        http.User.FindFirst(TokenService.UserIdClaim)?.Value ?? ClientIp.For(http),
         _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = http.RequestServices.GetRequiredService<IOptions<RateLimitOptions>>().Value.ClassChangesPerHourPerUser,
             Window = TimeSpan.FromHours(1),
         }));
     o.AddPolicy(AuthEndpoints.VerifyPolicy, http => RateLimitPartition.GetFixedWindowLimiter(
-        http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        ClientIp.For(http),
         _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = http.RequestServices.GetRequiredService<IOptions<RateLimitOptions>>().Value.VerifyAttemptsPer15MinPerIp,
