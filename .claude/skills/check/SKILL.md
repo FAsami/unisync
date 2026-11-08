@@ -1,6 +1,6 @@
 ---
 name: check
-description: Run UniSync's guardrails (server tests and typecheck, web lint, typecheck and format, mobile lint and typecheck, Hasura metadata rules) and fix whatever fails. Use before committing, after any change that crosses packages, or when asked whether the project is healthy.
+description: Run UniSync's guardrails (migration rules, .NET API build and tests, web lint, typecheck, format and API types, mobile lint, typecheck, tests and API types) and fix whatever fails. Use before committing, after any change that crosses packages, or when asked whether the project is healthy.
 ---
 
 # Run the project guardrails
@@ -9,19 +9,19 @@ description: Run UniSync's guardrails (server tests and typecheck, web lint, typ
 
    ```bash
    scripts/check-all.sh                 # everything
-   scripts/check-all.sh server hasura   # only what you touched
+   scripts/check-all.sh api mobile      # only what you touched (migrations|api|web|mobile)
    ```
 
-   A package with no `node_modules` is skipped and the output says how to install it. In cloud sessions `.claude/hooks/session-start.sh` installs everything.
+   For the API's database tests set `UNISYNC_TEST_DB` (see `api/CLAUDE.md`); without it they're skipped, and CI runs them with `UNISYNC_REQUIRE_DB=1`. A package with no `node_modules` is skipped and the output says how to install it. In cloud sessions `.claude/hooks/session-start.sh` installs everything.
 
-2. For each failure, find the cause and fix it. Never weaken the check to get green: no skipping tests, no `eslint-disable` without a reason in the comment, no loosening `tsconfig`, no allow-listing a column in `scripts/check-hasura-metadata.py`.
+2. For each failure, find the cause and fix it. Never weaken the check to get green: no skipping tests, no `eslint-disable` without a reason in the comment, no loosening `tsconfig` or analyzer rules.
 
    | Failure | Usual cause |
    |---|---|
-   | `server: test` → `fakeHasura: no handler registered for operation "X"` | The code sends a new GraphQL operation. Register it in the test with `fakeHasura.on("X", ...)`. |
-   | `graphql-documents.test.ts` | A query declares a variable it doesn't use, or uses one it doesn't declare. Hasura rejects both at runtime. |
-   | `hasura: ... can select secret column` | A role was given `password`, `access_token`, `refresh_token` or `otp_hash`. Remove the column from that role's permission. |
-   | `hasura: tables.yaml includes X which does not exist` | A table file was deleted or renamed without updating `tables.yaml`. |
+   | `api: build` → `CA....` error | Analyzers run as errors. Fix the code; suppress only with a justification attribute. |
+   | `OpenApiContractTests` fails | An endpoint changed. Refresh the spec: `UPDATE_OPENAPI=1 dotnet test --filter OpenApi`, then run `yarn api:types` in `mobile/` and `web/`. |
+   | `mobile/web: api types current` | `api/openapi/v1.json` changed but the client wasn't regenerated: `yarn api:types`. |
+   | `migrations: guardrails` | A migration has a psql meta-command, touches `hdb_catalog`, uses a session-level `SET`, or is misnamed. |
    | `web: format` | Run `cd web && yarn format`. The PostToolUse hook formats files Claude edits. |
    | `mobile: typecheck` → cannot find module | Usually wrong letter case in an import path. Linux CI and EAS are case-sensitive. |
 

@@ -1,8 +1,9 @@
 # api/
 
-The ASP.NET Core (.NET 10) API that replaces Hasura and the Node server, built
-around the flows in the UX review. It runs beside them on the same Postgres and
-accepts the same tokens until the cut-over.
+The ASP.NET Core (.NET 10) API: UniSync's only backend, built around the flows in
+the UX review. Hasura and the Node server are gone from the repository; production
+keeps running them on the same Postgres, accepting the same tokens, until the
+steps in `CUTOVER.md` are done.
 
 ```
 src/UniSync.Api/
@@ -81,7 +82,7 @@ missing database fails the run instead of skipping.
 - `db/migrations/NNNN_short_name.sql`: next number, plain SQL, embedded in the assembly, applied once in name order by `MigrationRunner` and recorded in `api.schema_migrations`.
 - **Never edit a committed migration**; add a new one. The guard hook blocks edits.
 - `0000_baseline.sql` is Hasura's schema (its two migrations). On a database that already has it (every existing environment) `MigrationRunner` records it without running it; on an empty database it runs. Tests build their database from this API's migrations alone.
-- No psql meta-commands and nothing in `hdb_catalog` (`scripts/check-hasura-metadata.py` checks both folders).
+- No psql meta-commands, nothing in `hdb_catalog`, and only `SET LOCAL` (`scripts/check-migrations.py` checks all three, plus file names).
 
 ## Adding an endpoint
 

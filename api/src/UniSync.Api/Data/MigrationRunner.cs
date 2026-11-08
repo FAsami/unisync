@@ -107,7 +107,8 @@ public sealed partial class MigrationRunner(NpgsqlDataSource dataSource, ILogger
         if (tables && !deletedAt)
         {
             throw new InvalidOperationException(
-                "The database has Hasura's schema without user.account.deleted_at. Apply hasura/migrations first, then migrate again.");
+                "The database has the baseline schema without user.account.deleted_at (Hasura's second migration). "
+                + "Run: ALTER TABLE \"user\".account ADD COLUMN deleted_at timestamptz; then migrate again.");
         }
 
         return tables;

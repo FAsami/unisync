@@ -3,7 +3,7 @@
   "permissions": {
     "allow": [
       "Bash(scripts/check-all.sh:*)",
-      "Bash(python3 scripts/check-hasura-metadata.py)",
+      "Bash(python3 scripts/check-migrations.py)",
       "Bash(yarn test:*)",
       "Bash(yarn typecheck:*)",
       "Bash(yarn lint:*)",
@@ -23,7 +23,7 @@
     "deny": [
       "Read(./**/.env)",
       "Read(./**/.env.local)",
-      "Read(./server/service-account.json)",
+      "Read(./**/service-account*.json)",
       "Bash(flyctl deploy:*)",
       "Bash(fly deploy:*)"
     ]

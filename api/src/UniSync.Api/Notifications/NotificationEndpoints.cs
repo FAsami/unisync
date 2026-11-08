@@ -28,8 +28,8 @@ public sealed record SentItem(
 
 /// <summary>
 /// The inbox (UX review decision 4) and sending notices to the audiences the
-/// sender may address. Delivery as push still happens through the legacy
-/// Hasura trigger on notification.log until the cut-over.
+/// sender may address. Sending only inserts into notification.log;
+/// <c>PushDispatcher</c> delivers the push (when Push:Enabled).
 /// </summary>
 public static class NotificationEndpoints
 {
