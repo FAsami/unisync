@@ -1,6 +1,6 @@
 # mobile/
 
-Expo SDK 53 app. **Sign-in, "My day" (Home) and push registration use the new .NET API** (`api/`). The other screens (schedule, alerts, manage, profile) still query Hasura through Apollo, using the same tokens.
+Expo SDK 53 app for students, teachers and CRs. **Everything goes through the .NET API** (`api/`, typed client in `lib/api`); there is no GraphQL, Apollo or Node-server call left. Per the UX review, mobile is for the day of class (My day, schedule, class changes, inbox, sending notices); department setup (batches, courses, roster, routine) is on the web dashboard.
 
 ```
 lib/api/generated.ts    types generated from api/openapi/v1.json (yarn api:types); never edit
@@ -9,12 +9,21 @@ lib/api/session.ts      the one session: SecureStore tokens, one shared refresh,
 lib/api/errors.ts       ApiError, unwrap(), call(): read the API envelope, never assume success
 lib/api/index.ts        app-wide `session` and `api`
 lib/phone.ts            Bangladeshi number rules (same as the API)
-lib/schedule.ts         wording for class statuses (cancelled, moved, room changed)
+lib/schedule.ts         wording for class statuses (cancelled, moved, room changed), calendar dates
+lib/classChanges.ts     which class actions to offer, the date a change is stored under, move checks
+lib/inbox.ts            inbox paging and read state, sent-notice status wording
+lib/roles.ts            student / teacher / department admin, CR as a mark; who gets the Send tab
 lib/installId.ts        stable per-install id that push tokens are registered under
-contexts/Auth.tsx       React view of the session (useAuth)
+lib/fcm.ts              Firebase messaging: permission, token, tap-to-open (data.notificationId)
+contexts/Auth.tsx       React view of the session (useAuth), plus GET /me as `me`
 app/login.tsx → app/verify-otp.tsx      passwordless sign-in
 app/request-access.tsx                  for numbers not on the roster
 app/(tabs)/index.tsx                    "My day" from GET /me/today
+app/(tabs)/schedule.tsx                 seven days from GET /me/week
+components/classes/ClassActionsSheet    cancel / move / change room / undo (when today/week say canChange)
+app/(tabs)/notifications.tsx → app/notification/[id].tsx    inbox, one notice (opening marks it read)
+app/(tabs)/manage.tsx                   the Send tab: compose and sent notices (teachers, CRs, department admins)
+app/profile.tsx                         GET /me, and account deletion (DELETE /me)
 ```
 
 ## Rules
@@ -22,7 +31,8 @@ app/(tabs)/index.tsx                    "My day" from GET /me/today
 - **Call the new API only through `api`**, and read the result with `unwrap()` inside `call()`: `await call(async () => unwrap(await api.GET('/api/v1/me/today')))`. This throws an `ApiError` carrying the server's message. Show `error.message`; it's written for students.
 - **Tokens live only in `lib/api/session.ts`.** Never read or write them anywhere else. To react to sign-out, use `session.subscribe`.
 - **API changed?** Run `cd mobile && yarn api:types` after the API's `UPDATE_OPENAPI=1` step. CI fails if `lib/api/generated.ts` is stale.
-- Legacy calls (`lib/axios.ts`, the Node server) remain only for the manage screens. Its axios never throws (`validateStatus: () => true`), so check `response.status`.
+- **Who may change a class is the server's call**: offer the class sheet only when `canChange` is true on `/me/today` or `/me/week`, and show the server's message when it refuses (clash, past class). Undo a moved class with `changeTarget()`, which uses the original date.
+- **CR is a mark, not a role**: read `me.isClassRepresentative`. Department setup belongs on the web; don't add setup screens here.
 
 ## Commands
 
@@ -46,6 +56,8 @@ API_URL=http://127.0.0.1:8090 npx expo export --platform web --output-dir dist-w
 node web-preview/serve.mjs 8090 http://127.0.0.1:9202
 # 4. Walk sign-in and "My day" and save screenshots:
 node web-preview/screens.mjs http://127.0.0.1:8090 /path/api.log +8801XXXXXXXXX ./screens
+#    As a teacher: schedule, inbox, a class-change sheet, compose and sent notices:
+node web-preview/screens-teacher.mjs http://127.0.0.1:8090 /path/api.log +8801XXXXXXXXX ./screens
 ```
 
 It can't show native-only behaviour: push, the real keychain, CodePush, or exact device layout.

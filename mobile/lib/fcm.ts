@@ -33,9 +33,26 @@ export function setupTokenRefreshListener(
 }
 
 export function setupForegroundMessageHandler(
-  onMessage: (message: any) => void
+  onMessage: (message: unknown) => void
 ) {
   return messaging().onMessage(async (remoteMessage) => {
     onMessage(remoteMessage)
   })
+}
+
+/**
+ * Calls onOpen with data.notificationId when the person taps a push: both when
+ * it brings the app back from the background and when it launched the app.
+ * Every notice the API sends carries its own id there.
+ */
+export function setupNotificationOpenHandler(onOpen: (notificationId: string) => void) {
+  const handle = (message: { data?: Record<string, unknown> } | null) => {
+    const id = message?.data?.notificationId
+    if (typeof id === 'string' && id) onOpen(id)
+  }
+  messaging()
+    .getInitialNotification()
+    .then(handle)
+    .catch(() => {})
+  return messaging().onNotificationOpenedApp(handle)
 }

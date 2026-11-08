@@ -105,5 +105,7 @@ public sealed class UniSyncDbContext(DbContextOptions<UniSyncDbContext> options)
         });
         modelBuilder.Entity<Device>(e => e.ToTable("device", "user"));
         modelBuilder.Entity<ClassRepresentative>(e => e.ToTable("class_representative", "academic"));
+
+        SetupModel.Configure(modelBuilder);
     }
 }

@@ -47,28 +47,26 @@ def tracked(p: str) -> bool:
     return r.returncode == 0
 
 
-# 1. Applied migrations are immutable.
-if rel.startswith("hasura/migrations/") and name == "up.sql" and tracked(rel):
+# 1. Applied API migrations are immutable.
+if rel.startswith("api/db/migrations/") and rel.endswith(".sql") and tracked(rel):
     block(
-        "Committed migrations may already be applied in some environment; editing "
-        "them desynchronises databases. Create a new migration instead:\n"
-        "  cd hasura && hasura migrate create <name> --database-name default\n"
-        "(see the hasura-change skill)."
+        "This API migration is committed and may already be applied. Add a new file "
+        "with the next number instead (see api/CLAUDE.md)."
     )
 
 # 2. Generated code.
 if name in {"generated.ts", "generated.tsx"} or "/__generated__/" in rel:
     block(
-        "This file is GraphQL codegen output. Change the .graphql/.ts documents or "
-        "Hasura metadata, then regenerate: `cd server && yarn codegen` or "
-        "`cd mobile && yarn generate-types` (needs a running Hasura)."
+        "This file is generated from the API contract (api/openapi/v1.json). Change the "
+        "API, refresh the spec (UPDATE_OPENAPI=1, see api/CLAUDE.md), then run "
+        "`yarn api:types` in mobile/ and web/."
     )
 
 # 3. Secrets.
 if (name == ".env" or name.startswith(".env.")) and name != ".env.example":
     block(
         "Never write real secrets. Update the committed template instead "
-        "(server/env.example, web/.env.example, mobile/.env.example)."
+        "(web/.env.example, mobile/.env.example; API settings in api/src/UniSync.Api/appsettings*.json and api/fly.toml)."
     )
 if name in {"service-account.json", "google-services.json", "GoogleService-Info.plist"}:
     block("Credential/config files from Firebase are managed outside Claude. Ask the user.")
@@ -81,17 +79,10 @@ if name in {"yarn.lock", "package-lock.json", "pnpm-lock.yaml"}:
     )
 
 # 5. Build output.
-for prefix in ("mobile/build-android/", "mobile/build-ios/", "server/dist/", "web/.next/"):
+for prefix in ("mobile/build-android/", "mobile/build-ios/", "mobile/dist-web-preview/", "web/.next/"):
     if rel.startswith(prefix):
         block("This is build output. Change the source and rebuild.")
 if rel.startswith("api/") and ("/bin/" in rel or "/obj/" in rel):
     block("This is .NET build output. Change the source and rebuild.")
-
-# 6. Applied API migrations are immutable too.
-if rel.startswith("api/db/migrations/") and rel.endswith(".sql") and tracked(rel):
-    block(
-        "This API migration is committed and may already be applied. Add a new file "
-        "with the next number instead (see api/CLAUDE.md)."
-    )
 
 sys.exit(0)

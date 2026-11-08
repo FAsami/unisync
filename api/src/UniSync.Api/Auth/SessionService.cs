@@ -37,7 +37,7 @@ public sealed class SessionService(UniSyncDbContext db, TokenService tokens, Tim
             AccessTokenExpiresAt = access.ExpiresAt,
             RefreshToken = refresh.Value,
             RefreshTokenExpiresAt = refresh.ExpiresAt,
-            IpAddress = http.Connection.RemoteIpAddress?.ToString() ?? "",
+            IpAddress = ClientIp.For(http),
             UserAgent = http.Request.Headers.UserAgent.ToString(),
             LastUsedAt = now,
         });
@@ -84,12 +84,22 @@ public sealed class SessionService(UniSyncDbContext db, TokenService tokens, Tim
         // Role comes from the account, so a role change applies at the next refresh.
         var access = tokens.Issue(sessionId, userId, account.Role, TokenType.Access);
         var refresh = tokens.Issue(sessionId, userId, account.Role, TokenType.Refresh);
-        session.AccessToken = access.Value;
-        session.AccessTokenExpiresAt = access.ExpiresAt;
-        session.RefreshToken = refresh.Value;
-        session.RefreshTokenExpiresAt = refresh.ExpiresAt;
-        session.LastUsedAt = time.GetUtcNow();
-        await db.SaveChangesAsync(ct);
+        // Compare-and-swap on the old token: of two refreshes racing with the same
+        // token only one can rotate it; the other is a replay and revokes the session.
+        var now = time.GetUtcNow();
+        var rotated = await db.Sessions
+            .Where(s => s.Id == sessionId && !s.Revoked && s.RefreshToken == refreshToken)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.AccessToken, access.Value)
+                .SetProperty(x => x.AccessTokenExpiresAt, access.ExpiresAt)
+                .SetProperty(x => x.RefreshToken, refresh.Value)
+                .SetProperty(x => x.RefreshTokenExpiresAt, refresh.ExpiresAt)
+                .SetProperty(x => x.LastUsedAt, now), ct);
+        if (rotated == 0)
+        {
+            await RevokeAsync(sessionId, ct);
+            return new(null, ErrorCodes.SessionRevoked, "You have been signed out. Please sign in again.");
+        }
 
         return new(new AuthTokens(sessionId, access.Value, access.ExpiresAt, refresh.Value, refresh.ExpiresAt, account.Role), null, null);
     }

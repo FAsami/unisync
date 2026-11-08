@@ -1,0 +1,62 @@
+name: Deploy API to Fly.io
+
+# Deploys api/ to the Fly app in api/fly.toml after its tests pass.
+# Off until the app exists: set the repository variable API_DEPLOY_ENABLED=true
+# (Settings → Secrets and variables → Actions → Variables) once CUTOVER.md step 1 is done.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "api/**"
+      - ".github/workflows/deploy-api.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify API
+    if: vars.API_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      UNISYNC_TEST_DB: Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=postgres
+      UNISYNC_REQUIRE_DB: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: api/global.json
+      - run: dotnet build -c Release
+      - run: dotnet test -c Release --no-build
+
+  deploy:
+    name: Deploy to Fly.io
+    needs: verify
+    if: github.ref == 'refs/heads/main' && vars.API_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only
+        working-directory: ./api
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

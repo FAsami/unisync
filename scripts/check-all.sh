@@ -2,7 +2,7 @@
 # Run every project guardrail locally - the same checks CI runs.
 #
 #   scripts/check-all.sh            # everything
-#   scripts/check-all.sh server web # only some packages (api|server|web|mobile|hasura)
+#   scripts/check-all.sh api web    # only some packages (migrations|api|web|mobile)
 #
 # api: database tests run when UNISYNC_TEST_DB is set (see api/CLAUDE.md),
 # otherwise they are reported as skipped.
@@ -13,7 +13,7 @@ set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TARGETS=("$@")
-[ ${#TARGETS[@]} -eq 0 ] && TARGETS=(hasura api server web mobile)
+[ ${#TARGETS[@]} -eq 0 ] && TARGETS=(migrations api web mobile)
 
 failed=()
 skipped=()
@@ -40,8 +40,8 @@ need_modules() { # need_modules <dir>
 
 for t in "${TARGETS[@]}"; do
   case "$t" in
-    hasura)
-      run "hasura: metadata guardrails" . python3 scripts/check-hasura-metadata.py
+    migrations)
+      run "migrations: guardrails" . python3 scripts/check-migrations.py
       ;;
     api)
       if ! command -v dotnet >/dev/null 2>&1 && [ ! -x "$HOME/.dotnet/dotnet" ]; then
@@ -53,16 +53,12 @@ for t in "${TARGETS[@]}"; do
       run "api: build" api "$DOTNET" build --nologo -v q
       run "api: test" api "$DOTNET" test --nologo --no-build
       ;;
-    server)
-      need_modules server || continue
-      run "server: typecheck" server yarn -s typecheck
-      run "server: test" server yarn -s test
-      ;;
     web)
       need_modules web || continue
       run "web: lint" web yarn -s lint
       run "web: typecheck" web yarn -s typecheck
       run "web: format" web yarn -s format:check
+      run "web: api types current" web bash -c 'yarn -s api:types >/dev/null && git diff --quiet -- src/lib/api/generated.ts || { echo "src/lib/api/generated.ts is stale: run yarn api:types"; exit 1; }'
       ;;
     mobile)
       need_modules mobile || continue
@@ -72,7 +68,7 @@ for t in "${TARGETS[@]}"; do
       run "mobile: api types current" mobile bash -c 'yarn -s api:types >/dev/null && git diff --quiet -- lib/api/generated.ts || { echo "lib/api/generated.ts is stale: run yarn api:types"; exit 1; }'
       ;;
     *)
-      echo "unknown target: $t (expected api|server|web|mobile|hasura)"
+      echo "unknown target: $t (expected migrations|api|web|mobile)"
       exit 2
       ;;
   esac

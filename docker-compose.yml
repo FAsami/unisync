@@ -1,10 +1,12 @@
+# Local development: Postgres, and optionally the API in a container.
+#   docker-compose up -d postgres         # then: cd api && dotnet run --project src/UniSync.Api
+#   docker-compose up -d                  # Postgres + the API on http://localhost:9202
+# Sign-in codes print to the API's log in Development (docker-compose logs -f api).
 services:
   postgres:
     image: postgres:17.5
     container_name: unisync-postgres
     restart: unless-stopped
-    networks:
-      - unisync-network
     environment:
       POSTGRES_DB: unisync
       POSTGRES_USER: postgres
@@ -19,42 +21,23 @@ services:
       timeout: 5s
       retries: 5
 
-  hasura:
-    image: hasura/graphql-engine:latest
-    container_name: unisync-hasura
+  api:
+    build: ./api
+    container_name: unisync-api
     restart: unless-stopped
-    networks:
-      - unisync-network
-    ports:
-      - "9203:8080"
+    # Applies migrations, then serves. Development settings only: never use these values in production.
+    entrypoint: ["sh", "-c", "dotnet UniSync.Api.dll migrate && exec dotnet UniSync.Api.dll"]
     environment:
-      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/unisync
-      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
-      HASURA_GRAPHQL_DEV_MODE: "true"
-      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
-      HASURA_GRAPHQL_ADMIN_SECRET: 123
-      HASURA_GRAPHQL_AUTH_HOOK: http://host.docker.internal:9201/api/v1/auth/webhook/authorize
-      HASURA_GRAPHQL_AUTH_HOOK_MODE: "POST"
-      SERVER_AUTH_SECRET: auth-test-101
-      SERVER_URL: http://host.docker.internal:9201/api/v1
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: Host=postgres;Port=5432;Database=unisync;Username=postgres;Password=postgrespassword
+      Auth__JwtSecret: local-development-secret-at-least-32-characters
+      Sms__Provider: console
+    ports:
+      - "9202:8080"
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - hasura_metadata:/hasura-metadata
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
 volumes:
   postgres_data:
     driver: local
-  hasura_metadata:
-    driver: local
-
-networks:
-  unisync-network:
-    name: unisync-network
-    driver: bridge

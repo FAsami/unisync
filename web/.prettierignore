@@ -39,3 +39,6 @@ package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
+
+# Generated from api/openapi/v1.json (yarn api:types)
+src/lib/api/generated.ts

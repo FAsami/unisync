@@ -110,3 +110,6 @@ mobile/build-ios/
 
 # Python bytecode (hook scripts)
 __pycache__/
+
+# Claude Code agent worktrees (temporary)
+.claude/worktrees/

@@ -67,7 +67,7 @@ public sealed class Profile
     public Guid? SectionId { get; set; }
 }
 
-public sealed class Department
+public sealed partial class Department
 {
     public Guid Id { get; set; }
     public string Code { get; set; } = "";
@@ -75,7 +75,7 @@ public sealed class Department
     public bool IsActive { get; set; }
 }
 
-public sealed class Batch
+public sealed partial class Batch
 {
     public Guid Id { get; set; }
     /// <summary>Column is misspelled <c>departmant_id</c> in the legacy schema.</summary>
@@ -84,7 +84,7 @@ public sealed class Batch
     public bool IsActive { get; set; }
 }
 
-public sealed class Section
+public sealed partial class Section
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = "";
@@ -121,7 +121,7 @@ public sealed class AccessRequest
 }
 
 /// <summary>A student marked as class representative for one section (not a separate role).</summary>
-public sealed class ClassRepresentative
+public sealed partial class ClassRepresentative
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
@@ -173,7 +173,7 @@ public sealed class ClassChange
     public DateTimeOffset CreatedAt { get; set; }
 }
 
-public sealed class CourseOffering
+public sealed partial class CourseOffering
 {
     public Guid Id { get; set; }
     public Guid CourseId { get; set; }
@@ -184,14 +184,14 @@ public sealed class CourseOffering
     public bool IsActive { get; set; }
 }
 
-public sealed class Course
+public sealed partial class Course
 {
     public Guid Id { get; set; }
     public string Code { get; set; } = "";
     public string Name { get; set; } = "";
 }
 
-public sealed class Room
+public sealed partial class Room
 {
     public Guid Id { get; set; }
     public Guid BuildingId { get; set; }
@@ -199,7 +199,7 @@ public sealed class Room
     public string RoomName { get; set; } = "";
 }
 
-public sealed class Building
+public sealed partial class Building
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = "";
@@ -207,7 +207,7 @@ public sealed class Building
 }
 
 /// <summary>Teacher details (legacy table user.faculty).</summary>
-public sealed class TeacherProfile
+public sealed partial class TeacherProfile
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
@@ -217,8 +217,9 @@ public sealed class TeacherProfile
 }
 
 /// <summary>
-/// A notification to an audience (notification.log). Inserting a row fires the
-/// legacy Hasura event trigger, which pushes it to the audience's devices.
+/// A notification to an audience (notification.log). Writers only insert the row;
+/// <c>PushDispatcher</c> pushes it to the audience's devices (or, until the
+/// cut-over, the legacy Hasura event trigger does).
 /// </summary>
 public sealed class NotificationLog
 {
@@ -231,10 +232,13 @@ public sealed class NotificationLog
     /// <summary>JSON object of string values (FCM data payloads accept strings only).</summary>
     public string? Data { get; set; }
     public Guid CreatedBy { get; set; }
-    /// <summary>Push delivery state, written by the legacy sender: pending | processing | sent | failed.</summary>
+    public string? ImageUrl { get; set; }
+    /// <summary>Push delivery state, written by <c>PushDispatcher</c>: pending | processing | sent | failed.</summary>
     public string Status { get; set; } = "pending";
     public int SentCount { get; set; }
     public int FailedCount { get; set; }
+    public string? ErrorMessage { get; set; }
+    public DateTimeOffset? ProcessedAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 }
 

@@ -1,8 +1,8 @@
 import { defineConfig } from "vitepress";
 
 export default defineConfig({
-  title: "Unisync Docs",
-  description: "Documentation for the Unisync project",
+  title: "UniSync Docs",
+  description: "Documentation for UniSync: class routines, class changes and notices for university departments",
   base: "/unisync/",
   ignoreDeadLinks: [/^http:\/\/localhost/],
 
@@ -10,42 +10,26 @@ export default defineConfig({
     nav: [
       { text: "Home", link: "/" },
       { text: "Guide", link: "/guide/" },
+      { text: "Architecture", link: "/architecture/overview" },
       { text: "API", link: "/api/" },
     ],
 
     sidebar: [
       {
-        text: "Introduction",
+        text: "Guide",
         items: [
           { text: "Getting Started", link: "/guide/" },
           { text: "Installation", link: "/guide/installation" },
-          { text: "Admin Dashboard Guide", link: "/guide/admin-dashboard-guide" },
-        ],
-      },
-      {
-        text: "Configuration",
-        items: [
-          { text: "Provider Setup Guide", link: "/guide/providers" },
-          { text: "Quick Reference", link: "/guide/provider-quick-reference" },
-        ],
-      },
-      {
-        text: "Event Management",
-        items: [
-          {
-            text: "Managing Events and Schedules",
-            link: "/guide/managing-events",
-          },
+          { text: "Department Setup (web)", link: "/guide/department-setup" },
+          { text: "Mobile App", link: "/guide/mobile-app" },
+          { text: "Deployment", link: "/guide/deployment" },
         ],
       },
       {
         text: "Architecture",
         items: [
+          { text: "Overview", link: "/architecture/overview" },
           { text: "Database Schema", link: "/architecture/database-schema" },
-          {
-            text: "Event Management System",
-            link: "/architecture/event-system",
-          },
           {
             text: "Notification System",
             link: "/architecture/notification-system",
@@ -62,12 +46,12 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: "github", link: "https://github.com/FASami/unisync" },
+      { icon: "github", link: "https://github.com/FAsami/unisync" },
     ],
 
     footer: {
       message: "Released under the MIT License.",
-      copyright: "Copyright © 2025-present Unisync Team",
+      copyright: "Copyright © 2025-present UniSync Team",
     },
   },
 });

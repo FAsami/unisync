@@ -11,10 +11,11 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="EFCore.NamingConventions" />
     <PackageReference Include="BCrypt.Net-Next" />
+    <PackageReference Include="Google.Apis.Auth" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Schema changes owned by this API (Hasura's migrations are the legacy baseline). -->
+    <!-- The schema, owned by this API (0000_baseline is what Hasura's migrations built). -->
     <EmbeddedResource Include="..\..\db\migrations\*.sql" LogicalName="migrations/%(Filename)%(Extension)" />
   </ItemGroup>
 

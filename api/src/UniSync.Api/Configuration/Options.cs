@@ -68,6 +68,13 @@ public sealed class RateLimitOptions
 
     /// <summary>Each notice pushes to a whole audience, so cap them per user.</summary>
     public int NotificationsPerHourPerUser { get; set; } = 20;
+
+    /// <summary>
+    /// Shared with the web server, which sends it with each client's real address
+    /// (see <c>Common.ClientIp</c>). Empty: forwarded client addresses are ignored.
+    /// </summary>
+    [MinLength(32)]
+    public string? TrustedProxySecret { get; set; }
 }
 
 public sealed class CampusOptions

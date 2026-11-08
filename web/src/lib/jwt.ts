@@ -1,8 +1,7 @@
 /**
  * Reads a JWT's `exp` claim without verifying the signature. Only for UX
- * decisions (redirects, choosing which token to send); Hasura and the API
- * server do the real verification. Works in the browser, Node and the Edge
- * runtime (no Buffer).
+ * decisions such as redirects; the API does the real verification. Works in
+ * Node and the Edge runtime (no Buffer).
  */
 export const getJwtExpiry = (token: string): number | null => {
   try {

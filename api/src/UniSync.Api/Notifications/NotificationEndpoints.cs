@@ -28,8 +28,8 @@ public sealed record SentItem(
 
 /// <summary>
 /// The inbox (UX review decision 4) and sending notices to the audiences the
-/// sender may address. Delivery as push still happens through the legacy
-/// Hasura trigger on notification.log until the cut-over.
+/// sender may address. Sending only inserts into notification.log;
+/// <c>PushDispatcher</c> delivers the push (when Push:Enabled).
 /// </summary>
 public static class NotificationEndpoints
 {
@@ -241,7 +241,7 @@ public static class NotificationEndpoints
         });
         await db.SaveChangesAsync(ct);
 
-        return ApiResponse.Ok(http, $"Sent to {target.Recipients} people.", new SendResult(id, target.Recipients), StatusCodes.Status201Created);
+        return ApiResponse.Ok(http, $"Sent to {target.Recipients} {(target.Recipients == 1 ? "person" : "people")}.", new SendResult(id, target.Recipients), StatusCodes.Status201Created);
     }
 
     private static async Task<IResult> GetSentAsync(

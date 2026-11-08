@@ -1,212 +1,127 @@
 # Installation
 
-This guide will walk you through setting up Unisync on your local development environment.
+Run the whole stack on your machine: PostgreSQL, the API, the mobile app and
+the web dashboard.
 
 ## Prerequisites
 
-Make sure you have the following installed:
+- [.NET SDK 10](https://dotnet.microsoft.com/download) (the exact version is in `api/global.json`)
+- Docker with Docker Compose, for PostgreSQL
+- Node.js 22 and Yarn 1, for the mobile app, web and docs. Each app has its own
+  `yarn.lock`: run `yarn` inside the app's directory, since there is no root `package.json`.
+- For the mobile app on a device: Expo Go, or an Android/iOS development build
 
-- Node.js (v18 or higher)
-- Yarn package manager
-- Docker and Docker Compose
-- Expo CLI (for mobile development)
-
-## 1. Start Backend Services
-
-Start PostgreSQL and Hasura using Docker Compose:
+## 1. Start PostgreSQL
 
 ```bash
-docker-compose up -d
+docker-compose up -d postgres
 ```
 
-This will start:
+PostgreSQL listens on `localhost:9200` (user `postgres`, password
+`postgrespassword`, database `unisync`). That matches the API's
+`appsettings.Development.json`.
 
-- **PostgreSQL**: Port 9200
-- **Hasura Console**: http://localhost:9203/console (admin secret: `123`)
-
-## 2. Set Up the Database
-
-Apply Hasura migrations and metadata:
+## 2. Create the schema
 
 ```bash
-cd hasura
-hasura migrate apply --database-name default
-hasura metadata apply
+cd api
+dotnet run --project src/UniSync.Api -- migrate
 ```
 
-## 3. Configure the Server
+`migrate` applies every file in `api/db/migrations` that hasn't run yet and
+records it in `api.schema_migrations`. On an empty database it starts with
+`0000_baseline.sql`. On a database that already has that schema, it records the
+baseline without running it.
 
-Create a `.env` file in the `server` directory:
+## 3. Run the API
 
 ```bash
-cd server
-cp env.example .env
+dotnet run --project src/UniSync.Api     # http://localhost:9202/api/v1/health
 ```
 
-Edit the `.env` file with your configuration. Key variables:
+In Development:
 
-```env
-NODE_ENV=development
-PORT=9201
-HASURA_ENDPOINT=http://localhost:9203/v1/graphql
-HASURA_ADMIN_SECRET=123
-JWT_SECRET=reallySecretKey
-JWT_ACCESS_TOKEN_EXPIRY=1h
-JWT_REFRESH_TOKEN_EXPIRY=30d
+- **SMS isn't sent.** The sign-in code is printed to the API's console instead, as
+  "… to +8801…: 123456 is your UniSync sign-in code".
+- **Push delivery is off** (`Push:Enabled=false`). Notices still reach the inbox.
+- The JWT secret is a development value from `appsettings.Development.json`.
 
-# OTP Configuration
-OTP_EXPIRY_MINUTES=5
-OTP_MAX_ATTEMPTS=5
-OTP_LENGTH=6
+Configuration uses the standard ASP.NET Core keys. Set them in
+`appsettings.*.json` or as environment variables with `__` between levels, for
+example `ConnectionStrings__Default`, `Auth__JwtSecret`, `Sms__Provider`,
+`Push__Enabled` and `Push__FcmServiceAccountJson`.
 
-# SMS Provider Configuration (via Database)
-# See Provider Configuration Guide for details
-BULK_SMS_API_KEY=your_api_key_here
-BULK_SMS_SECRET_KEY=your_secret_key_here
-BULK_SMS_CALLER_ID=your_sender_id
+## 4. Create the first department admin
 
-# Email Provider (not yet implemented)
-EMAIL_PROVIDER=console
-
-# Optional: Sentry Error Tracking
-SENTRY_DSN=
-```
-
-## 4. Start the Server
-
-Install dependencies and start the server:
+Only the command line can create the first admin. After that, everything is
+done in the dashboard.
 
 ```bash
-cd server
+dotnet run --project src/UniSync.Api -- create-admin \
+  --phone 01712345678 --first-name Ada --last-name Rahman \
+  --department-code CSE --department-name "Computer Science and Engineering"
+```
+
+- If the department doesn't exist, it is created.
+- The number becomes an admin managing that department.
+- Running the command again changes nothing.
+- If the code already exists, `--department-name` must match that department's name exactly.
+
+## 5. Run the web dashboard
+
+```bash
+cd web
+cp .env.example .env.local      # set API_URL to http://localhost:9202
 yarn install
-yarn dev
+yarn dev                        # http://localhost:3000
 ```
 
-The server will run on http://localhost:9201
+The browser only ever talks to the Next.js server. That server forwards API
+calls to `API_URL` and keeps the session tokens in httpOnly cookies. Sign in at
+`/auth/login` with the admin's number and the code from the API console.
 
-API endpoint: http://localhost:9201/api/v1
-
-## 5. Start the Mobile App
-
-Configure and start the mobile app:
+## 6. Run the mobile app
 
 ```bash
 cd mobile
+cp .env.example .env            # API_URL=http://localhost:9202
 yarn install
 yarn start
 ```
 
-Then press:
+`API_URL` is the API's origin, with no `/api/v1`. On a physical phone use your
+computer's LAN address instead of `localhost`.
 
-- `i` for iOS simulator
-- `a` for Android emulator
-- Scan QR code with Expo Go app for physical device
+To see the screens without a device, `mobile/web-preview` renders the app in a
+phone-sized browser against a running API; see `mobile/CLAUDE.md`.
 
-## Verify Installation
-
-### Check Server Health
+## Tests and checks
 
 ```bash
-curl http://localhost:9201/api/v1/health
+# API: unit tests, plus database tests when a Postgres admin connection is given
+cd api
+UNISYNC_TEST_DB="Host=localhost;Port=9200;Username=postgres;Password=postgrespassword;Database=postgres" dotnet test
+
+# Mobile
+cd mobile && yarn lint && yarn typecheck && yarn test
+
+# Web
+cd web && yarn lint && yarn typecheck && yarn build
+
+# Everything CI runs
+scripts/check-all.sh
 ```
 
-You should see:
+The database tests create and drop their own throwaway databases, which is why
+they need an admin connection string.
 
-```json
-{
-  "data": {
-    "status": "OK",
-    "uptime": 123.456,
-    "environment": "development",
-    "version": "1.0.0"
-  },
-  "meta": {
-    "message": "Server is healthy",
-    "timestamp": "2025-10-19T...",
-    "duration": 5
-  }
-}
-```
+## When the API changes
 
-### Check Hasura
-
-Visit http://localhost:9203/console and verify you can access the GraphQL console with admin secret `123`.
-
-### Check Database
-
-Verify containers are running:
+The contract `api/openapi/v1.json` is committed, and a test fails if it drifts
+from the code. After changing an endpoint:
 
 ```bash
-docker ps
+cd api && UPDATE_OPENAPI=1 dotnet test --filter OpenApi   # rewrite the spec
+cd mobile && yarn api:types                               # regenerate lib/api/generated.ts
+cd web && yarn api:types                                  # regenerate the web client
 ```
-
-You should see `unisync-postgres` and `unisync-hasura` running.
-
-## Troubleshooting
-
-### Port Already in Use
-
-If port 9201, 9200, or 9203 is already in use:
-
-```bash
-# Find the process using the port
-lsof -i :9201
-
-# Kill the process
-kill -9 <PID>
-```
-
-### Docker Issues
-
-If containers fail to start:
-
-```bash
-# Stop all containers
-docker-compose down
-
-# Remove volumes and restart
-docker-compose down -v
-docker-compose up -d
-```
-
-### Hasura Migration Issues
-
-If migrations fail:
-
-```bash
-cd hasura
-hasura migrate status --database-name default
-hasura migrate apply --database-name default --skip-execution
-```
-
-## Development Workflow
-
-### Running Tests
-
-```bash
-cd server
-yarn test
-```
-
-### GraphQL Code Generation
-
-Generate TypeScript types from GraphQL schema:
-
-```bash
-cd server
-yarn codegen
-```
-
-## Configure OTP Providers
-
-To enable SMS OTP delivery, you'll need to configure a provider. See the [Provider Configuration Guide](/guide/providers) for detailed instructions on:
-
-- Setting up BulkSMS Bangladesh
-- Adding new SMS providers
-- Email provider implementation status
-
-## Next Steps
-
-- [Provider Configuration](/guide/providers)
-- [API Reference](/api/)
-- [Authentication Guide](/api/authentication)

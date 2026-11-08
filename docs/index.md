@@ -2,9 +2,9 @@
 layout: home
 
 hero:
-  name: "Unisync"
+  name: "UniSync"
   text: "Documentation"
-  tagline: A full-stack application with mobile app, REST API, and GraphQL backend
+  tagline: Class routines, same-day class changes and notices for a university department
   actions:
     - theme: brand
       text: Get Started
@@ -14,42 +14,36 @@ hero:
       link: /api/
 
 features:
-  - title: 🔐 OTP Authentication
-    details: Secure authentication using One-Time Password verification via SMS (email support coming soon)
-  - title: 📱 Mobile App
-    details: React Native mobile application for iOS and Android built with Expo
-  - title: 🔌 REST + GraphQL API
-    details: Express REST API with Hasura GraphQL engine for data operations
-  - title: 🐘 PostgreSQL Database
-    details: Robust database with schemas for users, sessions, and application settings
+  - title: 📱 Mobile app
+    details: Students and teachers see "My day" and the week, get a notice for every class change, and keep an inbox. Teachers and class representatives cancel, move or re-room a class in two taps.
+  - title: 🖥️ Web dashboard
+    details: A department admin sets up batches, sections, courses, teachers, the student roster and the weekly routine, and approves access requests.
+  - title: 🔑 Passwordless sign-in
+    details: Students and teachers sign in with a code sent by SMS to the number on their department's roster. Numbers not on it can request access.
+  - title: ⚙️ One .NET API
+    details: ASP.NET Core 10 with EF Core and PostgreSQL. It owns the schema, sign-in, data and push delivery, and publishes an OpenAPI contract both apps generate their clients from.
 ---
 
-## Quick Start
-
-Get up and running with Unisync in minutes.
+## Quick start
 
 ```bash
-# Start backend services (PostgreSQL + Hasura)
-docker-compose up -d
+docker-compose up -d postgres          # PostgreSQL on localhost:9200
 
-# Start the API server
-cd server
-yarn install
-yarn dev
+cd api
+dotnet run --project src/UniSync.Api -- migrate
+dotnet run --project src/UniSync.Api   # http://localhost:9202, SMS codes print to the log
 
-# Start the mobile app
-cd mobile
-yarn install
-yarn start
+cd ../mobile && yarn install && yarn start
+cd ../web && yarn install && yarn dev  # http://localhost:3000
 ```
 
-## Project Structure
+See [Installation](/guide/installation) for the full setup, including the first department admin.
 
-Unisync is a monorepo containing:
+## Project structure
 
-- **Server**: Node.js REST API with Express and TypeScript
-- **Mobile**: React Native mobile application (iOS/Android) using Expo
-- **Hasura**: GraphQL engine with PostgreSQL database
-- **Docs**: VitePress documentation site
-
-For more information, check out the [Guide](/guide/) section.
+| Directory | What |
+| --- | --- |
+| `api/` | The backend: ASP.NET Core 10 API, its SQL migrations and tests |
+| `mobile/` | Expo (React Native) app for students, teachers and class representatives |
+| `web/` | Next.js dashboard for department admins, plus the landing page |
+| `docs/` | This site (VitePress), published to GitHub Pages |

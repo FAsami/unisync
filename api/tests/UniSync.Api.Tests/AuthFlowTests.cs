@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Hosting;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
@@ -178,6 +179,57 @@ public sealed class AuthFlowTests(PostgresFixture db) : ApiTestBase(db)
         var (me, meBody) = await GetAsync("/api/v1/me", rotated.GetProperty("accessToken").GetString());
         Assert.Equal(HttpStatusCode.Unauthorized, me);
         Assert.Equal("SESSION_REVOKED", ErrorCode(meBody));
+    }
+
+    [Fact]
+    public async Task Two_refreshes_racing_with_one_token_rotate_it_at_most_once()
+    {
+        var student = await Seed.StudentAsync(Db.ConnectionString, ct: Ct);
+        var refreshToken = (await SignInAsync(student.Phone)).GetProperty("refreshToken").GetString();
+
+        var results = await Task.WhenAll(Enumerable.Range(0, 4)
+            .Select(_ => PostAsync("/api/v1/auth/refresh", new { refreshToken })));
+
+        // At most one caller holds a rotated token; the others were replays, so the session ends.
+        Assert.True(results.Count(r => r.Status == HttpStatusCode.OK) <= 1);
+        Assert.Contains(results, r => r.Status == HttpStatusCode.Unauthorized);
+        Assert.Equal(1, await Seed.ScalarAsync<long>(Db.ConnectionString,
+            """SELECT count(*) FROM "user".session s JOIN "user".account a ON a.id = s.user_id WHERE a.phone = @p AND s.revoked""",
+            Ct, ("p", student.Phone)));
+    }
+
+    [Fact]
+    public async Task Code_limits_follow_the_web_servers_forwarded_client_ip_only_with_the_secret()
+    {
+        const string secret = "test-proxy-secret-that-is-at-least-32-chars";
+        using var factory = Factory.WithWebHostBuilder(b =>
+        {
+            b.UseSetting("RateLimits:CodeRequestsPerHourPerIp", "2");
+            b.UseSetting("RateLimits:TrustedProxySecret", secret);
+        });
+        using var client = factory.CreateClient();
+
+        async Task<HttpStatusCode> Ask(string? clientIp, string? proxySecret)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/code")
+            {
+                Content = JsonContent.Create(new { phone = Seed.RandomPhone() }),
+            };
+            if (clientIp is not null) request.Headers.Add("X-UniSync-Client-IP", clientIp);
+            if (proxySecret is not null) request.Headers.Add("X-UniSync-Proxy-Secret", proxySecret);
+            return (await client.SendAsync(request, Ct)).StatusCode;
+        }
+
+        // Each forwarded client gets its own bucket...
+        Assert.NotEqual(HttpStatusCode.TooManyRequests, await Ask("203.0.113.1", secret));
+        Assert.NotEqual(HttpStatusCode.TooManyRequests, await Ask("203.0.113.1", secret));
+        Assert.Equal(HttpStatusCode.TooManyRequests, await Ask("203.0.113.1", secret));
+        Assert.NotEqual(HttpStatusCode.TooManyRequests, await Ask("203.0.113.2", secret));
+
+        // ...but without the right secret the header is ignored: one shared bucket, however the IP is spoofed.
+        Assert.NotEqual(HttpStatusCode.TooManyRequests, await Ask("198.51.100.1", "wrong"));
+        Assert.NotEqual(HttpStatusCode.TooManyRequests, await Ask("198.51.100.2", null));
+        Assert.Equal(HttpStatusCode.TooManyRequests, await Ask("198.51.100.3", "wrong"));
     }
 
     [Fact]

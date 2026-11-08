@@ -13,7 +13,9 @@ using UniSync.Api.Academic;
 using UniSync.Api.Health;
 using UniSync.Api.CurrentUser;
 using UniSync.Api.Notifications;
+using UniSync.Api.Notifications.Push;
 using UniSync.Api.Schedule;
+using UniSync.Api.Setup;
 using UniSync.Api.Sms;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,7 +24,7 @@ var services = builder.Services;
 // ---- configuration (validated at startup: a bad config fails the deploy, not a request)
 services.AddOptions<AuthOptions>().BindConfiguration(AuthOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
 services.AddOptions<OtpOptions>().BindConfiguration(OtpOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
-services.AddOptions<RateLimitOptions>().BindConfiguration(RateLimitOptions.SectionName);
+services.AddOptions<RateLimitOptions>().BindConfiguration(RateLimitOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
 services.AddOptions<SmsOptions>().BindConfiguration(SmsOptions.SectionName).ValidateDataAnnotations()
     .Validate(o => o.Provider is "bulksmsbd" or "console", "Sms:Provider must be 'bulksmsbd' or 'console'.")
     .Validate(o => o.Provider != "console" || builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing"),
@@ -73,6 +75,18 @@ services.AddScoped<ISmsSender>(sp => sp.GetRequiredService<IOptions<SmsOptions>>
     ? sp.GetRequiredService<ConsoleSmsSender>()
     : sp.GetRequiredService<BulkSmsBdSender>());
 
+// ---- push delivery (notification.log -> FCM); off until the cut-over, see PushOptions
+services.AddOptions<PushOptions>().BindConfiguration(PushOptions.SectionName).ValidateDataAnnotations()
+    .Validate(o => !o.Enabled || builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing") || FcmCredentialsLoad(o),
+        "Push:Enabled needs a valid Firebase service-account key in Push:FcmServiceAccountJson (JSON or base64).")
+    .ValidateOnStart();
+services.AddHttpClient<FcmPushSender>(c => c.Timeout = TimeSpan.FromSeconds(15));
+services.AddSingleton<LogPushSender>();
+services.AddScoped<IPushSender>(sp => sp.GetRequiredService<IOptions<PushOptions>>().Value.ServiceAccountJson() is null
+    ? sp.GetRequiredService<LogPushSender>()
+    : sp.GetRequiredService<FcmPushSender>());
+services.AddHostedService<PushDispatcher>();
+
 // ---- cross-cutting
 services.AddExceptionHandler<EnvelopeExceptionHandler>();
 services.AddProblemDetails();
@@ -91,28 +105,28 @@ services.AddRateLimiter(o =>
     o.OnRejected = (ctx, _) => new ValueTask(ApiResponse.WriteFailAsync(ctx.HttpContext, StatusCodes.Status429TooManyRequests,
         ErrorCodes.RateLimited, "Too many requests. Please wait and try again."));
     o.AddPolicy(AuthEndpoints.CodePolicy, http => RateLimitPartition.GetFixedWindowLimiter(
-        http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        ClientIp.For(http),
         _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = http.RequestServices.GetRequiredService<IOptions<RateLimitOptions>>().Value.CodeRequestsPerHourPerIp,
             Window = TimeSpan.FromHours(1),
         }));
     o.AddPolicy(NotificationEndpoints.SendPolicy, http => RateLimitPartition.GetFixedWindowLimiter(
-        http.User.FindFirst(TokenService.UserIdClaim)?.Value ?? http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        http.User.FindFirst(TokenService.UserIdClaim)?.Value ?? ClientIp.For(http),
         _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = http.RequestServices.GetRequiredService<IOptions<RateLimitOptions>>().Value.NotificationsPerHourPerUser,
             Window = TimeSpan.FromHours(1),
         }));
     o.AddPolicy(ClassChangeEndpoints.Policy, http => RateLimitPartition.GetFixedWindowLimiter(
-        http.User.FindFirst(TokenService.UserIdClaim)?.Value ?? http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        http.User.FindFirst(TokenService.UserIdClaim)?.Value ?? ClientIp.For(http),
         _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = http.RequestServices.GetRequiredService<IOptions<RateLimitOptions>>().Value.ClassChangesPerHourPerUser,
             Window = TimeSpan.FromHours(1),
         }));
     o.AddPolicy(AuthEndpoints.VerifyPolicy, http => RateLimitPartition.GetFixedWindowLimiter(
-        http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        ClientIp.For(http),
         _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = http.RequestServices.GetRequiredService<IOptions<RateLimitOptions>>().Value.VerifyAttemptsPer15MinPerIp,
@@ -129,6 +143,15 @@ if (args.Contains("migrate"))
     await using var scope = app.Services.CreateAsyncScope();
     var applied = await scope.ServiceProvider.GetRequiredService<MigrationRunner>().ApplyPendingAsync();
     Console.WriteLine(applied.Count == 0 ? "Database is up to date." : $"Applied: {string.Join(", ", applied)}");
+    return;
+}
+
+// `dotnet UniSync.Api.dll create-admin --phone ... --department-code ...` creates the first department admin.
+if (args.Contains(AdminBootstrap.Command))
+{
+    var result = await AdminBootstrap.RunAsync(app.Services, args);
+    Console.WriteLine(result.Message);
+    Environment.ExitCode = result.Ok ? 0 : 1;
     return;
 }
 
@@ -155,8 +178,22 @@ api.MapScheduleEndpoints();
 api.MapClassChangeEndpoints();
 api.MapNotificationEndpoints();
 api.MapDeviceEndpoints();
+api.MapSetupEndpoints();
 
 await app.RunAsync();
+
+static bool FcmCredentialsLoad(PushOptions options)
+{
+    try
+    {
+        _ = FcmPushSender.Load(options);
+        return true;
+    }
+    catch (Exception ex) when (ex is InvalidOperationException or ArgumentException or FormatException or System.Text.Json.JsonException or Newtonsoft.Json.JsonException)
+    {
+        return false;
+    }
+}
 
 /// <summary>Entry point; public so integration tests can host the app.</summary>
 public partial class Program;

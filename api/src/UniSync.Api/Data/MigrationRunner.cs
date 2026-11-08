@@ -7,14 +7,17 @@ namespace UniSync.Api.Data;
 /// Applies the SQL files in api/db/migrations (embedded in this assembly) in
 /// name order, once each, recording them in api.schema_migrations.
 ///
-/// The legacy Hasura migrations are the baseline and are NOT run here: in
-/// existing environments Hasura already applied them. New schema changes go in
-/// api/db/migrations only. Run with: <c>dotnet UniSync.Api.dll migrate</c>.
+/// <c>0000_baseline.sql</c> is the schema Hasura's migrations built. Existing
+/// environments already have it, so on a database where it is present but not
+/// recorded the runner records it without running it (adopts it); on an empty
+/// database it runs. Run with: <c>dotnet UniSync.Api.dll migrate</c>.
 /// </summary>
 public sealed partial class MigrationRunner(NpgsqlDataSource dataSource, ILogger<MigrationRunner> logger)
 {
     // Arbitrary constant: serialises runners started by several machines at once.
     private const long AdvisoryLockKey = 0x556e6953796e63; // "UniSync"
+
+    internal const string BaselineName = "0000_baseline.sql";
 
     public async Task<IReadOnlyList<string>> ApplyPendingAsync(CancellationToken cancellationToken = default)
     {
@@ -43,6 +46,13 @@ public sealed partial class MigrationRunner(NpgsqlDataSource dataSource, ILogger
             }
         }
 
+        if (!done.Contains(BaselineName) && await BaselinePresentAsync(connection, transaction, cancellationToken))
+        {
+            await RecordAsync(connection, transaction, BaselineName, cancellationToken);
+            done.Add(BaselineName);
+            LogAdopted(logger, BaselineName);
+        }
+
         foreach (var (name, sql) in migrations)
         {
             if (done.Contains(name))
@@ -51,9 +61,7 @@ public sealed partial class MigrationRunner(NpgsqlDataSource dataSource, ILogger
             }
 
             await ExecuteAsync(connection, transaction, sql, cancellationToken);
-            await using var record = new NpgsqlCommand("INSERT INTO api.schema_migrations (name) VALUES (@name)", connection, transaction);
-            record.Parameters.AddWithValue("name", name);
-            await record.ExecuteNonQueryAsync(cancellationToken);
+            await RecordAsync(connection, transaction, name, cancellationToken);
 
             LogApplied(logger, name);
             applied.Add(name);
@@ -78,6 +86,41 @@ public sealed partial class MigrationRunner(NpgsqlDataSource dataSource, ILogger
             .ToList();
     }
 
+    /// <summary>
+    /// True when Hasura's schema is already there. A database with only part of it
+    /// (Hasura's second migration missing) is refused rather than guessed at.
+    /// </summary>
+    private static async Task<bool> BaselinePresentAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, CancellationToken ct)
+    {
+        await using var command = new NpgsqlCommand("""
+            SELECT to_regclass('academic.department') IS NOT NULL,
+                   EXISTS (SELECT 1 FROM information_schema.columns
+                            WHERE table_schema = 'user' AND table_name = 'account' AND column_name = 'deleted_at')
+            """, connection, transaction);
+        bool tables, deletedAt;
+        await using (var reader = await command.ExecuteReaderAsync(ct))
+        {
+            await reader.ReadAsync(ct);
+            (tables, deletedAt) = (reader.GetBoolean(0), reader.GetBoolean(1));
+        }
+
+        if (tables && !deletedAt)
+        {
+            throw new InvalidOperationException(
+                "The database has the baseline schema without user.account.deleted_at (Hasura's second migration). "
+                + "Run: ALTER TABLE \"user\".account ADD COLUMN deleted_at timestamptz; then migrate again.");
+        }
+
+        return tables;
+    }
+
+    private static async Task RecordAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string name, CancellationToken ct)
+    {
+        await using var record = new NpgsqlCommand("INSERT INTO api.schema_migrations (name) VALUES (@name)", connection, transaction);
+        record.Parameters.AddWithValue("name", name);
+        await record.ExecuteNonQueryAsync(ct);
+    }
+
     private static async Task ExecuteAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string sql, CancellationToken ct)
     {
         await using var command = new NpgsqlCommand(sql, connection, transaction);
@@ -86,4 +129,7 @@ public sealed partial class MigrationRunner(NpgsqlDataSource dataSource, ILogger
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Applied migration {Name}")]
     private static partial void LogApplied(ILogger logger, string name);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Schema already present: recorded {Name} without running it")]
+    private static partial void LogAdopted(ILogger logger, string name);
 }

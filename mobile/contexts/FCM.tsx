@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { router } from 'expo-router'
 import { useAuth } from './Auth'
 import {
   requestNotificationPermission,
@@ -6,6 +7,7 @@ import {
   getPlatform,
   setupTokenRefreshListener,
   setupForegroundMessageHandler,
+  setupNotificationOpenHandler,
 } from '@/lib/fcm'
 import { api, call, unwrap } from '@/lib/api'
 import { getInstallId } from '@/lib/installId'
@@ -67,10 +69,15 @@ export const FCMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const unsubscribeForeground = setupForegroundMessageHandler(() => {
       // Foreground pushes: the inbox refreshes on focus; nothing to show here yet.
     })
+    // Tapping a push opens that notice in the inbox.
+    const unsubscribeOpen = setupNotificationOpenHandler((id) => {
+      router.push({ pathname: '/notification/[id]', params: { id } })
+    })
 
     return () => {
       unsubscribeTokenRefresh()
       unsubscribeForeground()
+      unsubscribeOpen()
     }
   }, [hasValidToken, userId, registerToken])
 

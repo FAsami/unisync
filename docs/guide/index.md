@@ -1,85 +1,52 @@
-# Getting Started
+# Getting started
 
-Welcome to the Unisync documentation! This guide will help you get started with the project.
+UniSync helps a university department run its class routine. The routine is
+set up once on the web. Everything that happens on the day of a class happens
+on the phone: a teacher cancels, moves or re-rooms a class, and every student
+in the section gets a notice and sees the change in "My day".
 
-## What is Unisync?
+## Who uses what
 
-Unisync is a full-stack application consisting of a mobile app (iOS/Android), REST API server, and GraphQL backend powered by Hasura.
+| Role | App | What they do |
+| --- | --- | --- |
+| **Student** | Mobile | "My day" (now and next), the week, class changes as they happen, the notice inbox |
+| **Class representative (CR)** | Mobile | Everything a student does, plus changing their own section's classes and sending notices to it. CR is a mark on a student, not a separate role. |
+| **Teacher** | Mobile | Their own classes, changing them, and sending notices to the sections they teach |
+| **Department admin** | Web (and mobile for notices) | Sets up the department, keeps the roster, approves access requests, and sends notices to the department, a batch or a section |
 
-## Architecture Overview
+There is no university-wide admin. Each department admin manages only their
+own department. The first admin of a department is created from the command
+line (see [Installation](./installation#_4-create-the-first-department-admin)).
 
-The Unisync project consists of the following components:
+## Signing in
 
-### Server (REST API)
+There are no passwords.
 
-- **Technology**: Node.js with Express and TypeScript
-- **Port**: 9201
-- **Features**:
-  - User registration with OTP verification
-  - Phone + password authentication
-  - Password reset with OTP
-  - Guest session generation
-  - JWT token management (access and refresh)
-  - Hasura webhook authorization
-  - Rate limiting for OTP endpoints
-  - Error tracking with Sentry
-  - Logging with Winston
+1. The person enters their mobile number.
+2. If the number is on a department's roster, an SMS code is sent. Entering the code signs them in.
+3. If it isn't, the app offers **Request access**. They verify the number with a code and choose their department, batch and section. The department admin approves or rejects the request on the web, and approval adds them to the roster.
 
-### Mobile App
+Details are in [Authentication](/api/authentication).
 
-- **Framework**: React Native with Expo
-- **Platforms**: iOS and Android
-- **UI Library**: React Native Paper
-- **Navigation**: Expo Router
-- **GraphQL Client**: Apollo Client
-- **Features**: Home, Schedule, Tasks, Announcements, Account screens
+## How the pieces fit
 
-### Hasura (GraphQL Engine)
+```
+mobile (Expo) ──┐
+                ├──▶  api/ (ASP.NET Core)  ──▶  PostgreSQL
+web (Next.js) ──┘          │
+                           ├──▶  BulkSMSBD (sign-in codes)
+                           └──▶  Firebase Cloud Messaging (pushes)
+```
 
-- **Port**: 9203
-- **Admin Console**: http://localhost:9203/console (admin secret: `123`)
-- **Features**:
-  - GraphQL API with PostgreSQL
-  - Authentication via webhook to server
-  - Database migrations and metadata management
+- The **API** is the only backend. It owns the database schema
+  (`api/db/migrations`), and its contract is `api/openapi/v1.json`.
+- **Mobile** calls the API directly with a typed client generated from that contract.
+- **Web** calls it through its own server. The browser never holds tokens.
 
-### PostgreSQL Database
+## Next steps
 
-- **Port**: 9200
-- **Database Name**: unisync
-- **Schemas**:
-  - `user`: User sessions
-  - `platform`: OTP transactions and rate limiting
-  - `settings`: Application configuration
-
-## Prerequisites
-
-Before you begin, make sure you have the following installed:
-
-- Node.js (v18 or higher)
-- Yarn package manager
-- Docker and Docker Compose
-- Xcode (for iOS development)
-- Android Studio (for Android development)
-
-## Key Documentation
-
-### Installation & Setup
-
-- [Installation Guide](/guide/installation) - Complete setup instructions
-- [Provider Configuration](/guide/providers) - Configure SMS/Email OTP providers
-
-### Admin Dashboard
-
-- [Admin Dashboard Guide](/guide/admin-dashboard-guide) - Manage instructors, routines, and exam schedules
-
-### API & Authentication
-
-- [Authentication Guide](/api/authentication) - JWT and OTP authentication flows
-- [API Reference](/api/) - Complete REST and GraphQL API documentation
-
-## Next Steps
-
-1. [Install and configure](/guide/installation) the backend services
-2. [Set up SMS provider](/guide/providers) for OTP delivery
-3. Review the [authentication flow](/api/authentication) documentation
+- [Installation](./installation): run everything locally
+- [Department setup](./department-setup): what an admin does on the web, in order
+- [Mobile app](./mobile-app): what each role sees
+- [Deployment](./deployment): where production runs
+- [Architecture](/architecture/overview)

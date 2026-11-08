@@ -7,6 +7,8 @@ function messaging() {
     getToken: async () => null,
     onTokenRefresh: () => () => {},
     onMessage: () => () => {},
+    onNotificationOpenedApp: () => () => {},
+    getInitialNotification: async () => null,
   }
 }
 messaging.AuthorizationStatus = AuthorizationStatus
