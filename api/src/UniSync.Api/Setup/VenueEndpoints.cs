@@ -12,7 +12,7 @@ public sealed record BuildingView(Guid Id, string Name, string Code, string Addr
 
 public sealed record BuildingBody(string? Name, string? Code, string? Address);
 
-public sealed record RoomBody(Guid? BuildingId, string? RoomNumber, string? RoomName, string? Floor, int? Capacity);
+public sealed record RoomDetailsBody(Guid? BuildingId, string? RoomNumber, string? RoomName, string? Floor, int? Capacity);
 
 /// <summary>
 /// Buildings and rooms are shared by the whole university: anyone signed in can
@@ -159,7 +159,7 @@ public static partial class VenueEndpoints
 
     // ---------------------------------------------------------------- rooms
 
-    private static async Task<IResult> CreateRoomAsync(RoomBody body, HttpContext http, UniSyncDbContext db, CancellationToken ct)
+    private static async Task<IResult> CreateRoomAsync(RoomDetailsBody body, HttpContext http, UniSyncDbContext db, CancellationToken ct)
     {
         var room = new Room();
         if (Apply(room, body, creating: true) is { Count: > 0 } errors)
@@ -176,7 +176,7 @@ public static partial class VenueEndpoints
         return await SaveRoomAsync(http, db, room, "Room added", StatusCodes.Status201Created, ct);
     }
 
-    private static async Task<IResult> UpdateRoomAsync(Guid id, RoomBody body, HttpContext http, UniSyncDbContext db, CancellationToken ct)
+    private static async Task<IResult> UpdateRoomAsync(Guid id, RoomDetailsBody body, HttpContext http, UniSyncDbContext db, CancellationToken ct)
     {
         var room = await db.Rooms.FirstOrDefaultAsync(r => r.Id == id, ct);
         if (room is null)
@@ -227,7 +227,7 @@ public static partial class VenueEndpoints
         return ApiResponse.Ok(http, message, await RoomsQuery(db, roomId: room.Id).FirstAsync(ct), status);
     }
 
-    private static Dictionary<string, string> Apply(Room room, RoomBody body, bool creating)
+    private static Dictionary<string, string> Apply(Room room, RoomDetailsBody body, bool creating)
     {
         var errors = new Dictionary<string, string>();
         var number = SetupScope.Clean(body.RoomNumber);

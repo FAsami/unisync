@@ -1,14 +1,10 @@
 import { ReactNode } from 'react'
-import { getServerSession } from '@/lib/auth/server'
-import { redirect } from 'next/navigation'
 import DashboardLayoutClient from '@/components/DashboardLayoutClient'
 
-const DashboardLayout = async ({ children }: { children: ReactNode }) => {
-  const session = await getServerSession()
-  if (!session) {
-    redirect(`/auth/login?redirect=${encodeURIComponent('/dashboard')}`)
-  }
-  return <DashboardLayoutClient>{children}</DashboardLayoutClient>
-}
+// middleware.ts sends visitors without a session to /auth/login; the client
+// layout checks the role (department admins only).
+const DashboardLayout = ({ children }: { children: ReactNode }) => (
+  <DashboardLayoutClient>{children}</DashboardLayoutClient>
+)
 
 export default DashboardLayout

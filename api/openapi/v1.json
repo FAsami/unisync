@@ -662,7 +662,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RoomBody"
+                "$ref": "#/components/schemas/RoomDetailsBody"
               }
             }
           },
@@ -6071,7 +6071,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RoomBody"
+                "$ref": "#/components/schemas/RoomDetailsBody"
               }
             }
           },
@@ -9276,6 +9276,28 @@
         }
       },
       "RoomBody": {
+        "required": [
+          "roomId",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "roomId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RoomDetailsBody": {
         "required": [
           "buildingId",
           "roomNumber",
