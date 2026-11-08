@@ -176,7 +176,7 @@ public static class RoutineEndpoints
         routine.IsActive = body.IsActive ?? true;
 
         if (routine.IsActive && offering.Offering.IsActive
-            && await FindClashAsync(db, routine, offering.Offering, ct) is { } clash)
+            && await FindClashAsync(db, routine, offering.Offering, departmentId, ct) is { } clash)
         {
             return ApiResponse.Fail(http, 409, clash.Code, clash.Message);
         }
@@ -200,22 +200,26 @@ public static class RoutineEndpoints
     /// for the same section, teacher or room. Same rules as one-off moves
     /// (<c>ClassChangeService.FindClashAsync</c>), applied to the weekly pattern.
     /// </summary>
-    private static async Task<SlotClash?> FindClashAsync(UniSyncDbContext db, Routine slot, CourseOffering offering, CancellationToken ct)
+    private static async Task<SlotClash?> FindClashAsync(UniSyncDbContext db, Routine slot, CourseOffering offering, Guid departmentId, CancellationToken ct)
     {
         var others = await (
             from r in db.Routines.AsNoTracking()
             join o in db.CourseOfferings on r.CourseOfferingId equals (Guid?)o.Id
             join c in db.Courses on o.CourseId equals c.Id
             join s in db.Sections on o.SectionId equals s.Id
+            join b in db.Batches on s.BatchId equals b.Id
             where r.Id != slot.Id && r.IsActive && o.IsActive
                 && r.DayOfWeek == slot.DayOfWeek
                 && r.StartTime < slot.EndTime && slot.StartTime < r.EndTime
                 && r.EffectiveFrom <= slot.EffectiveTo && slot.EffectiveFrom <= r.EffectiveTo
                 && (o.SectionId == offering.SectionId || o.TeacherId == offering.TeacherId || (slot.RoomId != null && r.RoomId == slot.RoomId))
-            select new { o.SectionId, o.TeacherId, r.RoomId, c.Code, SectionName = s.Name, r.StartTime, r.EndTime }).ToListAsync(ct);
+            select new { o.SectionId, o.TeacherId, r.RoomId, c.Code, SectionName = s.Name, r.StartTime, r.EndTime, b.DepartmentId }).ToListAsync(ct);
 
         static string When(TimeOnly a, TimeOnly b) => $"{a:HH\\:mm}–{b:HH\\:mm}";
 
+        // The section clash is always inside the admin's own department (the offering is
+        // theirs); teacher and room clashes can land on another department's class, whose
+        // course and section name are not this admin's to see.
         if (others.FirstOrDefault(o => o.SectionId == offering.SectionId) is { } section)
         {
             return new(ErrorCodes.SectionBusy, $"Section {section.SectionName} already has {section.Code} at {When(section.StartTime, section.EndTime)}.");
@@ -223,12 +227,16 @@ public static class RoutineEndpoints
 
         if (others.FirstOrDefault(o => o.TeacherId == offering.TeacherId) is { } teacher)
         {
-            return new(ErrorCodes.TeacherBusy, $"The teacher already has {teacher.Code} at {When(teacher.StartTime, teacher.EndTime)}.");
+            return new(ErrorCodes.TeacherBusy, teacher.DepartmentId == departmentId
+                ? $"The teacher already has {teacher.Code} at {When(teacher.StartTime, teacher.EndTime)}."
+                : $"The teacher already has a class at {When(teacher.StartTime, teacher.EndTime)}.");
         }
 
         if (others.FirstOrDefault(o => slot.RoomId != null && o.RoomId == slot.RoomId) is { } room)
         {
-            return new(ErrorCodes.RoomTaken, $"That room is booked for {room.Code} at {When(room.StartTime, room.EndTime)}.");
+            return new(ErrorCodes.RoomTaken, room.DepartmentId == departmentId
+                ? $"That room is booked for {room.Code} at {When(room.StartTime, room.EndTime)}."
+                : $"That room is booked at {When(room.StartTime, room.EndTime)}.");
         }
 
         return null;

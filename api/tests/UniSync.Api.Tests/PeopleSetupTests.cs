@@ -265,8 +265,11 @@ public sealed class PeopleSetupTests(PostgresFixture db) : SetupTestBase(db)
         Assert.True(errors[0].TryGetProperty("phone", out _) && errors[0].TryGetProperty("firstName", out _) && errors[0].TryGetProperty("studentId", out _));
         Assert.Contains("row 1", errors[1].GetProperty("phone").GetString());
         Assert.True(errors[2].TryGetProperty("section", out _));
-        Assert.Contains("teacher", errors[3].GetProperty("phone").GetString());
-        Assert.Contains("another department", errors[4].GetProperty("phone").GetString());
+        // Security review: naming the reason (teacher, or a student elsewhere) told an admin
+        // about an account outside their department. Both now read the same, generic way.
+        const string notAvailable = "This number already has an account.";
+        Assert.Equal(notAvailable, errors[3].GetProperty("phone").GetString());
+        Assert.Equal(notAvailable, errors[4].GetProperty("phone").GetString());
 
         Assert.Equal(0, await CountAsync("""SELECT count(*) FROM "user".account WHERE phone = @p""", ("p", good)));
         Fails(await PostAsync("/api/v1/students/import", new { rows = Array.Empty<object>() }, admin), HttpStatusCode.BadRequest, "VALIDATION_FAILED");

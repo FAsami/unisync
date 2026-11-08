@@ -403,17 +403,21 @@ public static partial class StudentEndpoints
             if (phoneOk && accounts.TryGetValue(phone, out existing))
             {
                 profiles.TryGetValue(existing.Id, out profile);
+                // One message for every reason this number can't become a student here:
+                // which reason it is would tell an admin about another department's roster,
+                // or about a role (teacher, admin) this screen has no business naming.
+                const string notAvailable = "This number already has an account.";
                 if (existing.DeletedAt is not null)
                 {
-                    errors["phone"] = "This number's account was deleted.";
+                    errors["phone"] = notAvailable;
                 }
                 else if (existing.Role is not ("student" or "class_representative"))
                 {
-                    errors["phone"] = "This number belongs to a teacher or admin.";
+                    errors["phone"] = notAvailable;
                 }
                 else if (profile is null || profile.DepartmentId != departmentId)
                 {
-                    errors["phone"] = "This number is a student in another department.";
+                    errors["phone"] = notAvailable;
                 }
             }
 
