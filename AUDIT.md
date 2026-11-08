@@ -81,6 +81,10 @@ These were open on 2026-11-07. The code they described is gone, and the API's de
 | `docker-compose.yml`: unpinned `hasura/graphql-engine:latest`, a no-op metadata volume, admin secret `123` | The Hasura service is gone. Only PostgreSQL (pinned 17.5) remains. |
 | Mobile: unused `lib/graphql/generated.ts`, `components/form/*` duplicating `components/auth/*` | Removed with the GraphQL code and the setup screens |
 | "Login leaks whether an account exists" | Now deliberate: `/auth/code` answers `PHONE_NOT_REGISTERED` so the app can offer **Request access** (UX review). It is rate-limited per IP. |
+| Setup error messages could reveal other departments' data: routine clashes named another department's section and course; adding/importing a student said whether a number belonged to a teacher or a student elsewhere | Clashes outside the admin's own department drop the course/section name (`Setup/RoutineEndpoints.cs`); every "this number can't become a student here" reason reads the same generic way (`Setup/StudentEndpoints.cs`). Tested in `TimetableSetupTests`, `PeopleSetupTests`. |
+| mobile: unused dependencies (`react-native-vector-icons`, `react-aria`, `react-stately`, `react-native-webview`, `expo-web-browser`, `expo-image`, `expo-notifications`, `react-native-make`) | Removed with `yarn remove`; none were imported anywhere in `app`, `components`, `contexts`, `lib`, `hooks` or `utils`. |
+| web: `transpilePackages: ['@ant-design']` was a scope, not a package, so it transpiled nothing | Changed to the actual package, `@ant-design/icons` (the one antd 5 + Next need transpiled). Build still passes. |
+| web: `eslint-config-next` 16 installed alongside `next` 15, flagged as drift | Checked: `eslint-config-next@15.5.7` ships the legacy `.eslintrc`-style config (`extends: [...]`), which can't be spread into this project's flat `eslint.config.mjs` (confirmed: downgrading throws `nextVitals is not iterable`). Version 16 is the first to ship flat-config exports, independent of the Next.js runtime major. Keeping 16 is correct, not drift. |
 
 ---
 
@@ -117,29 +121,18 @@ These were open on 2026-11-07. The code they described is gone, and the API's de
   - `settings.config`
   - `academic.faculty` and `academic.department.faculty_id`
   - `user.account.password`
-- **Setup error messages can reveal other departments' data**, to department
-  admins only:
-  - routine clash errors name another department's section and course
-  - adding a teacher or student, or importing a roster, says whether a number
-    already has an account and what kind
-  - **Fix:** Use generic messages when the clashing or existing record belongs to another department.
 - **Sent notices show "Sending push…" until push delivery is on.** While
   `Push:Enabled` is false (until CUTOVER.md step 5), `notification.log` rows
   stay `pending`. Notices still reach the inbox.
 - **Deleted accounts are never purged.** `DELETE /me` is a soft delete. Decide
   whether a retention period is needed, and if so add a scheduled purge.
 - **mobile:**
-  - Unused dependencies: `react-native-vector-icons`, `react-aria`,
-    `react-stately`, `react-native-webview`, `expo-web-browser`, `expo-image`,
-    `expo-notifications`, `react-native-make`. Re-check these after the GraphQL
-    removal.
   - Unused gluestack components and template assets.
   - The deep-link scheme is the generic `mobile`.
   - 58 lint warnings, mostly unused variables.
-- **web:** re-check these against the rebuilt dashboard:
-  - `eslint-config-next` 16 is installed alongside `next` 15.
-  - `transpilePackages: ['@ant-design']` is a scope, not a package, so it does nothing.
-  - App-store links point to `#`.
+- **web:** app-store links on the landing page (`src/app/page.tsx`) point to
+  `#`: there is nothing to link to until the app is published under the new
+  API (`CUTOVER.md` step 4).
 
 ---
 

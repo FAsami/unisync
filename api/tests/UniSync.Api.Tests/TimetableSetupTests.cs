@@ -126,6 +126,38 @@ public sealed class TimetableSetupTests(PostgresFixture db) : SetupTestBase(db)
     }
 
     [Fact]
+    public async Task Clashes_with_another_departments_class_name_nothing_of_it()
+    {
+        // A room is university-wide, and legacy data can still have one account teaching
+        // in two departments, so a clash can land on a class this admin has no right to
+        // see details of. Time is fine to show; the other department's course and section
+        // name are not.
+        var w = await WorldAsync();
+        var mine = await OfferingAsync(w, w.Course1, w.Placement.SectionId, w.TeacherA);
+
+        var other = await Seed.PlacementAsync(Db.ConnectionString, Ct);
+        var (otherTeacher, _) = await Seed.TeacherAsync(Db.ConnectionString, other.BatchId, "Far", "Away", Ct);
+        var otherOffering = await Seed.OfferingAsync(Db.ConnectionString, "OUT-" + Guid.NewGuid().ToString("N")[..4], other.SectionId, other.BatchId, otherTeacher, Ct);
+        await Seed.RoutineAsync(Db.ConnectionString, otherOffering, DayOfWeek.Wednesday, "09:00", "10:00", Ct, roomId: w.Room);
+
+        var roomClash = Fails(await PostAsync("/api/v1/routines", Slot(mine, (int)DayOfWeek.Wednesday, "09:30", "10:30", w.Room), w.Admin),
+            HttpStatusCode.Conflict, "ROOM_TAKEN");
+        var roomMessage = roomClash.GetProperty("message").GetString()!;
+        Assert.Contains("09:00", roomMessage);
+        Assert.DoesNotContain("OUT-", roomMessage);
+
+        // Same account teaching here too (only reachable with legacy/seeded data: the API
+        // itself refuses to assign a teacher from another department to an offering).
+        var crossOffering = await Seed.OfferingAsync(Db.ConnectionString, "CROSS-" + Guid.NewGuid().ToString("N")[..4],
+            w.Placement.SectionId, w.Placement.BatchId, otherTeacher, Ct);
+        var teacherClash = Fails(await PostAsync("/api/v1/routines", Slot(crossOffering, (int)DayOfWeek.Wednesday, "09:30", "10:30"), w.Admin),
+            HttpStatusCode.Conflict, "TEACHER_BUSY");
+        var teacherMessage = teacherClash.GetProperty("message").GetString()!;
+        Assert.Contains("09:00", teacherMessage);
+        Assert.DoesNotContain("OUT-", teacherMessage);
+    }
+
+    [Fact]
     public async Task Routine_input_is_validated_and_deleting_removes_its_class_changes()
     {
         var w = await WorldAsync();
