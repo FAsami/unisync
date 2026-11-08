@@ -57,6 +57,23 @@ public sealed class PeopleSetupTests(PostgresFixture db) : SetupTestBase(db)
     }
 
     [Fact]
+    public async Task Changing_a_teachers_number_turns_off_their_old_devices()
+    {
+        var (_, admin) = await DepartmentAsync();
+        var phone = Seed.RandomPhone();
+        var id = Ok(await PostAsync("/api/v1/teachers", new { phone, firstName = "Mita", lastName = "Sen" }, admin),
+            HttpStatusCode.Created).GetProperty("id").GetGuid();
+        var token = await AccessTokenAsync(phone);
+        Ok(await PutAsync("/api/v1/me/devices", new { deviceId = "old-handset", token = "fcm-" + Guid.NewGuid(), platform = "android" }, token));
+        Assert.Equal(1, await CountAsync("""SELECT count(*) FROM "user".device WHERE user_id = @id AND is_active""", ("id", id)));
+
+        Ok(await PatchAsync($"/api/v1/teachers/{id}", new { phone = Seed.RandomPhone() }, admin));
+
+        Assert.Equal(0, await CountAsync("""SELECT count(*) FROM "user".device WHERE user_id = @id AND is_active""", ("id", id)));
+        Fails(await GetAsync("/api/v1/me", token), HttpStatusCode.Unauthorized, "SESSION_REVOKED");
+    }
+
+    [Fact]
     public async Task Teacher_validation_and_scope()
     {
         var (_, admin) = await DepartmentAsync();

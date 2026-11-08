@@ -17,7 +17,7 @@ public static class AdminBootstrap
 {
     public const string Command = "create-admin";
 
-    private static readonly string[] RequiredOptions = ["phone", "first-name", "last-name", "department-code"];
+    private static readonly string[] RequiredOptions = ["phone", "first-name", "last-name", "department-code", "department-name"];
 
     public sealed record Result(bool Ok, string Message);
 
@@ -30,7 +30,7 @@ public static class AdminBootstrap
         if (missing.Count > 0)
         {
             return new(false, $"Missing --{string.Join(", --", missing)}. Usage: create-admin --phone 017XXXXXXXX --first-name F "
-                + "--last-name L --department-code CSE [--department-name \"Computer Science\"]");
+                + "--last-name L --department-code CSE --department-name \"Computer Science\"");
         }
 
         if (!PhoneNumber.TryNormalize(Opt("phone"), out var phone))
@@ -49,15 +49,20 @@ public static class AdminBootstrap
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
 
         var notes = new List<string>();
-        var department = await db.Departments.FirstOrDefaultAsync(d => d.Code == code, ct);
+        var name = Opt("department-name");
+        // Case-insensitive (the code pattern has no LIKE wildcards): legacy rows may hold
+        // lower-case codes, and a miss would create a duplicate department.
+        var department = await db.Departments.FirstOrDefaultAsync(d => EF.Functions.ILike(d.Code, code), ct);
+        if (department is not null && !string.Equals(department.Name.Trim(), name, StringComparison.OrdinalIgnoreCase))
+        {
+            // Admins can change their department's code, so a code alone doesn't prove which
+            // department this is. Both must match before someone becomes its admin.
+            return new(false, $"Department {code} already exists as \"{department.Name}\", not \"{name}\". "
+                + "Check you mean that department, then pass its exact name.");
+        }
+
         if (department is null)
         {
-            var name = Opt("department-name");
-            if (name.Length == 0)
-            {
-                return new(false, $"Department {code} doesn't exist yet. Add --department-name to create it.");
-            }
-
             department = new Department { Id = Guid.NewGuid(), Code = code, Name = name, IsActive = true };
             db.Departments.Add(department);
             await db.SaveChangesAsync(ct); // before the account that references it (no navigation to order the inserts)
@@ -79,6 +84,16 @@ public static class AdminBootstrap
         else if (account.Role != "admin")
         {
             notes.Add($"changed the account's role from {account.Role} to admin");
+
+            // An admin is not a teacher: drop the old teaching record (so no department's
+            // teacher screens can edit this account) and end sessions carrying the old role.
+            await db.TeacherProfiles.Where(t => t.UserId == account.Id).ExecuteDeleteAsync(ct);
+            await PeopleHelpers.SignOutEverywhereAsync(db, account.Id, ct);
+        }
+        else if (account.ManagedDepartmentId != department.Id)
+        {
+            notes.Add("moved the admin to this department");
+            await PeopleHelpers.SignOutEverywhereAsync(db, account.Id, ct);
         }
 
         account.Role = "admin";

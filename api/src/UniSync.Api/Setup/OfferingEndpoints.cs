@@ -193,7 +193,7 @@ public static class OfferingEndpoints
         var teacher = await (
             from t in db.TeacherProfiles
             join a in db.Accounts on t.UserId equals a.Id
-            where t.UserId == teacherId && t.DepartmentId == departmentId && a.DeletedAt == null
+            where t.UserId == teacherId && t.DepartmentId == departmentId && a.Role == "teacher" && a.DeletedAt == null
             select new { a.IsActive }).FirstOrDefaultAsync(ct);
         if (teacher is null)
         {

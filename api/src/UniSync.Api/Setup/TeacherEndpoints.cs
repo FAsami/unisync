@@ -104,7 +104,9 @@ public static class TeacherEndpoints
     {
         var departmentId = SetupScope.DepartmentId(http);
         var teacher = await db.TeacherProfiles.FirstOrDefaultAsync(t => t.UserId == id && t.DepartmentId == departmentId, ct);
-        var account = teacher is null ? null : await db.Accounts.FirstOrDefaultAsync(a => a.Id == id && a.DeletedAt == null, ct);
+        // Role check: a faculty row alone isn't enough. An account promoted to admin keeps its old
+        // faculty row, and editing its phone here would hand that admin account to someone else.
+        var account = teacher is null ? null : await db.Accounts.FirstOrDefaultAsync(a => a.Id == id && a.Role == "teacher" && a.DeletedAt == null, ct);
         if (teacher is null || account is null)
         {
             return SetupScope.NotFound(http, "Teacher");
@@ -179,7 +181,7 @@ public static class TeacherEndpoints
     private static IQueryable<TeacherRow> Rows(UniSyncDbContext db, Guid departmentId) =>
         from t in db.TeacherProfiles.AsNoTracking()
         join a in db.Accounts.AsNoTracking() on t.UserId equals a.Id
-        where t.DepartmentId == departmentId && a.DeletedAt == null
+        where t.DepartmentId == departmentId && a.Role == "teacher" && a.DeletedAt == null
         select new TeacherRow { Teacher = t, Account = a };
 
     private static IQueryable<TeacherView> Project(UniSyncDbContext db, IQueryable<TeacherRow> rows) =>
@@ -194,7 +196,13 @@ public static class TeacherEndpoints
 
 internal static class PeopleHelpers
 {
-    /// <summary>Revokes every session, so a deactivated person (or a changed number) must sign in again.</summary>
-    public static Task<int> SignOutEverywhereAsync(UniSyncDbContext db, Guid userId, CancellationToken ct) =>
-        db.Sessions.Where(s => s.UserId == userId && !s.Revoked).ExecuteUpdateAsync(s => s.SetProperty(x => x.Revoked, true), ct);
+    /// <summary>
+    /// Revokes every session and turns off every device, so a deactivated person (or a changed
+    /// number) must sign in again, and the old handset stops receiving their pushes.
+    /// </summary>
+    public static async Task SignOutEverywhereAsync(UniSyncDbContext db, Guid userId, CancellationToken ct)
+    {
+        await db.Sessions.Where(s => s.UserId == userId && !s.Revoked).ExecuteUpdateAsync(s => s.SetProperty(x => x.Revoked, true), ct);
+        await db.Devices.Where(d => d.UserId == userId && d.IsActive).ExecuteUpdateAsync(d => d.SetProperty(x => x.IsActive, false), ct);
+    }
 }

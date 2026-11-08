@@ -30,7 +30,7 @@ public static class SetupScope
         var userId = UserId(http.User);
         var db = http.RequestServices.GetRequiredService<UniSyncDbContext>();
         var departmentId = await db.Accounts.AsNoTracking()
-            .Where(a => a.Id == userId)
+            .Where(a => a.Id == userId && a.Role == "admin" && a.IsActive && a.DeletedAt == null)
             .Select(a => a.ManagedDepartmentId)
             .FirstOrDefaultAsync(http.RequestAborted);
         if (departmentId is null)

@@ -201,7 +201,8 @@ public sealed partial class PushDispatcher(
             }
         }
 
-        data.TryAdd("notificationId", row.Id.ToString());
+        // Always the row's own id, whatever the writer put in data.
+        data["notificationId"] = row.Id.ToString();
         return data;
     }
 

@@ -179,6 +179,47 @@ public sealed class TimetableSetupTests(PostgresFixture db) : SetupTestBase(db)
     }
 
     [Fact]
+    public async Task A_teacher_promoted_to_admin_leaves_the_teacher_screens()
+    {
+        // Security review: a faculty row left behind on a promoted account let another
+        // department's admin edit that admin's phone through PATCH /teachers and take it over.
+        var (_, adminA) = await DepartmentAsync();
+        var phone = Seed.RandomPhone();
+        var teacherId = Ok(await PostAsync("/api/v1/teachers", new { phone, firstName = "Rafi", lastName = "Kabir" }, adminA),
+            HttpStatusCode.Created).GetProperty("id").GetGuid();
+        var teacherToken = await AccessTokenAsync(phone);
+
+        var code = "P" + Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+        var promoted = await AdminBootstrap.RunAsync(Factory.Services,
+            ["create-admin", "--phone", phone, "--first-name", "Rafi", "--last-name", "Kabir", "--department-code", code, "--department-name", "Promoted Dept"], Ct);
+        Assert.True(promoted.Ok, promoted.Message);
+
+        Fails(await PatchAsync($"/api/v1/teachers/{teacherId}", new { phone = Seed.RandomPhone() }, adminA), HttpStatusCode.NotFound, "NOT_FOUND");
+        Assert.DoesNotContain(Ok(await GetAsync("/api/v1/teachers", adminA)).EnumerateArray(), t => t.GetProperty("id").GetGuid() == teacherId);
+        Assert.Equal(0, await CountAsync("""SELECT count(*) FROM "user".faculty WHERE user_id = @id""", ("id", teacherId)));
+        Assert.Equal(phone, await Seed.ScalarAsync<string>(Db.ConnectionString, """SELECT phone FROM "user".account WHERE id = @id""", Ct, ("id", teacherId)));
+
+        // The token issued while they were a teacher is revoked; a fresh sign-in is the admin.
+        Fails(await GetAsync("/api/v1/me", teacherToken), HttpStatusCode.Unauthorized, "SESSION_REVOKED");
+        Assert.Equal(code, Ok(await GetAsync("/api/v1/department", await AccessTokenAsync(phone))).GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task Create_admin_needs_the_existing_departments_exact_name()
+    {
+        var (placement, _) = await DepartmentAsync();
+        var code = await Seed.ScalarAsync<string>(Db.ConnectionString, "SELECT code FROM academic.department WHERE id = @id", Ct,
+            ("id", placement.DepartmentId));
+        var phone = Seed.RandomPhone();
+
+        var wrong = await AdminBootstrap.RunAsync(Factory.Services,
+            ["create-admin", "--phone", phone, "--first-name", "A", "--last-name", "B", "--department-code", code!, "--department-name", "Something Else"], Ct);
+        Assert.False(wrong.Ok);
+        Assert.Contains("already exists", wrong.Message);
+        Assert.Equal(0, await CountAsync("""SELECT count(*) FROM "user".account WHERE phone = @p""", ("p", phone)));
+    }
+
+    [Fact]
     public async Task Create_admin_refuses_bad_input()
     {
         var services = Factory.Services.GetRequiredService<IServiceProvider>();
