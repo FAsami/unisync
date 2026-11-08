@@ -17,6 +17,8 @@ src/UniSync.Api/
   Schedule/             /me/today, /me/week (resolved classes); /classes/{routineId}/{date}/cancel|move|room and undo
   Notifications/        inbox (/me/notifications), devices (/me/devices), sending (/notifications), AudienceService
     Push/               PushDispatcher (notification.log -> FCM), IPushSender, FcmPushSender, PushOptions
+  Setup/                department setup for web: /department, /batches, /sections, /courses, /teachers,
+                        /students (+ /import, CR mark), /offerings, /routines, /buildings, /rooms; create-admin CLI
   Health/               /health, /health/ready
   Sms/                  ISmsSender: BulkSMSBD (prod), console (Development only)
 db/migrations/          the schema, owned by this API (NNNN_name.sql; 0000_baseline = what Hasura built)
@@ -34,7 +36,13 @@ dotnet test                      # unit tests; DB tests skip without UNISYNC_TES
 UNISYNC_TEST_DB="Host=localhost;Port=9200;Username=postgres;Password=postgrespassword;Database=postgres" dotnet test
 dotnet run --project src/UniSync.Api            # http://localhost:9202 (Development: codes print to the log)
 dotnet run --project src/UniSync.Api -- migrate # apply db/migrations and exit
+# The first department admin (nobody else can create one; safe to re-run):
+dotnet run --project src/UniSync.Api -- create-admin --phone 01712345678 --first-name Ada --last-name Rahman \
+  --department-code CSE --department-name "Computer Science and Engineering"
 ```
+
+In production run the same against the published DLL (`dotnet UniSync.Api.dll create-admin ...`, for example
+over `fly ssh console`). It creates the department if the code is new, and makes the number an admin managing it.
 
 The database tests create and drop their own database. They need an admin
 connection string, not your dev database's. CI sets `UNISYNC_REQUIRE_DB=1`, so a
@@ -60,6 +68,11 @@ missing database fails the run instead of skipping.
 - **A push token belongs to one person**: registering a token removes it from anyone else. Logout with `deviceId` deactivates that device in the same call.
 - **Codes are bound to their purpose** (`LOGIN`, `ACCESS_REQUEST`): a code sent for one flow can't complete another.
 - **Never log codes, tokens or SMS gateway URLs.** The console SMS sender is refused at startup outside Development.
+- **Setup routes use `MapDepartmentAdminGroup`** (`Setup/SetupScope.cs`): the DepartmentAdmin policy plus a filter that resolves the admin's department once (403 if none). Handlers read `SetupScope.DepartmentId(http)` and filter every query by it, so another department's records answer 404. Buildings and rooms are university-wide: anyone signed in lists them, any department admin edits them.
+- **People are deactivated, not deleted**, and deactivating (or changing a number) revokes their sessions. Structure (batches, sections, courses, offerings, rooms) is deleted only when nothing uses it; otherwise `409 IN_USE` and the screen offers "mark inactive".
+- **The roster import is all-or-nothing and idempotent on phone.** Any bad row → `400 VALIDATION_FAILED` with the full per-row result in `error.details` and nothing written; `dryRun: true` checks without writing. Students and teachers each get a profile (names for `/me`); a teacher also gets a `user.faculty` row in the department.
+- **Weekly routine slots are refused on a section, teacher (any department) or room clash** on the same weekday with overlapping times and terms. Editing a slot is a `PUT` of the whole slot; deleting one also deletes its class changes. CR is a mark (`PUT/DELETE /students/{id}/class-representative`), never a role; moving a student to another section ends it.
+- **Filter EF queries on entities, then project.** EF can't translate a `Where` on a record built by its constructor (that was a 500); use member-init rows (`RosterRow`, `TeacherRow`) or filter first. `AsNoTracking()` anywhere in a composed query makes the whole query untracked.
 
 ## Migrations
 

@@ -15,6 +15,7 @@ using UniSync.Api.CurrentUser;
 using UniSync.Api.Notifications;
 using UniSync.Api.Notifications.Push;
 using UniSync.Api.Schedule;
+using UniSync.Api.Setup;
 using UniSync.Api.Sms;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -145,6 +146,15 @@ if (args.Contains("migrate"))
     return;
 }
 
+// `dotnet UniSync.Api.dll create-admin --phone ... --department-code ...` creates the first department admin.
+if (args.Contains(AdminBootstrap.Command))
+{
+    var result = await AdminBootstrap.RunAsync(app.Services, args);
+    Console.WriteLine(result.Message);
+    Environment.ExitCode = result.Ok ? 0 : 1;
+    return;
+}
+
 app.UseForwardedHeaders();
 app.UseExceptionHandler();
 app.UseStatusCodePages(ctx => ctx.HttpContext.Response.HasStarted
@@ -168,6 +178,7 @@ api.MapScheduleEndpoints();
 api.MapClassChangeEndpoints();
 api.MapNotificationEndpoints();
 api.MapDeviceEndpoints();
+api.MapSetupEndpoints();
 
 await app.RunAsync();
 
