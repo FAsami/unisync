@@ -21,9 +21,7 @@ jobs:
       run:
         working-directory: web
     env:
-      NEXT_PUBLIC_API_URL: http://localhost:9201/api/v1
-      NEXT_PUBLIC_HASURA_ENDPOINT: http://localhost:9203/v1/graphql
-      ENCRYPT_SECRET: ci-only-secret
+      # API_URL is read at runtime by the server-side proxy; the build doesn't need it.
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@v4
@@ -36,6 +34,8 @@ jobs:
       - run: yarn lint
       - run: yarn typecheck
       - run: yarn format:check
+      - name: API types are up to date
+        run: yarn api:types && git diff --exit-code -- src/lib/api/generated.ts
       - run: yarn build
 
   mobile:

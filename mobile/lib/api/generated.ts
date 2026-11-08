@@ -6560,7 +6560,7 @@ export interface components {
         RequestCodeBody: {
             phone: null | string;
         };
-        RoomBody: {
+        RoomChangeBody: {
             /** Format: uuid */
             roomId: null | string;
             reason: null | string;
@@ -6573,11 +6573,6 @@ export interface components {
             floor: null | string;
             /** Format: int32 */
             capacity: null | number | string;
-        };
-        RoomChangeBody: {
-            /** Format: uuid */
-            roomId: null | string;
-            reason: null | string;
         };
         RoomRef: {
             /** Format: uuid */

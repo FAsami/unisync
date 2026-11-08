@@ -9275,7 +9275,7 @@
           }
         }
       },
-      "RoomBody": {
+      "RoomChangeBody": {
         "required": [
           "roomId",
           "reason"
@@ -9340,28 +9340,6 @@
               "string"
             ],
             "format": "int32"
-          }
-        }
-      },
-      "RoomChangeBody": {
-        "required": [
-          "roomId",
-          "reason"
-        ],
-        "type": "object",
-        "properties": {
-          "roomId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "reason": {
-            "type": [
-              "null",
-              "string"
-            ]
           }
         }
       },

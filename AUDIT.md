@@ -107,6 +107,12 @@ These were open on 2026-11-07. The code they described is gone, and the API's de
   live in memory, so running N Fly machines multiplies every limit by N. The
   per-number code limit is stored in the database, so it is unaffected.
   - **Fix:** Keep one machine, or move the limits to Postgres or Redis before scaling out.
+- **Web sign-ins share one per-IP bucket.** The web app calls the API through its
+  server-side proxy, so the API sees the web server's IP for every admin. All web
+  sign-ins share the 10-codes-an-hour per-IP limit (the per-number limit still
+  applies). Fine for a handful of admins.
+  - **Fix:** Have the proxy send the client IP in a header signed with a shared
+    secret, and let the API trust it only with that secret.
 
 ### Low
 
