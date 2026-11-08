@@ -696,7 +696,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["RoomBody"];
+                    "application/json": components["schemas"]["RoomDetailsBody"];
                 };
             };
             responses: {
@@ -5893,7 +5893,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["RoomBody"];
+                    "application/json": components["schemas"]["RoomDetailsBody"];
                 };
             };
             responses: {
@@ -6561,6 +6561,11 @@ export interface components {
             phone: null | string;
         };
         RoomBody: {
+            /** Format: uuid */
+            roomId: null | string;
+            reason: null | string;
+        };
+        RoomDetailsBody: {
             /** Format: uuid */
             buildingId: null | string;
             roomNumber: null | string;

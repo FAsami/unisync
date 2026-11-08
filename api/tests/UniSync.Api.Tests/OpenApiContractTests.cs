@@ -51,6 +51,21 @@ public sealed class OpenApiContractTests
     }
 
     [Fact]
+    public void Public_types_have_unique_names()
+    {
+        // OpenAPI schema ids are the short type name: two records both called
+        // RoomBody silently became one schema, and one endpoint documented the
+        // other's body. Name request and response types uniquely.
+        var duplicates = typeof(Program).Assembly.GetExportedTypes()
+            .GroupBy(t => t.Name)
+            .Where(g => g.Count() > 1)
+            .Select(g => $"{g.Key} ({string.Join(", ", g.Select(t => t.Namespace))})")
+            .ToList();
+
+        Assert.True(duplicates.Count == 0, "Rename one of: " + string.Join("; ", duplicates));
+    }
+
+    [Fact]
     public async Task Every_endpoint_documents_its_success_envelope()
     {
         var paths = (await GenerateAsync())["paths"]!.AsObject();

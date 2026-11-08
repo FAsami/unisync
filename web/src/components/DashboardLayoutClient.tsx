@@ -1,19 +1,26 @@
 'use client'
 
-import { Layout, Button } from 'antd'
-import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
+import { Layout, Button, Typography } from 'antd'
+import {
+  LogoutOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+} from '@ant-design/icons'
 import { useState, useEffect } from 'react'
 import DashboardSidebar from './DashboardSidebar'
+import {
+  DashboardSessionProvider,
+  useDashboardSession,
+  useSignOut,
+} from './DashboardSession'
 
 const { Content, Header } = Layout
 
-interface DashboardLayoutClientProps {
-  children: React.ReactNode
-}
-
-const DashboardLayoutClient = ({ children }: DashboardLayoutClientProps) => {
+const Shell = ({ children }: { children: React.ReactNode }) => {
   const [collapsed, setCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const { me, department } = useDashboardSession()
+  const { signOut, pending } = useSignOut()
 
   useEffect(() => {
     const checkMobile = () => {
@@ -28,6 +35,8 @@ const DashboardLayoutClient = ({ children }: DashboardLayoutClientProps) => {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  const name = [me.firstName, me.lastName].filter(Boolean).join(' ')
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <DashboardSidebar
@@ -39,10 +48,7 @@ const DashboardLayoutClient = ({ children }: DashboardLayoutClientProps) => {
         <div
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            inset: 0,
             background: 'rgba(0, 0, 0, 0.45)',
             zIndex: 99,
           }}
@@ -55,27 +61,37 @@ const DashboardLayoutClient = ({ children }: DashboardLayoutClientProps) => {
           transition: 'margin-left 0.2s',
         }}
       >
-        {isMobile && (
-          <Header
-            style={{
-              padding: '0 16px',
-              background: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              position: 'sticky',
-              top: 0,
-              zIndex: 98,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            }}
-          >
+        <Header
+          style={{
+            padding: '0 16px',
+            background: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            position: 'sticky',
+            top: 0,
+            zIndex: 98,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+          }}
+        >
+          {isMobile && (
             <Button
               type='text'
+              aria-label='Menu'
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
               onClick={() => setCollapsed(!collapsed)}
-              style={{ fontSize: 16, width: 64, height: 64 }}
             />
-          </Header>
-        )}
+          )}
+          <Typography.Text strong ellipsis style={{ flex: 1, minWidth: 0 }}>
+            {department.code} · {department.name}
+          </Typography.Text>
+          {!isMobile && name ? (
+            <Typography.Text type='secondary'>{name}</Typography.Text>
+          ) : null}
+          <Button icon={<LogoutOutlined />} loading={pending} onClick={signOut}>
+            {isMobile ? null : 'Sign out'}
+          </Button>
+        </Header>
         <Content
           style={{
             margin: isMobile ? '16px' : '24px 16px',
@@ -90,5 +106,11 @@ const DashboardLayoutClient = ({ children }: DashboardLayoutClientProps) => {
     </Layout>
   )
 }
+
+const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => (
+  <DashboardSessionProvider>
+    <Shell>{children}</Shell>
+  </DashboardSessionProvider>
+)
 
 export default DashboardLayoutClient

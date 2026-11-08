@@ -1,14 +1,21 @@
 'use client'
 
-import { Layout, Menu } from 'antd'
+import { Badge, Layout, Menu } from 'antd'
 import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
 import {
+  ApartmentOutlined,
   BookOutlined,
   BuildOutlined,
   CalendarOutlined,
+  DashboardOutlined,
+  IdcardOutlined,
+  LinkOutlined,
+  TeamOutlined,
+  UserAddOutlined,
   UserOutlined,
 } from '@ant-design/icons'
+import { useDashboardSession } from './DashboardSession'
 
 const { Sider } = Layout
 
@@ -18,48 +25,71 @@ interface DashboardSidebarProps {
   isMobile?: boolean
 }
 
+const ROUTES = [
+  { key: '/dashboard', icon: <DashboardOutlined />, label: 'Overview' },
+  {
+    key: '/dashboard/access-requests',
+    icon: <UserAddOutlined />,
+    label: 'Access requests',
+  },
+  {
+    key: '/dashboard/department',
+    icon: <ApartmentOutlined />,
+    label: 'Department',
+  },
+  {
+    key: '/dashboard/batches',
+    icon: <TeamOutlined />,
+    label: 'Batches & sections',
+  },
+  { key: '/dashboard/courses', icon: <BookOutlined />, label: 'Courses' },
+  { key: '/dashboard/teachers', icon: <IdcardOutlined />, label: 'Teachers' },
+  { key: '/dashboard/students', icon: <UserOutlined />, label: 'Students' },
+  {
+    key: '/dashboard/offerings',
+    icon: <LinkOutlined />,
+    label: 'Course offerings',
+  },
+  {
+    key: '/dashboard/routine',
+    icon: <CalendarOutlined />,
+    label: 'Weekly routine',
+  },
+  {
+    key: '/dashboard/venue',
+    icon: <BuildOutlined />,
+    label: 'Buildings & rooms',
+  },
+]
+
 const DashboardSidebar = ({
   collapsed,
   onCollapse,
   isMobile = false,
 }: DashboardSidebarProps) => {
   const router = useRouter()
-  const pathname = usePathname()
+  const pathname = usePathname() ?? '/dashboard'
+  const { pendingRequests } = useDashboardSession()
 
-  const handleMenuClick = ({ key }: { key: string }) => {
-    if (key === 'venue') {
-      router.push('/dashboard/venue')
-    } else if (key === 'academic') {
-      router.push('/dashboard/academic')
-    } else if (key === 'routine') {
-      router.push('/dashboard/routine')
-    } else if (key === 'instructor') {
-      router.push('/dashboard/instructor')
-    }
-  }
+  const selected =
+    [...ROUTES]
+      .sort((a, b) => b.key.length - a.key.length)
+      .find((r) => pathname === r.key || pathname.startsWith(`${r.key}/`))
+      ?.key ?? '/dashboard'
 
-  const menuItems = [
-    {
-      key: 'academic',
-      icon: <BookOutlined />,
-      label: 'Academic Management',
-    },
-    {
-      key: 'venue',
-      icon: <BuildOutlined />,
-      label: 'Building & Rooms',
-    },
-    {
-      key: 'routine',
-      icon: <CalendarOutlined />,
-      label: 'Routine Management',
-    },
-    {
-      key: 'instructor',
-      icon: <UserOutlined />,
-      label: 'Instructor Management',
-    },
-  ]
+  const items = ROUTES.map((route) => ({
+    key: route.key,
+    icon: route.icon,
+    label:
+      route.key === '/dashboard/access-requests' && pendingRequests > 0 ? (
+        <span className='flex items-center justify-between'>
+          {route.label}
+          <Badge count={pendingRequests} size='small' />
+        </span>
+      ) : (
+        route.label
+      ),
+  }))
 
   return (
     <Sider
@@ -95,30 +125,20 @@ const DashboardSidebar = ({
           src='/logo-transparent.png'
           alt='UniSync Logo'
           width={collapsed ? 40 : 120}
-          height={collapsed ? 40 : 40}
-          style={{
-            objectFit: 'contain',
-            transition: 'all 0.2s',
-          }}
+          height={40}
+          style={{ objectFit: 'contain', transition: 'all 0.2s' }}
           priority
         />
       </div>
       <Menu
         theme='dark'
         mode='inline'
-        selectedKeys={
-          pathname?.includes('/venue')
-            ? ['venue']
-            : pathname?.includes('/academic')
-              ? ['academic']
-              : pathname?.includes('/routine')
-                ? ['routine']
-                : pathname?.includes('/instructor')
-                  ? ['instructor']
-                  : []
-        }
-        items={menuItems}
-        onClick={handleMenuClick}
+        selectedKeys={[selected]}
+        items={items}
+        onClick={({ key }) => {
+          router.push(key)
+          if (isMobile) onCollapse(true)
+        }}
         style={{ borderRight: 0 }}
       />
     </Sider>

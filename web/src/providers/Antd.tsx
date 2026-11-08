@@ -1,7 +1,7 @@
 'use client'
 
 import '@ant-design/v5-patch-for-react-19'
-import { ConfigProvider } from 'antd'
+import { App, ConfigProvider } from 'antd'
 import { AntdRegistry } from '@ant-design/nextjs-registry'
 
 interface AntdProviderProps {
@@ -32,7 +32,7 @@ export const AntdProvider = ({ children }: AntdProviderProps) => {
           },
         }}
       >
-        {children}
+        <App>{children}</App>
       </ConfigProvider>
     </AntdRegistry>
   )
