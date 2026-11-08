@@ -3,16 +3,21 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from 'antd'
 import {
+  AndroidOutlined,
+  AppleOutlined,
   ArrowRightOutlined,
   BellOutlined,
   CalendarOutlined,
   CheckCircleFilled,
   LockOutlined,
-  MobileOutlined,
+  ReadOutlined,
+  SafetyCertificateOutlined,
+  SolutionOutlined,
   SwapOutlined,
   TeamOutlined,
   UserAddOutlined,
 } from '@ant-design/icons'
+import { Reveal } from './reveal'
 
 // Scoped to this page only: a distinct, considered type voice instead of the
 // rest of the app's default Geist, without touching the shared root layout.
@@ -69,16 +74,19 @@ const FEATURES = [
 
 const ROLES = [
   {
+    icon: SolutionOutlined,
     title: 'Students',
     description:
       "See your section's schedule, get notified the moment a class changes, and ask your department for access if you're new.",
   },
   {
+    icon: ReadOutlined,
     title: 'Teachers',
     description:
       'Cancel or move your own classes in a tap, and send a notice to everyone in the section at once.',
   },
   {
+    icon: SafetyCertificateOutlined,
     title: 'Department admins',
     description:
       'Set up batches, courses and the weekly routine here on the web, then hand the day-to-day over to the app.',
@@ -207,6 +215,31 @@ const BrowserFrame = ({
   </div>
 )
 
+/**
+ * An app-store-style badge. Not a link: the apps aren't published yet, so
+ * there's nowhere real to send a tap, and a dead link would be worse than
+ * none (see AUDIT.md). The "Coming soon" tag next to it says why.
+ */
+const StoreBadge = ({
+  icon,
+  line1,
+  line2,
+}: {
+  icon: React.ReactNode
+  line1: string
+  line2: string
+}) => (
+  <span className='inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-1.5 text-white opacity-90 transition-opacity hover:opacity-100'>
+    <span className='text-xl'>{icon}</span>
+    <span className='leading-tight'>
+      <span className='block text-[0.6rem] tracking-wide text-slate-300 uppercase'>
+        {line1}
+      </span>
+      <span className='block text-sm font-bold'>{line2}</span>
+    </span>
+  </span>
+)
+
 /** A large, pale ordinal sitting behind a section's eyebrow label. Purely decorative. */
 const SectionNumber = ({ n, label }: { n: string; label: string }) => (
   <div className='flex items-center gap-4'>
@@ -225,6 +258,23 @@ const SectionNumber = ({ n, label }: { n: string; label: string }) => (
 const Home = () => {
   return (
     <div className={`${jakarta.className} bg-white text-slate-900 antialiased`}>
+      {/* Scroll-reveal degrades to fully visible without JS. */}
+      <noscript>
+        <style>
+          {'.reveal-target{opacity:1!important;transform:none!important}'}
+        </style>
+      </noscript>
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35); }
+          50% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+        }
+      `}</style>
+
       {/* Header */}
       <header className='sticky top-0 z-20 border-b border-slate-100 bg-white/90 backdrop-blur-sm'>
         <div className='mx-auto flex h-16 max-w-6xl items-center justify-between px-6'>
@@ -272,103 +322,141 @@ const Home = () => {
           />
           <div className='mx-auto grid max-w-6xl items-center gap-16 px-6 pt-16 pb-24 md:grid-cols-[1.05fr_0.95fr] md:pt-24 md:pb-32'>
             <div>
-              <span className='inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700'>
-                Built for one university at a time
-              </span>
-              <h1 className='mt-6 text-4xl leading-[1.05] font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem]'>
-                Everyone&apos;s schedule,{' '}
-                <span className='bg-linear-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent'>
-                  always current.
+              <Reveal>
+                <span className='inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700'>
+                  Built for one university at a time
                 </span>
-              </h1>
-              <p className='mt-5 max-w-md text-lg text-slate-600'>
-                UniSync keeps students, teachers and department admins in sync:
-                real-time class schedules, instant alerts when a class is
-                cancelled, moved or changes room, and one inbox for everything
-                else.
-              </p>
-              <div className='mt-8 flex flex-wrap items-center gap-4'>
-                <Link href='/auth/login'>
-                  <Button
-                    type='primary'
-                    size='large'
-                    icon={<ArrowRightOutlined />}
-                    iconPosition='end'
-                    className='!border-none !bg-linear-to-r !from-blue-600 !to-blue-500 !shadow-lg !shadow-blue-600/25'
-                  >
-                    Sign in to set up your department
-                  </Button>
-                </Link>
-                <span className='inline-flex items-center gap-1.5 text-sm text-slate-500'>
-                  <MobileOutlined />
-                  Mobile app coming soon to iOS &amp; Android
-                </span>
-              </div>
+              </Reveal>
+              <Reveal delay={80}>
+                <h1 className='mt-6 text-4xl leading-[1.05] font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem]'>
+                  Everyone&apos;s schedule,{' '}
+                  <span className='bg-linear-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent'>
+                    always current.
+                  </span>
+                </h1>
+              </Reveal>
+              <Reveal delay={160}>
+                <p className='mt-5 max-w-md text-lg text-slate-600'>
+                  UniSync keeps students, teachers and department admins in
+                  sync: real-time class schedules, instant alerts when a class
+                  is cancelled, moved or changes room, and one inbox for
+                  everything else.
+                </p>
+              </Reveal>
+              <Reveal delay={240}>
+                <div className='mt-8 flex flex-wrap items-center gap-4'>
+                  <Link href='/auth/login'>
+                    <Button
+                      type='primary'
+                      size='large'
+                      icon={<ArrowRightOutlined />}
+                      iconPosition='end'
+                      className='!border-none !bg-linear-to-r !from-blue-600 !to-blue-500 !shadow-lg !shadow-blue-600/25 motion-reduce:[animation:none!important] [animation:pulseGlow_2.5s_ease-in-out_infinite]'
+                    >
+                      Sign in to set up your department
+                    </Button>
+                  </Link>
+                </div>
+                <div className='mt-5 flex flex-wrap items-center gap-3'>
+                  <StoreBadge
+                    icon={<AppleOutlined />}
+                    line1='Download on the'
+                    line2='App Store'
+                  />
+                  <StoreBadge
+                    icon={<AndroidOutlined />}
+                    line1='GET IT ON'
+                    line2='Google Play'
+                  />
+                  <span className='text-xs font-medium text-slate-400'>
+                    Coming soon
+                  </span>
+                </div>
+              </Reveal>
             </div>
 
             {/* Two real screens from the app, not mockups. */}
-            <div className='relative mx-auto h-[340px] w-full max-w-sm sm:h-[400px]'>
-              <div className='absolute top-6 right-2 w-[190px] rotate-6 sm:w-[210px]'>
+            <Reveal
+              delay={200}
+              className='relative mx-auto h-[340px] w-full max-w-sm sm:h-[400px]'
+            >
+              <div
+                className='absolute top-6 right-2 w-[190px] rotate-6 motion-reduce:[animation:none!important] sm:w-[210px] [animation:float_7s_ease-in-out_infinite]'
+                style={{ animationDelay: '0.4s' }}
+              >
                 <PhoneFrame
                   src='/screenshots/mobile-inbox.png'
                   alt='The notifications inbox with several unread announcements'
                 />
               </div>
-              <div className='absolute top-0 left-0 w-[200px] -rotate-3 sm:w-[230px]'>
+              <div className='absolute top-0 left-0 w-[200px] -rotate-3 motion-reduce:[animation:none!important] sm:w-[230px] [animation:float_7s_ease-in-out_infinite]'>
                 <PhoneFrame
                   src='/screenshots/mobile-my-day.png'
                   alt="A student's My day screen, showing the current class, a cancelled class and a room change"
                   priority
                 />
               </div>
-            </div>
+            </Reveal>
           </div>
         </section>
 
         {/* Product tour: real screenshots */}
         <section id='tour' className='border-t border-slate-100 bg-slate-50'>
           <div className='mx-auto max-w-6xl px-6 py-20 sm:py-24'>
-            <SectionNumber n='01' label='See it in action' />
-            <p className='mt-4 max-w-2xl text-3xl font-bold tracking-tight text-slate-900'>
-              Real screens. Nothing staged.
-            </p>
+            <Reveal>
+              <SectionNumber n='01' label='See it in action' />
+            </Reveal>
+            <Reveal delay={80}>
+              <p className='mt-4 max-w-2xl text-3xl font-bold tracking-tight text-slate-900'>
+                Real screens. Nothing staged.
+              </p>
+            </Reveal>
 
-            <h3 className='mt-14 text-lg font-bold text-slate-900'>
-              For students, teachers and CRs
-            </h3>
-            <p className='mt-1 text-sm text-slate-600'>
-              Day-of-class, on the phone.
-            </p>
+            <Reveal>
+              <h3 className='mt-14 text-lg font-bold text-slate-900'>
+                For students, teachers and CRs
+              </h3>
+              <p className='mt-1 text-sm text-slate-600'>
+                Day-of-class, on the phone.
+              </p>
+            </Reveal>
             <div className='mt-8 flex gap-6 overflow-x-auto pb-4 sm:grid sm:grid-cols-3 sm:gap-8 sm:overflow-visible lg:grid-cols-5'>
-              {MOBILE_SHOTS.map((shot) => (
-                <div
+              {MOBILE_SHOTS.map((shot, i) => (
+                <Reveal
                   key={shot.caption}
+                  delay={i * 90}
                   className='w-[220px] shrink-0 sm:w-auto'
                 >
-                  <PhoneFrame src={shot.src} alt={shot.alt} />
-                  <p className='mt-4 text-center font-semibold text-slate-900'>
-                    {shot.caption}
-                  </p>
-                  <p className='mt-1 text-center text-sm text-slate-600'>
-                    {shot.detail}
-                  </p>
-                </div>
+                  <div className='group transition-transform duration-300 hover:-translate-y-1.5'>
+                    <PhoneFrame src={shot.src} alt={shot.alt} />
+                    <p className='mt-4 text-center font-semibold text-slate-900'>
+                      {shot.caption}
+                    </p>
+                    <p className='mt-1 text-center text-sm text-slate-600'>
+                      {shot.detail}
+                    </p>
+                  </div>
+                </Reveal>
               ))}
             </div>
 
-            <h3 className='mt-20 text-lg font-bold text-slate-900'>
-              For department admins
-            </h3>
-            <p className='mt-1 text-sm text-slate-600'>Setup, on the web.</p>
+            <Reveal>
+              <h3 className='mt-20 text-lg font-bold text-slate-900'>
+                For department admins
+              </h3>
+              <p className='mt-1 text-sm text-slate-600'>Setup, on the web.</p>
+            </Reveal>
             <div className='mt-8 grid gap-8 sm:grid-cols-2'>
-              {DASHBOARD_SHOTS.map((shot) => (
-                <div key={shot.caption}>
-                  <BrowserFrame src={shot.src} alt={shot.alt} />
-                  <p className='mt-4 font-semibold text-slate-900'>
-                    {shot.caption}
-                  </p>
-                  <p className='mt-1 text-sm text-slate-600'>{shot.detail}</p>
-                </div>
+              {DASHBOARD_SHOTS.map((shot, i) => (
+                <Reveal key={shot.caption} delay={i * 90}>
+                  <div className='transition-transform duration-300 hover:-translate-y-1.5'>
+                    <BrowserFrame src={shot.src} alt={shot.alt} />
+                    <p className='mt-4 font-semibold text-slate-900'>
+                      {shot.caption}
+                    </p>
+                    <p className='mt-1 text-sm text-slate-600'>{shot.detail}</p>
+                  </div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -377,22 +465,26 @@ const Home = () => {
         {/* Roles */}
         <section id='roles' className='border-t border-slate-100'>
           <div className='mx-auto max-w-6xl px-6 py-20 sm:py-24'>
-            <SectionNumber n='02' label="Who it's for" />
-            <p className='mt-4 max-w-2xl text-3xl font-bold tracking-tight text-slate-900'>
-              Everyone gets what they need, nothing they don&apos;t.
-            </p>
+            <Reveal>
+              <SectionNumber n='02' label="Who it's for" />
+            </Reveal>
+            <Reveal delay={80}>
+              <p className='mt-4 max-w-2xl text-3xl font-bold tracking-tight text-slate-900'>
+                Everyone gets what they need, nothing they don&apos;t.
+              </p>
+            </Reveal>
             <div className='mt-12 grid gap-6 md:grid-cols-3'>
-              {ROLES.map((role) => (
-                <div
-                  key={role.title}
-                  className='relative overflow-hidden rounded-xl border border-slate-200 p-6 transition-shadow hover:shadow-lg hover:shadow-slate-900/5'
-                >
-                  <div className='absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-600 to-sky-400' />
-                  <h3 className='font-bold text-slate-900'>{role.title}</h3>
-                  <p className='mt-2 text-sm text-slate-600'>
-                    {role.description}
-                  </p>
-                </div>
+              {ROLES.map(({ icon: Icon, title, description }, i) => (
+                <Reveal key={title} delay={i * 100}>
+                  <div className='group relative h-full overflow-hidden rounded-xl border border-slate-200 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-900/5'>
+                    <div className='absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-600 to-sky-400' />
+                    <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-lg text-blue-600 transition-transform duration-300 group-hover:scale-110'>
+                      <Icon />
+                    </div>
+                    <h3 className='mt-4 font-bold text-slate-900'>{title}</h3>
+                    <p className='mt-2 text-sm text-slate-600'>{description}</p>
+                  </div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -404,19 +496,27 @@ const Home = () => {
           className='border-t border-slate-100 bg-slate-50'
         >
           <div className='mx-auto max-w-6xl px-6 py-20 sm:py-24'>
-            <SectionNumber n='03' label='Features' />
-            <p className='mt-4 max-w-2xl text-3xl font-bold tracking-tight text-slate-900'>
-              Everything a department needs to stay in sync.
-            </p>
+            <Reveal>
+              <SectionNumber n='03' label='Features' />
+            </Reveal>
+            <Reveal delay={80}>
+              <p className='mt-4 max-w-2xl text-3xl font-bold tracking-tight text-slate-900'>
+                Everything a department needs to stay in sync.
+              </p>
+            </Reveal>
             <div className='mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3'>
-              {FEATURES.map(({ icon: Icon, title, description }) => (
-                <div key={title}>
-                  <div className='flex h-11 w-11 items-center justify-center rounded-lg bg-linear-to-br from-blue-600 to-sky-500 text-lg text-white shadow-md shadow-blue-600/20'>
-                    <Icon />
+              {FEATURES.map(({ icon: Icon, title, description }, i) => (
+                <Reveal key={title} delay={(i % 3) * 90}>
+                  <div className='group'>
+                    <div className='flex h-11 w-11 items-center justify-center rounded-lg bg-linear-to-br from-blue-600 to-sky-500 text-lg text-white shadow-md shadow-blue-600/20 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6'>
+                      <Icon />
+                    </div>
+                    <h3 className='mt-4 font-bold text-slate-900'>{title}</h3>
+                    <p className='mt-1.5 text-sm text-slate-600'>
+                      {description}
+                    </p>
                   </div>
-                  <h3 className='mt-4 font-bold text-slate-900'>{title}</h3>
-                  <p className='mt-1.5 text-sm text-slate-600'>{description}</p>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -425,37 +525,39 @@ const Home = () => {
         {/* For departments / CTA */}
         <section id='departments' className='border-t border-slate-100'>
           <div className='mx-auto max-w-6xl px-6 py-20 sm:py-24'>
-            <div className='relative flex flex-col items-start justify-between gap-10 overflow-hidden rounded-2xl bg-linear-to-br from-blue-700 via-blue-600 to-sky-500 p-10 text-white md:flex-row md:items-center md:p-14'>
-              <div
-                aria-hidden='true'
-                className='absolute inset-0 -z-10 bg-[radial-gradient(circle,#ffffff_1px,transparent_1px)] bg-[length:24px_24px] opacity-10'
-              />
-              <div>
-                <p className='text-2xl font-bold tracking-tight sm:text-3xl'>
-                  Setting up a department takes minutes.
-                </p>
-                <ul className='mt-5 space-y-2 text-sm text-blue-50'>
-                  {[
-                    'Add batches, sections and courses',
-                    'Import your roster from a spreadsheet',
-                    'Build the weekly routine, clash-free',
-                  ].map((item) => (
-                    <li key={item} className='flex items-center gap-2'>
-                      <CheckCircleFilled className='text-blue-200' />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+            <Reveal>
+              <div className='relative flex flex-col items-start justify-between gap-10 overflow-hidden rounded-2xl bg-linear-to-br from-blue-700 via-blue-600 to-sky-500 p-10 text-white md:flex-row md:items-center md:p-14'>
+                <div
+                  aria-hidden='true'
+                  className='absolute inset-0 -z-10 bg-[radial-gradient(circle,#ffffff_1px,transparent_1px)] bg-[length:24px_24px] opacity-10'
+                />
+                <div>
+                  <p className='text-2xl font-bold tracking-tight sm:text-3xl'>
+                    Setting up a department takes minutes.
+                  </p>
+                  <ul className='mt-5 space-y-2 text-sm text-blue-50'>
+                    {[
+                      'Add batches, sections and courses',
+                      'Import your roster from a spreadsheet',
+                      'Build the weekly routine, clash-free',
+                    ].map((item) => (
+                      <li key={item} className='flex items-center gap-2'>
+                        <CheckCircleFilled className='text-blue-200' />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <Link href='/auth/login' className='shrink-0'>
+                  <Button
+                    size='large'
+                    className='!border-white !bg-white !text-blue-700 transition-transform duration-200 hover:!bg-blue-50 hover:scale-[1.03]'
+                  >
+                    Sign in as a department admin
+                  </Button>
+                </Link>
               </div>
-              <Link href='/auth/login' className='shrink-0'>
-                <Button
-                  size='large'
-                  className='!border-white !bg-white !text-blue-700 hover:!bg-blue-50'
-                >
-                  Sign in as a department admin
-                </Button>
-              </Link>
-            </div>
+            </Reveal>
           </div>
         </section>
       </main>
