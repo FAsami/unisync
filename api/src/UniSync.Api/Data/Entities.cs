@@ -217,8 +217,9 @@ public sealed class TeacherProfile
 }
 
 /// <summary>
-/// A notification to an audience (notification.log). Inserting a row fires the
-/// legacy Hasura event trigger, which pushes it to the audience's devices.
+/// A notification to an audience (notification.log). Writers only insert the row;
+/// <c>PushDispatcher</c> pushes it to the audience's devices (or, until the
+/// cut-over, the legacy Hasura event trigger does).
 /// </summary>
 public sealed class NotificationLog
 {
@@ -231,10 +232,13 @@ public sealed class NotificationLog
     /// <summary>JSON object of string values (FCM data payloads accept strings only).</summary>
     public string? Data { get; set; }
     public Guid CreatedBy { get; set; }
-    /// <summary>Push delivery state, written by the legacy sender: pending | processing | sent | failed.</summary>
+    public string? ImageUrl { get; set; }
+    /// <summary>Push delivery state, written by <c>PushDispatcher</c>: pending | processing | sent | failed.</summary>
     public string Status { get; set; } = "pending";
     public int SentCount { get; set; }
     public int FailedCount { get; set; }
+    public string? ErrorMessage { get; set; }
+    public DateTimeOffset? ProcessedAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 }
 

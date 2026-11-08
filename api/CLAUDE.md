@@ -11,14 +11,16 @@ src/UniSync.Api/
   Data/                 EF Core entities mapped onto the existing schema, DbContext, MigrationRunner
   Common/               the response envelope, error codes, exception handler
   Auth/                 phone normalisation, one-time codes, tokens, sessions, /auth endpoints
-  CurrentUser/          /me
+  CurrentUser/          /me, DELETE /me (in-app account deletion)
   Academic/             /directory: public list of open departments, batches and sections
   AccessRequests/       request to join, plus the department admin queue (approve / reject)
   Schedule/             /me/today, /me/week (resolved classes); /classes/{routineId}/{date}/cancel|move|room and undo
   Notifications/        inbox (/me/notifications), devices (/me/devices), sending (/notifications), AudienceService
+    Push/               PushDispatcher (notification.log -> FCM), IPushSender, FcmPushSender, PushOptions
   Health/               /health, /health/ready
   Sms/                  ISmsSender: BulkSMSBD (prod), console (Development only)
-db/migrations/          schema changes owned by this API (NNNN_name.sql)
+db/migrations/          the schema, owned by this API (NNNN_name.sql; 0000_baseline = what Hasura built)
+db/one-off/             hand-run SQL, never applied automatically (drop-hasura-catalog.sql: after Hasura is off)
 tests/UniSync.Api.Tests/
   Infrastructure/       PostgresFixture (throwaway DB), ApiFactory (real app, fake SMS), Seed
 ```
@@ -50,7 +52,9 @@ missing database fails the run instead of skipping.
 - **Time is campus time.** Class times are campus-local (`event.routine` start/end are plain `time`, Asia/Dhaka). "Now" and "today" come only from `CampusClock`, never from UTC or `DateTime.Now`. Tests set `Factory.CampusTime`.
 - **One class change per occurrence** (`event.routine_exception`, mapped as `ClassChange`): `cancellation`, `reschedule` (new date and times, optional room) or `room_change`. The database checks the fields match the type. A move shows on both slots: `moved_away` on the old one, `moved` on the new one.
 - **Who may change a class**: its teacher, an active CR of its section, or the admin of its department (`ClassChangeService.CanChangeAsync`). A move is refused on a section, teacher or room clash; a room change only on a room clash. The latest decision replaces the previous one.
-- **Every class change notifies its section in the same transaction** by inserting into `notification.log`. Until the inbox slice lands, the legacy Hasura event trigger turns that row into a push (via the Node server). `data` values must be strings (FCM).
+- **Every class change notifies its section in the same transaction** by inserting into `notification.log`. `data` values must be strings (FCM).
+- **Writers only insert into `notification.log`; `PushDispatcher` delivers.** It claims `pending` rows with `FOR UPDATE SKIP LOCKED` (safe on several machines), resolves recipients through `AudienceService`, sends through `IPushSender`, and writes `status` (`pending -> processing -> sent | failed`), `sent_count`, `failed_count`, `error_message`, `processed_at`. Dead tokens (UNREGISTERED, SENDER_ID_MISMATCH, invalid token) are deactivated. Rows older than `Push:MaxAge` are marked failed instead of pushed, and rows stuck in `processing` are retried. **`Push:Enabled` is false by default**: while Hasura's event trigger still sends through the Node server, enabling it sends everything twice. Enable it at the cut-over; outside Development it then requires `Push:FcmServiceAccountJson` (JSON or base64) at startup.
+- **Account deletion is a soft delete** (`DELETE /me`): `deleted_at`, `is_active = false`, every session revoked and every device deactivated in one transaction. The roster record stays with the department.
 - **Audiences have one definition**: `AudienceService` decides who is in an audience (inbox and counts) and who may address it. A department admin may address their department, its batches and its sections; a teacher, the sections they teach; a CR, their own section. Nobody sends university-wide (no role decided). Never write audience rules anywhere else.
 - **Every notification carries its own id** in `data.notificationId`, so a push opens it. `data` values are strings.
 - **A push token belongs to one person**: registering a token removes it from anyone else. Logout with `deviceId` deactivates that device in the same call.
@@ -61,7 +65,7 @@ missing database fails the run instead of skipping.
 
 - `db/migrations/NNNN_short_name.sql`: next number, plain SQL, embedded in the assembly, applied once in name order by `MigrationRunner` and recorded in `api.schema_migrations`.
 - **Never edit a committed migration**; add a new one. The guard hook blocks edits.
-- The Hasura migrations in `hasura/migrations` are the frozen baseline. Tests apply them first; production already has them.
+- `0000_baseline.sql` is Hasura's schema (its two migrations). On a database that already has it (every existing environment) `MigrationRunner` records it without running it; on an empty database it runs. Tests build their database from this API's migrations alone.
 - No psql meta-commands and nothing in `hdb_catalog` (`scripts/check-hasura-metadata.py` checks both folders).
 
 ## Adding an endpoint

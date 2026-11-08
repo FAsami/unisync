@@ -22,9 +22,4 @@
     <ProjectReference Include="..\..\src\UniSync.Api\UniSync.Api.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- Legacy Hasura migrations: the baseline schema tests build on. -->
-    <None Include="..\..\..\hasura\migrations\default\**\up.sql" LinkBase="legacy-migrations" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-
 </Project>

@@ -265,7 +265,84 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete my account
+         * @description Soft delete (the store-required in-app deletion): the account can no longer sign in, every session is revoked and every device stops getting pushes. The roster record stays with the department.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiEnvelopeOfAccountDeleted"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiEnvelopeOfObject"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiEnvelopeOfObject"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiEnvelopeOfObject"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiEnvelopeOfObject"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiEnvelopeOfObject"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiEnvelopeOfObject"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -2585,6 +2662,10 @@ export interface components {
             /** Format: date-time */
             decidedAt: null | string;
         };
+        AccountDeleted: {
+            /** Format: date-time */
+            deletedAt: string;
+        };
         ApiEnvelopeOfAccessRequestCreated: {
             success: boolean;
             message: null | string;
@@ -2596,6 +2677,13 @@ export interface components {
             success: boolean;
             message: null | string;
             data: null | components["schemas"]["AccessRequestView"];
+            error: null | components["schemas"]["ApiError"];
+            meta: components["schemas"]["ApiMeta"];
+        };
+        ApiEnvelopeOfAccountDeleted: {
+            success: boolean;
+            message: null | string;
+            data: null | components["schemas"]["AccountDeleted"];
             error: null | components["schemas"]["ApiError"];
             meta: components["schemas"]["ApiMeta"];
         };
