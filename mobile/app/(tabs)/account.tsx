@@ -14,10 +14,12 @@ import { Icon } from '@/components/ui/icon'
 import { Divider } from '@/components/ui/divider'
 import { useAuth } from '@/contexts/Auth'
 import { useTheme } from '@/contexts/ThemeContext'
+import { roleLabel } from '@/lib/roles'
 
 const AccountScreen = () => {
   const { currentMode, setTheme } = useTheme()
-  const { logout } = useAuth()
+  const { logout, me, userRole } = useAuth()
+  const name = me ? [me.firstName, me.lastName].filter(Boolean).join(' ') : ''
 
   const handleLogout = async () => {
     await logout()
@@ -34,6 +36,11 @@ const AccountScreen = () => {
         <Heading size="2xl" className="font-extrabold text-typography-900">
           Account
         </Heading>
+        {me ? (
+          <Text className="text-typography-500 mt-1">
+            {name || me.phone} · {roleLabel(me.role ?? userRole, me.isClassRepresentative)}
+          </Text>
+        ) : null}
       </VStack>
 
       <ScrollView className="flex-1">
@@ -106,7 +113,7 @@ const AccountScreen = () => {
                   style={{ color: '#DC2626' }}
                 />
                 <Text className="text-base font-bold text-error-600">
-                  Logout
+                  Sign out
                 </Text>
               </HStack>
             </Pressable>

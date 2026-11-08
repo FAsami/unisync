@@ -8,7 +8,7 @@ namespace UniSync.Api.Schedule;
 
 public sealed record CancelBody(string? Reason);
 public sealed record MoveBody(string? Date, string? Start, string? End, Guid? RoomId, string? Reason);
-public sealed record RoomBody(Guid? RoomId, string? Reason);
+public sealed record RoomChangeBody(Guid? RoomId, string? Reason);
 
 public sealed record ClassChangeResult(
     Guid RoutineId, DateOnly Date, string Change, string? Reason, Slot? MovedTo, string? Room, Guid NotificationId);
@@ -149,7 +149,7 @@ public static class ClassChangeEndpoints
     }
 
     private static async Task<IResult> ChangeRoomAsync(
-        Guid routineId, string date, RoomBody body, ClaimsPrincipal user, HttpContext http,
+        Guid routineId, string date, RoomChangeBody body, ClaimsPrincipal user, HttpContext http,
         ClassChangeService service, CampusClock clock, CancellationToken ct)
     {
         var (ctx, day, failure) = await AuthorizeAsync(routineId, date, user, http, service, clock, ct);

@@ -1,209 +1,117 @@
-import React from 'react'
-import { ScrollView, TouchableOpacity, RefreshControl } from 'react-native'
+import React, { useCallback, useState } from 'react'
+import { FlatList, Pressable, RefreshControl, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { router, Stack } from 'expo-router'
-import { useQuery } from '@apollo/client'
+import { router, useFocusEffect } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { GET_MY_SENT_NOTIFICATIONS } from '@/lib/graphql-operations'
-
-import { Text } from '@/components/ui/text'
-import { Heading } from '@/components/ui/heading'
-import { VStack } from '@/components/ui/vstack'
-import { HStack } from '@/components/ui/hstack'
 import { Box } from '@/components/ui/box'
-import { Badge, BadgeText } from '@/components/ui/badge'
-import { useTheme } from '@/contexts/ThemeContext'
-import { useHaptics } from '@/hooks/useHaptics'
+import { Heading } from '@/components/ui/heading'
+import { HStack } from '@/components/ui/hstack'
+import { Icon } from '@/components/ui/icon'
+import { Spinner } from '@/components/ui/spinner'
+import { Text } from '@/components/ui/text'
+import { VStack } from '@/components/ui/vstack'
+import { Notice } from '@/components/signin/Fields'
+import { api, ApiError, call, unwrap } from '@/lib/api'
+import { relativeTime, sentStatus, type SentItem } from '@/lib/inbox'
 
-export default function NotificationHistoryScreen() {
-  const haptics = useHaptics()
-  const { currentMode } = useTheme()
+const toneClass = { info: 'text-info-700', success: 'text-success-700', warning: 'text-warning-800' }
 
-  const { data, loading, refetch } = useQuery(GET_MY_SENT_NOTIFICATIONS)
-  const notifications = data?.notification_log || []
+function Row({ item }: { item: SentItem }) {
+  const status = sentStatus(item)
+  const reads = Number(item.readCount)
+  return (
+    <VStack className="p-4 mb-3 rounded-2xl border border-outline-100 dark:border-outline-800 bg-white dark:bg-background-900" space="xs">
+      <HStack className="justify-between items-start">
+        <Text className="text-base font-bold text-typography-900 flex-1" numberOfLines={2}>
+          {item.title}
+        </Text>
+        <Text className="text-xs text-typography-400 ml-2">{relativeTime(item.createdAt)}</Text>
+      </HStack>
+      <Text className="text-typography-600" numberOfLines={3}>
+        {item.body}
+      </Text>
+      <HStack space="xs" className="items-center mt-1">
+        <Icon as={Ionicons} name="people-outline" size={14} className="text-typography-400" />
+        <Text className="text-typography-500 text-xs">{item.audience}</Text>
+      </HStack>
+      <HStack className="justify-between mt-1">
+        <Text className={`text-xs font-semibold ${toneClass[status.tone]}`}>{status.label}</Text>
+        <Text className="text-xs text-typography-500">
+          Read by {reads} {reads === 1 ? 'person' : 'people'}
+        </Text>
+      </HStack>
+    </VStack>
+  )
+}
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'sent':
-        return 'bg-success-500'
-      case 'processing':
-        return 'bg-warning-500'
-      case 'failed':
-        return 'bg-error-500'
-      default:
-        return 'bg-outline-300'
+/** Notices I sent (GET /notifications/sent), newest first, with push and read counts. */
+export default function SentScreen() {
+  const [items, setItems] = useState<SentItem[]>()
+  const [problem, setProblem] = useState<ApiError>()
+  const [refreshing, setRefreshing] = useState(false)
+
+  const load = useCallback(async () => {
+    try {
+      setItems(await call(async () => unwrap(await api.GET('/api/v1/notifications/sent'))))
+      setProblem(undefined)
+    } catch (error) {
+      setProblem(error as ApiError)
     }
-  }
+  }, [])
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+  useFocusEffect(
+    useCallback(() => {
+      void load()
+    }, [load])
+  )
+
+  const onRefresh = async () => {
+    setRefreshing(true)
+    await load()
+    setRefreshing(false)
   }
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-background-950">
-      <Stack.Screen options={{ headerShown: false }} />
-
-      {/* Header */}
-      <HStack className="items-center justify-between px-4 py-3 bg-white dark:bg-background-900 border-b border-outline-100 dark:border-outline-800">
-        <HStack className="items-center flex-1">
-          <TouchableOpacity
-            onPress={() => {
-              haptics.light()
-              router.back()
-            }}
-            className="p-2 rounded-full mr-2"
-          >
-            <Ionicons
-              name="arrow-back"
-              size={24}
-              color={currentMode === 'dark' ? '#F1F5F9' : '#1E293B'}
-            />
-          </TouchableOpacity>
-          <Heading size="md" className="font-bold text-typography-900">
-            Notification History
-          </Heading>
-        </HStack>
-        <TouchableOpacity
-          onPress={() => {
-            haptics.light()
-            router.push('/manage/notifications/compose')
-          }}
-          className="p-2 rounded-full"
-        >
-          <Ionicons name="add" size={24} color="#8B5CF6" />
-        </TouchableOpacity>
+      <HStack className="items-center px-2 py-2">
+        <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back" className="p-3">
+          <Icon as={Ionicons} name="arrow-back" size={22} className="text-typography-900" />
+        </Pressable>
+        <Heading size="md" className="text-typography-900 flex-1">
+          Sent notices
+        </Heading>
+        <Pressable onPress={() => router.push('/manage/notifications/compose')} accessibilityRole="button" className="px-3 min-h-[44px] justify-center">
+          <Text className="text-primary-600 font-semibold">New</Text>
+        </Pressable>
       </HStack>
 
-      <ScrollView
-        contentContainerStyle={{ padding: 16 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={loading}
-            onRefresh={refetch}
-            tintColor={currentMode === 'dark' ? '#fff' : '#000'}
-          />
-        }
-      >
-        {notifications.length === 0 ? (
-          <Box className="items-center justify-center py-20">
-            <Box className="bg-primary-500/10 p-4 rounded-full mb-4">
-              <Ionicons
-                name="notifications-outline"
-                size={32}
-                color="#8B5CF6"
-              />
-            </Box>
-            <Heading size="sm" className="text-typography-900 mb-2">
-              No Notifications Yet
-            </Heading>
-            <Text className="text-typography-500 text-center mb-6">
-              Send your first notification to get started
-            </Text>
-            <TouchableOpacity
-              onPress={() => router.push('/manage/notifications/compose')}
-              className="bg-primary-500 px-6 py-3 rounded-full"
-            >
-              <Text className="text-white font-semibold">
-                Send Notification
-              </Text>
-            </TouchableOpacity>
-          </Box>
-        ) : (
-          <VStack space="md">
-            {notifications.map((notification: any) => (
-              <Box
-                key={notification.id}
-                className="bg-white dark:bg-background-900 rounded-xl p-4 border border-outline-100 dark:border-outline-800"
-              >
-                <VStack space="xs">
-                  {/* Title and Status */}
-                  <HStack className="items-start justify-between mb-2">
-                    <Text
-                      className="text-typography-900 font-semibold text-base flex-1 mr-2"
-                      numberOfLines={2}
-                    >
-                      {notification.title}
-                    </Text>
-                    <Badge
-                      className={`${getStatusColor(
-                        notification.status
-                      )} rounded-full`}
-                    >
-                      <BadgeText className="text-white text-xs capitalize">
-                        {notification.status}
-                      </BadgeText>
-                    </Badge>
-                  </HStack>
+      {problem ? (
+        <View className="px-4 mb-3">
+          <Notice message={problem.message} action={{ label: 'Try again', onPress: onRefresh }} />
+        </View>
+      ) : null}
 
-                  {/* Body */}
-                  <Text
-                    className="text-typography-600 text-sm mb-2"
-                    numberOfLines={3}
-                  >
-                    {notification.body}
-                  </Text>
-
-                  {/* Metadata */}
-                  <HStack className="items-center justify-between">
-                    <HStack className="items-center space-x-3">
-                      {/* Target Type */}
-                      <HStack className="items-center">
-                        <Ionicons
-                          name="people-outline"
-                          size={14}
-                          color="#94A3B8"
-                        />
-                        <Text className="text-typography-500 text-xs ml-1 capitalize">
-                          {notification.target_type}
-                        </Text>
-                      </HStack>
-
-                      {/* Sent Count */}
-                      {notification.status === 'sent' && (
-                        <HStack className="items-center">
-                          <Ionicons
-                            name="checkmark-circle-outline"
-                            size={14}
-                            color="#10B981"
-                          />
-                          <Text className="text-success-600 text-xs ml-1">
-                            {notification.sent_count} sent
-                          </Text>
-                        </HStack>
-                      )}
-
-                      {/* Failed Count */}
-                      {notification.failed_count > 0 && (
-                        <HStack className="items-center">
-                          <Ionicons
-                            name="close-circle-outline"
-                            size={14}
-                            color="#EF4444"
-                          />
-                          <Text className="text-error-600 text-xs ml-1">
-                            {notification.failed_count} failed
-                          </Text>
-                        </HStack>
-                      )}
-                    </HStack>
-
-                    {/* Date */}
-                    <Text className="text-typography-400 text-xs">
-                      {formatDate(notification.created_at)}
-                    </Text>
-                  </HStack>
-                </VStack>
-              </Box>
-            ))}
-          </VStack>
-        )}
-      </ScrollView>
+      {!items && !problem ? (
+        <Box className="flex-1 justify-center items-center">
+          <Spinner size="large" accessibilityLabel="Loading" />
+        </Box>
+      ) : (
+        <FlatList
+          data={items ?? []}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <Row item={item} />}
+          contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          ListEmptyComponent={
+            items ? (
+              <VStack className="items-center py-16" space="sm">
+                <Icon as={Ionicons} name="paper-plane-outline" size={40} className="text-typography-300" />
+                <Text className="text-typography-700 font-semibold">Nothing sent yet</Text>
+              </VStack>
+            ) : null
+          }
+        />
+      )}
     </SafeAreaView>
   )
 }

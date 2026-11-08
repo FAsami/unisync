@@ -9,5 +9,5 @@ const apiUrl: string = getEnv('API_URL') ?? ''
 export const session = createSession({ storage: secureStorage, apiUrl })
 export const api = createApi(apiUrl, session)
 
-export { ApiError, call, unwrap } from './errors'
+export { ApiError, call, unwrap, unwrapWithMessage } from './errors'
 export type { Tokens, SessionEvent } from './session'

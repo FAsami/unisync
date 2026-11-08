@@ -1975,7 +1975,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RoomBody"
+                "$ref": "#/components/schemas/RoomChangeBody"
               }
             }
           },
@@ -9321,6 +9321,28 @@
           }
         }
       },
+      "RoomChangeBody": {
+        "required": [
+          "roomId",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "roomId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "RoomRef": {
         "required": [
           "id",
@@ -10242,7 +10264,8 @@
           "scope",
           "classes",
           "current",
-          "next"
+          "next",
+          "canChange"
         ],
         "type": "object",
         "properties": {
@@ -10282,6 +10305,9 @@
                 "$ref": "#/components/schemas/ClassOccurrence"
               }
             ]
+          },
+          "canChange": {
+            "type": "boolean"
           }
         }
       },
@@ -10311,7 +10337,8 @@
           "from",
           "to",
           "scope",
-          "days"
+          "days",
+          "canChange"
         ],
         "type": "object",
         "properties": {
@@ -10331,6 +10358,9 @@
             "items": {
               "$ref": "#/components/schemas/DaySchedule"
             }
+          },
+          "canChange": {
+            "type": "boolean"
           }
         }
       }

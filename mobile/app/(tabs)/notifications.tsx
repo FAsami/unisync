@@ -1,216 +1,155 @@
-/**
- * TODO:
- * Handnle role for notifications according to user role
- */
-import React from 'react'
-import { Text, FlatList, RefreshControl, ActivityIndicator } from 'react-native'
+import React, { useCallback, useState } from 'react'
+import { FlatList, Pressable, RefreshControl, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { router, useFocusEffect } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { useQuery } from '@apollo/client'
-
-import { Heading } from '@/components/ui/heading'
 import { Box } from '@/components/ui/box'
-import { VStack } from '@/components/ui/vstack'
+import { Heading } from '@/components/ui/heading'
 import { HStack } from '@/components/ui/hstack'
 import { Icon } from '@/components/ui/icon'
-import { useAuth } from '@/contexts/Auth'
-import {
-  GET_USER_NOTIFICATIONS,
-  GET_USER_PROFILE_FOR_NOTIFICATIONS,
-  type GetUserNotificationsData,
-  type GetUserProfileForNotificationsData,
-  type UserNotification,
-} from '@/lib/graphql-operations'
-import { getRelativeTime } from '@/lib/time-utils'
+import { Spinner } from '@/components/ui/spinner'
+import { Text } from '@/components/ui/text'
+import { VStack } from '@/components/ui/vstack'
+import { Notice } from '@/components/signin/Fields'
+import { api, ApiError, call, unwrap } from '@/lib/api'
+import { emptyInbox, inboxIcon, markAllRead, mergePage, relativeTime, type InboxItem, type InboxState } from '@/lib/inbox'
 
-const getNotificationIcon = (notification: UserNotification) => {
-  const notificationType = notification.data?.type || notification.target_type
+const PAGE = 30
 
-  switch (notificationType) {
-    case 'alert':
-    case 'cancellation':
-      return 'warning-outline'
-    case 'event':
-    case 'exam':
-      return 'calendar-outline'
-    case 'assignment':
-      return 'document-text-outline'
-    case 'announcement':
-      return 'megaphone-outline'
-    default:
-      return 'notifications-outline'
-  }
-}
-
-const NotificationItem = ({ item }: { item: UserNotification }) => {
-  const isUnread = item.status === 'pending' || item.status === 'processing'
-
+function Row({ item }: { item: InboxItem }) {
   return (
-    <Box
-      className={`p-4 mb-3 rounded-xl border ${
-        isUnread
-          ? 'bg-primary-50 dark:bg-primary-900/10 border-primary-100 dark:border-primary-800'
-          : 'bg-white dark:bg-background-900 border-outline-100 dark:border-outline-800'
+    <Pressable
+      onPress={() => router.push({ pathname: '/notification/[id]', params: { id: item.id } })}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.read ? '' : 'Unread. '}${item.title}. ${item.body}`}
+      className={`p-4 mb-3 rounded-2xl border ${
+        item.read
+          ? 'bg-white dark:bg-background-900 border-outline-100 dark:border-outline-800'
+          : 'bg-primary-50 dark:bg-primary-900/10 border-primary-200 dark:border-primary-800'
       }`}
     >
-      <HStack className="space-x-2 gap-2 items-start">
-        <Box
-          className={`p-2 h-12 w-12 rounded-full flex items-center justify-center ${
-            isUnread
-              ? 'bg-primary-100 dark:bg-primary-800'
-              : 'bg-background-100 dark:bg-background-800'
-          }`}
-        >
-          <Icon
-            as={Ionicons}
-            name={getNotificationIcon(item)}
-            size={20}
-            className={
-              isUnread
-                ? 'text-primary-600 dark:text-primary-400'
-                : 'text-typography-500'
-            }
-          />
+      <HStack space="md" className="items-start">
+        <Box className={`h-10 w-10 rounded-full items-center justify-center ${item.read ? 'bg-background-100' : 'bg-primary-100'}`}>
+          <Icon as={Ionicons} name={inboxIcon(item)} size={20} className={item.read ? 'text-typography-500' : 'text-primary-600'} />
         </Box>
-        <VStack className="flex-1 space-y-1 gap-1">
+        <VStack className="flex-1">
           <HStack className="justify-between items-start">
-            <Text
-              className={`text-base font-bold flex-1 ${
-                isUnread ? 'text-typography-900' : 'text-typography-900'
-              }`}
-            >
+            <Text className={`text-base flex-1 text-typography-900 ${item.read ? 'font-semibold' : 'font-bold'}`} numberOfLines={2}>
               {item.title}
             </Text>
-            <Text className="text-xs text-typography-400 ml-2">
-              {getRelativeTime(item.created_at)}
-            </Text>
+            <Text className="text-xs text-typography-400 ml-2">{relativeTime(item.createdAt)}</Text>
           </HStack>
-          <Text className="text-typography-500 leading-tight">{item.body}</Text>
-          {item.sent_count > 0 && (
-            <Text className="text-xs text-typography-400 mt-1">
-              Sent to {item.sent_count}{' '}
-              {item.sent_count === 1 ? 'user' : 'users'}
-            </Text>
-          )}
+          <Text className="text-typography-600 mt-1" numberOfLines={3}>
+            {item.body}
+          </Text>
+          {item.from ? <Text className="text-xs text-typography-400 mt-1">From {item.from}</Text> : null}
         </VStack>
+        {item.read ? null : <View className="h-2.5 w-2.5 rounded-full bg-primary-500 mt-1.5" accessibilityElementsHidden />}
       </HStack>
-    </Box>
+    </Pressable>
   )
 }
 
-const NotificationsScreen = () => {
-  const { userId } = useAuth()
-  const { data: profileData } = useQuery<GetUserProfileForNotificationsData>(
-    GET_USER_PROFILE_FOR_NOTIFICATIONS,
-    {
-      variables: { userId },
-      skip: !userId,
+/** The inbox (UX review decision 4): every notice addressed to me, newest first, with read state. */
+export default function NotificationsScreen() {
+  const [inbox, setInbox] = useState<InboxState>()
+  const [problem, setProblem] = useState<ApiError>()
+  const [refreshing, setRefreshing] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  const load = useCallback(async (before?: string) => {
+    try {
+      const page = await call(async () =>
+        unwrap(await api.GET('/api/v1/me/notifications', { params: { query: { limit: PAGE, ...(before ? { before } : {}) } } }))
+      )
+      setInbox((current) => mergePage(current ?? emptyInbox, page, !!before))
+      setProblem(undefined)
+    } catch (error) {
+      setProblem(error as ApiError)
     }
+  }, [])
+
+  // Opening a notice marks it read on the server; reload on focus to pick that up.
+  useFocusEffect(
+    useCallback(() => {
+      void load()
+    }, [load])
   )
 
-  const profile = profileData?.user_profile?.[0]
-  const { data, loading, error, refetch } = useQuery<GetUserNotificationsData>(
-    GET_USER_NOTIFICATIONS,
-    {
-      variables: {
-        sectionId: profile?.section_id,
-        batchId: profile?.batch_id,
-        departmentId: profile?.department_id,
-      },
-      skip: !userId || !profile,
-    }
-  )
-
-  const notifications = data?.notification_log || []
-
-  if (loading && !data) {
-    return (
-      <SafeAreaView className="flex-1 bg-white dark:bg-background-950">
-        <VStack className="px-4 py-4 space-y-4 gap-4 flex-1">
-          <Heading size="2xl" className="font-extrabold text-typography-900">
-            Notifications
-          </Heading>
-          <Box className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#3B82F6" />
-            <Text className="text-typography-400 mt-4">
-              Loading notifications...
-            </Text>
-          </Box>
-        </VStack>
-      </SafeAreaView>
-    )
+  const onRefresh = async () => {
+    setRefreshing(true)
+    await load()
+    setRefreshing(false)
   }
 
-  if (error) {
-    return (
-      <SafeAreaView className="flex-1 bg-white dark:bg-background-950">
-        <VStack className="px-4 py-4 space-y-4 gap-4 flex-1">
-          <Heading size="2xl" className="font-extrabold text-typography-900">
-            Notifications
-          </Heading>
-          <Box className="flex-1 items-center justify-center py-20">
-            <Icon
-              as={Ionicons}
-              name="alert-circle-outline"
-              size={48}
-              className="text-error-500 mb-4"
-            />
-            <Text className="text-typography-900 font-semibold mb-2">
-              Failed to Load
-            </Text>
-            <Text className="text-typography-400 text-center mb-4 px-8">
-              {error.message || 'Unable to fetch notifications'}
-            </Text>
-            <Box
-              className="px-6 py-3 bg-primary-600 rounded-lg"
-              onTouchEnd={() => refetch()}
-            >
-              <Text className="text-white font-semibold">Retry</Text>
-            </Box>
-          </Box>
-        </VStack>
-      </SafeAreaView>
-    )
+  const loadMore = async () => {
+    if (!inbox?.nextBefore || loadingMore) return
+    setLoadingMore(true)
+    await load(inbox.nextBefore)
+    setLoadingMore(false)
+  }
+
+  const readAll = async () => {
+    if (!inbox) return
+    const before = inbox
+    setInbox(markAllRead(inbox))
+    try {
+      await call(async () => unwrap(await api.POST('/api/v1/me/notifications/read-all')))
+    } catch (error) {
+      setInbox(before)
+      setProblem(error as ApiError)
+    }
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-background-950">
-      <VStack className="px-4 py-4 space-y-4 gap-4 flex-1">
-        <Heading size="2xl" className="font-extrabold text-typography-900">
-          Notifications
-        </Heading>
+    <SafeAreaView className="flex-1 bg-white dark:bg-background-950" edges={['top']}>
+      <HStack className="px-4 pt-4 pb-3 items-center justify-between">
+        <VStack>
+          <Heading size="2xl" className="font-extrabold text-typography-900">
+            Notifications
+          </Heading>
+          {inbox ? (
+            <Text className="text-typography-500 text-sm">{inbox.unreadCount ? `${inbox.unreadCount} unread` : 'All caught up'}</Text>
+          ) : null}
+        </VStack>
+        {inbox?.unreadCount ? (
+          <Pressable onPress={readAll} accessibilityRole="button" className="min-h-[44px] justify-center px-2">
+            <Text className="text-primary-600 font-semibold">Mark all read</Text>
+          </Pressable>
+        ) : null}
+      </HStack>
 
+      {problem ? (
+        <View className="px-4 mb-3">
+          <Notice message={problem.message} action={{ label: 'Try again', onPress: onRefresh }} />
+        </View>
+      ) : null}
+
+      {!inbox && !problem ? (
+        <Box className="flex-1 justify-center items-center">
+          <Spinner size="large" accessibilityLabel="Loading notifications" />
+        </Box>
+      ) : (
         <FlatList
-          data={notifications}
-          renderItem={({ item }) => <NotificationItem item={item} />}
+          data={inbox?.items ?? []}
           keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          refreshControl={
-            <RefreshControl
-              refreshing={loading}
-              onRefresh={refetch}
-              tintColor="#3B82F6"
-              colors={['#3B82F6']}
-            />
-          }
+          renderItem={({ item }) => <Row item={item} />}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={loadingMore ? <Spinner className="my-4" /> : null}
           ListEmptyComponent={
-            <Box className="flex-1 items-center justify-center py-20">
-              <Icon
-                as={Ionicons}
-                name="notifications-off-outline"
-                size={48}
-                className="text-typography-300 mb-4"
-              />
-              <Text className="text-typography-400 text-center">
-                No notifications yet
-              </Text>
-            </Box>
+            inbox ? (
+              <VStack className="items-center py-20" space="sm">
+                <Icon as={Ionicons} name="notifications-off-outline" size={44} className="text-typography-300" />
+                <Text className="text-typography-700 font-semibold">No notifications yet</Text>
+                <Text className="text-typography-500 text-center px-8">Class changes and notices from your teachers and department show up here.</Text>
+              </VStack>
+            ) : null
           }
         />
-      </VStack>
+      )}
     </SafeAreaView>
   )
 }
-
-export default NotificationsScreen

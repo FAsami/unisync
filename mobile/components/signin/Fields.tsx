@@ -115,13 +115,18 @@ export function TextField({
   error,
   placeholder,
   autoCapitalize = 'words',
+  multiline = false,
+  maxLength,
 }: {
   label: string
   value: string
   onChange: (text: string) => void
   error?: string
   placeholder?: string
-  autoCapitalize?: 'none' | 'words' | 'characters'
+  autoCapitalize?: 'none' | 'words' | 'characters' | 'sentences'
+  /** A message box: several lines, text starts at the top. */
+  multiline?: boolean
+  maxLength?: number
 }) {
   return (
     <View>
@@ -129,15 +134,23 @@ export function TextField({
       <View className={boxClass(error)}>
         <TextInput
           className={inputClass}
+          style={multiline ? { minHeight: 120, textAlignVertical: 'top' } : undefined}
           value={value}
           onChangeText={onChange}
           placeholderTextColor={PLACEHOLDER}
           placeholder={placeholder}
           autoCapitalize={autoCapitalize}
-          autoCorrect={false}
+          autoCorrect={multiline}
+          multiline={multiline}
+          maxLength={maxLength}
           accessibilityLabel={label}
         />
       </View>
+      {maxLength && multiline ? (
+        <Text className="text-typography-400 text-xs mt-1 self-end">
+          {value.length}/{maxLength}
+        </Text>
+      ) : null}
       <FieldError message={error} />
     </View>
   )

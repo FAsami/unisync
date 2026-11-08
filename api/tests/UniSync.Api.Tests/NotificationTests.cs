@@ -82,6 +82,7 @@ public sealed class NotificationTests(PostgresFixture db) : ApiTestBase(db)
         Assert.Equal(HttpStatusCode.Created, status);
         var id = sent.GetProperty("data").GetProperty("id").GetGuid();
         Assert.Equal(1, sent.GetProperty("data").GetProperty("recipients").GetInt32());
+        Assert.Equal("Sent to 1 person.", sent.GetProperty("message").GetString());
 
         // The push payload can open the message: it carries the notification's id.
         var payloadId = await Seed.ScalarAsync<string>(Db.ConnectionString, "SELECT data->>'notificationId' FROM notification.log WHERE id = @id", Ct, ("id", id));

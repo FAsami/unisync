@@ -16,6 +16,18 @@ export const shortDate = (date: string): string => {
   return `${DAYS[weekday]} ${d} ${MONTHS[m - 1]}`
 }
 
+/** Calendar arithmetic on "YYYY-MM-DD" (UTC, so no daylight-saving or zone drift). */
+export const addDays = (date: string, days: number): string => {
+  const [y, m, d] = date.split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10)
+}
+
+/** "2026-11-09" → { weekday: "Mon", day: 9 } for a day chip. */
+export const dayChip = (date: string): { weekday: string; day: number } => {
+  const [y, m, d] = date.split('-').map(Number)
+  return { weekday: DAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()], day: d }
+}
+
 const slot = (s: Slot) => `${shortDate(s.date)}, ${hhmm(s.start)}`
 
 export type Tone = 'normal' | 'cancelled' | 'changed'

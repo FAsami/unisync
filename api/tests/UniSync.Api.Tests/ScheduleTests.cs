@@ -29,6 +29,34 @@ public sealed class ScheduleTests : ApiTestBase
     private static string Code(JsonElement c) => c.GetProperty("course").GetProperty("code").GetString()!;
 
     [Fact]
+    public async Task Can_change_is_true_for_the_teacher_and_the_sections_cr_only()
+    {
+        var world = await BuildAsync();
+        var teacher = await AccessTokenAsync(world.TeacherPhone);
+        var student = await AccessTokenAsync(world.Student.Phone);
+        async Task<bool> CanChangeAsync(string token, string path = "/api/v1/me/today")
+        {
+            var (status, body) = await GetAsync(path, token);
+            Assert.Equal(HttpStatusCode.OK, status);
+            return body.GetProperty("data").GetProperty("canChange").GetBoolean();
+        }
+
+        Assert.True(await CanChangeAsync(teacher));
+        Assert.False(await CanChangeAsync(student));
+
+        await Seed.ExecuteAsync(Db.ConnectionString,
+            "INSERT INTO academic.class_representative (user_id, section_id, batch_id) VALUES (@u, @s, @b)", Ct,
+            ("u", world.Student.UserId), ("s", world.Student.SectionId), ("b", world.Student.BatchId));
+        Assert.True(await CanChangeAsync(student));
+        Assert.True(await CanChangeAsync(student, "/api/v1/me/week?start=2026-11-09"));
+
+        // An inactive CR mark no longer counts.
+        await Seed.ExecuteAsync(Db.ConnectionString,
+            "UPDATE academic.class_representative SET is_active = false WHERE user_id = @u", Ct, ("u", world.Student.UserId));
+        Assert.False(await CanChangeAsync(student));
+    }
+
+    [Fact]
     public async Task Today_shows_only_my_sections_classes_in_order_with_now_and_next()
     {
         var world = await BuildAsync();

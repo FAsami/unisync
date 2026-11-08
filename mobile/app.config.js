@@ -1,11 +1,9 @@
 import 'dotenv/config'
 
+// The app talks only to the UniSync API (api/). API_URL is its origin, no path.
 const getEnvs = () => {
   return {
-    SERVER_URL: process.env.SERVER_URL,
     API_URL: process.env.API_URL,
-    DATAHUB: process.env.DATAHUB,
-    DATAHUB_WS: process.env.DATAHUB_WS,
   }
 }
 

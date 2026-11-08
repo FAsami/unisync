@@ -65,6 +65,15 @@ export const unwrap = <T>(result: { data?: Envelope<T>; error?: unknown; respons
   throw toApiError(result.response.status, result.error ?? result.data)
 }
 
+/**
+ * Like unwrap, and also returns the envelope's message: the confirmation the
+ * server wrote for people ("Class cancelled. The section has been notified.").
+ */
+export const unwrapWithMessage = <T>(result: { data?: Envelope<T>; error?: unknown; response: Response }): { data: T; message: string } => ({
+  data: unwrap(result),
+  message: result.data?.message ?? '',
+})
+
 /** Wraps a call so a dropped connection becomes ApiError('NETWORK') instead of a bare TypeError. */
 export const call = async <T>(run: () => Promise<T>): Promise<T> => {
   try {

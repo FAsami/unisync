@@ -1983,7 +1983,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["RoomBody"];
+                    "application/json": components["schemas"]["RoomChangeBody"];
                 };
             };
             responses: {
@@ -6569,6 +6569,11 @@ export interface components {
             /** Format: int32 */
             capacity: null | number | string;
         };
+        RoomChangeBody: {
+            /** Format: uuid */
+            roomId: null | string;
+            reason: null | string;
+        };
         RoomRef: {
             /** Format: uuid */
             id: string;
@@ -6789,6 +6794,7 @@ export interface components {
             classes: components["schemas"]["ClassOccurrence"][];
             current: null | components["schemas"]["ClassOccurrence"];
             next: null | components["schemas"]["ClassOccurrence"];
+            canChange: boolean;
         };
         VerifyCodeBody: {
             phone: null | string;
@@ -6801,6 +6807,7 @@ export interface components {
             to: string;
             scope: string;
             days: components["schemas"]["DaySchedule"][];
+            canChange: boolean;
         };
     };
     responses: never;

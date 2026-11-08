@@ -1,4 +1,4 @@
-import { ApiError, call, toApiError, unwrap } from '../errors'
+import { ApiError, call, toApiError, unwrap, unwrapWithMessage } from '../errors'
 
 const response = (status: number) => ({ ok: status < 400, status }) as Response
 
@@ -21,4 +21,12 @@ it('exposes per-field messages from VALIDATION_FAILED', () => {
 it('turns a dropped connection into a NETWORK error', async () => {
   await expect(call(() => Promise.reject(new TypeError('Network request failed')))).rejects.toMatchObject({ code: 'NETWORK' })
   await expect(call(() => Promise.reject(new ApiError('x', 'INVALID_CODE', 400)))).rejects.toMatchObject({ code: 'INVALID_CODE' })
+})
+
+it("returns the server's confirmation alongside the payload", () => {
+  const ok = { success: true, message: 'Class cancelled. The section has been notified.', data: { change: 'cancellation' } }
+  expect(unwrapWithMessage({ data: ok, response: response(200) })).toEqual({ data: { change: 'cancellation' }, message: ok.message })
+  expect(() => unwrapWithMessage({ error: { success: false, error: { code: 'FORBIDDEN', message: 'No.' } }, response: response(403) })).toThrow(
+    expect.objectContaining({ code: 'FORBIDDEN' })
+  )
 })
