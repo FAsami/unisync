@@ -12,7 +12,7 @@ import {
   Table,
   Tag,
 } from 'antd'
-import { PlusOutlined } from '@ant-design/icons'
+import { Plus } from 'lucide-react'
 import { api } from '@/lib/api/client'
 import { messageOf, unwrap } from '@/lib/api/errors'
 import { fields, type Teacher } from '@/lib/api/schema'
@@ -99,7 +99,7 @@ const TeachersPage = () => {
         extra={
           <Button
             type='primary'
-            icon={<PlusOutlined />}
+            icon={<Plus size={16} />}
             onClick={() => setModal({})}
           >
             Add teacher

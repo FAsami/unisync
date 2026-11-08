@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react'
 import { Pressable, RefreshControl, ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useFocusEffect } from 'expo-router'
-import { Ionicons } from '@expo/vector-icons'
+import { ChevronLeft, ChevronRight, Coffee } from 'lucide-react-native'
 import { Box } from '@/components/ui/box'
 import { Heading } from '@/components/ui/heading'
 import { HStack } from '@/components/ui/hstack'
@@ -90,7 +90,7 @@ export default function ScheduleScreen() {
               accessibilityLabel="Previous week"
               className="p-2 min-h-[44px] justify-center"
             >
-              <Icon as={Ionicons} name="chevron-back" size={22} className="text-typography-700" />
+              <Icon as={ChevronLeft} size={22} className="text-typography-700" />
             </Pressable>
             {start ? (
               <Pressable onPress={() => goTo(undefined)} accessibilityRole="button" className="px-2 min-h-[44px] justify-center">
@@ -103,7 +103,7 @@ export default function ScheduleScreen() {
               accessibilityLabel="Next week"
               className="p-2 min-h-[44px] justify-center"
             >
-              <Icon as={Ionicons} name="chevron-forward" size={22} className="text-typography-700" />
+              <Icon as={ChevronRight} size={22} className="text-typography-700" />
             </Pressable>
           </HStack>
         </HStack>
@@ -170,7 +170,7 @@ export default function ScheduleScreen() {
               <Text className="text-xs font-bold uppercase tracking-widest text-typography-500 mb-2 px-1">{shortDate(day.date)}</Text>
               {day.classes.length === 0 ? (
                 <VStack className="rounded-2xl border border-outline-100 dark:border-outline-800 p-6 items-center" space="xs">
-                  <Icon as={Ionicons} name="cafe-outline" size={28} className="text-typography-400" />
+                  <Icon as={Coffee} size={28} className="text-typography-400" />
                   <Text className="text-typography-700 font-semibold">No classes</Text>
                 </VStack>
               ) : (

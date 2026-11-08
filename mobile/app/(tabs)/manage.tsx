@@ -2,7 +2,7 @@ import React from 'react'
 import { Linking, Pressable, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
-import { Ionicons } from '@expo/vector-icons'
+import { ChevronRight, Clock, Lock, Megaphone, type LucideIcon } from 'lucide-react-native'
 import { Box } from '@/components/ui/box'
 import { Heading } from '@/components/ui/heading'
 import { HStack } from '@/components/ui/hstack'
@@ -12,7 +12,7 @@ import { VStack } from '@/components/ui/vstack'
 import { useAuth } from '@/contexts/Auth'
 import { canSend, WEB_DASHBOARD_URL } from '@/lib/roles'
 
-function Action({ icon, title, description, onPress, color }: { icon: string; title: string; description: string; onPress: () => void; color: string }) {
+function Action({ icon, title, description, onPress, color }: { icon: LucideIcon; title: string; description: string; onPress: () => void; color: string }) {
   return (
     <Pressable
       onPress={onPress}
@@ -22,13 +22,13 @@ function Action({ icon, title, description, onPress, color }: { icon: string; ti
     >
       <HStack space="md" className="items-center">
         <Box className="h-12 w-12 rounded-full items-center justify-center" style={{ backgroundColor: `${color}1A` }}>
-          <Icon as={Ionicons} name={icon} size={24} style={{ color }} />
+          <Icon as={icon} size={24} style={{ color }} />
         </Box>
         <VStack className="flex-1">
           <Text className="text-base font-bold text-typography-900">{title}</Text>
           <Text className="text-typography-500 text-sm">{description}</Text>
         </VStack>
-        <Icon as={Ionicons} name="chevron-forward" size={20} className="text-typography-400" />
+        <Icon as={ChevronRight} size={20} className="text-typography-400" />
       </HStack>
     </Pressable>
   )
@@ -56,17 +56,17 @@ export default function ManageScreen() {
         {allowed ? (
           <>
             <Action
-              icon="megaphone-outline"
+              icon={Megaphone}
               title="Send a notice"
               description="To a section, batch or your department, as you're allowed"
               color="#2563EB"
               onPress={() => router.push('/manage/notifications/compose')}
             />
             <Action
-              icon="time-outline"
+              icon={Clock}
               title="Sent notices"
               description="What you sent, who got it and how many read it"
-              color="#059669"
+              color="#4F46E5"
               onPress={() => router.push('/manage/notifications/history')}
             />
             <VStack className="rounded-2xl bg-background-50 dark:bg-background-900 p-4 mt-3" space="xs">
@@ -76,7 +76,7 @@ export default function ManageScreen() {
           </>
         ) : (
           <VStack className="rounded-2xl border border-outline-200 p-6 items-center" space="sm">
-            <Icon as={Ionicons} name="lock-closed-outline" size={32} className="text-typography-400" />
+            <Icon as={Lock} size={32} className="text-typography-400" />
             <Text className="text-typography-700 text-center">Only teachers, CRs and department admins send notices.</Text>
           </VStack>
         )}

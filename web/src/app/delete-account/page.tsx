@@ -3,10 +3,7 @@
 import { useState, useTransition } from 'react'
 import Image from 'next/image'
 import { Alert, Button } from 'antd'
-import {
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons'
+import { CheckCircle2, AlertCircle } from 'lucide-react'
 import { CodeSignIn } from '@/components/CodeSignIn'
 import { deleteAccount, signOut } from '@/actions/session'
 
@@ -49,9 +46,7 @@ const DeleteAccountPage = () => {
         </div>
 
         <div className='flex items-center justify-center gap-3 mb-2'>
-          <ExclamationCircleOutlined
-            style={{ fontSize: '24px', color: '#dc2626' }}
-          />
+          <AlertCircle size={24} color='#B91C1C' />
           <h1 className='text-3xl font-bold text-center text-gray-900'>
             Delete account
           </h1>
@@ -118,7 +113,7 @@ const DeleteAccountPage = () => {
         {step === 'done' ? (
           <div className='text-center'>
             <div className='flex justify-center mb-6'>
-              <CheckCircleOutlined style={{ fontSize: 64, color: '#52c41a' }} />
+              <CheckCircle2 size={64} color='#15803D' />
             </div>
             <h2 className='text-2xl font-bold text-gray-900 mb-3'>
               Account deleted

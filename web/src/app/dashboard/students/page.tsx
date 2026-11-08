@@ -13,7 +13,7 @@ import {
   Table,
   Tooltip,
 } from 'antd'
-import { PlusOutlined, UploadOutlined } from '@ant-design/icons'
+import { Plus, Upload } from 'lucide-react'
 import { api } from '@/lib/api/client'
 import { messageOf, unwrap } from '@/lib/api/errors'
 import { fields, type Student } from '@/lib/api/schema'
@@ -137,14 +137,14 @@ const StudentsPage = () => {
         extra={
           <>
             <Button
-              icon={<UploadOutlined />}
+              icon={<Upload size={16} />}
               onClick={() => setImporting(true)}
             >
               Import
             </Button>
             <Button
               type='primary'
-              icon={<PlusOutlined />}
+              icon={<Plus size={16} />}
               onClick={() => setModal({})}
             >
               Add student

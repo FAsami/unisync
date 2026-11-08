@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
-import { Ionicons } from '@expo/vector-icons'
+import { ArrowLeft, Building2, Circle, CircleDot, GraduationCap, Users, type LucideIcon } from 'lucide-react-native'
 import { Heading } from '@/components/ui/heading'
 import { HStack } from '@/components/ui/hstack'
 import { Icon } from '@/components/ui/icon'
@@ -20,7 +20,7 @@ type Audience = components['schemas']['AudienceOption']
 const MAX_TITLE = 100
 const MAX_BODY = 1000
 
-const audienceIcon: Record<string, string> = { section: 'people-outline', batch: 'school-outline', department: 'business-outline' }
+const audienceIcon: Record<string, LucideIcon> = { section: Users, batch: GraduationCap, department: Building2 }
 
 /**
  * Send a notice to one audience the API says I may address (GET /notifications/audiences):
@@ -84,7 +84,7 @@ export default function ComposeScreen() {
     <SafeAreaView className="flex-1 bg-white dark:bg-background-950">
       <HStack className="items-center px-2 py-2">
         <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back" className="p-3">
-          <Icon as={Ionicons} name="arrow-back" size={22} className="text-typography-900" />
+          <Icon as={ArrowLeft} size={22} className="text-typography-900" />
         </Pressable>
         <Heading size="md" className="text-typography-900">
           Send a notice
@@ -119,7 +119,7 @@ export default function ComposeScreen() {
                         selected ? 'bg-primary-50 dark:bg-primary-900/20' : ''
                       }`}
                     >
-                      <Icon as={Ionicons} name={audienceIcon[a.type] ?? 'people-outline'} size={20} className="text-typography-500 mr-3" />
+                      <Icon as={audienceIcon[a.type] ?? Users} size={20} className="text-typography-500 mr-3" />
                       <VStack className="flex-1">
                         <Text className="text-typography-900 font-semibold">{a.label}</Text>
                         <Text className="text-typography-500 text-xs">
@@ -127,8 +127,7 @@ export default function ComposeScreen() {
                         </Text>
                       </VStack>
                       <Icon
-                        as={Ionicons}
-                        name={selected ? 'radio-button-on' : 'radio-button-off'}
+                        as={selected ? CircleDot : Circle}
                         size={22}
                         className={selected ? 'text-primary-600' : 'text-typography-300'}
                       />

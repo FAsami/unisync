@@ -14,7 +14,7 @@ import {
   TimePicker,
   Typography,
 } from 'antd'
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
+import { Trash2, Pencil, Plus } from 'lucide-react'
 import dayjs, { type Dayjs } from 'dayjs'
 import { api } from '@/lib/api/client'
 import { unwrap } from '@/lib/api/errors'
@@ -147,7 +147,7 @@ const RoutinePage = () => {
         extra={
           <Button
             type='primary'
-            icon={<PlusOutlined />}
+            icon={<Plus size={16} />}
             disabled={!sectionId}
             onClick={() => setModal({})}
           >
@@ -182,7 +182,7 @@ const RoutinePage = () => {
                   type='text'
                   size='small'
                   aria-label={`Add a class on ${dayName}`}
-                  icon={<PlusOutlined />}
+                  icon={<Plus size={16} />}
                   onClick={() => setModal({ dayOfWeek: day })}
                 />
               }
@@ -208,7 +208,7 @@ const RoutinePage = () => {
                             type='text'
                             size='small'
                             aria-label='Edit class'
-                            icon={<EditOutlined />}
+                            icon={<Pencil size={14} />}
                             onClick={() => setModal({ slot })}
                           />
                           <Button
@@ -216,7 +216,7 @@ const RoutinePage = () => {
                             size='small'
                             danger
                             aria-label='Delete class'
-                            icon={<DeleteOutlined />}
+                            icon={<Trash2 size={14} />}
                             onClick={() =>
                               confirmDelete({
                                 title: `Remove ${slot.course.code} on ${dayName} at ${hhmm(slot.startTime)}?`,

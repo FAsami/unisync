@@ -12,7 +12,7 @@ import {
   Tag,
   Upload,
 } from 'antd'
-import { DownloadOutlined, UploadOutlined } from '@ant-design/icons'
+import { Download, Upload as UploadIcon } from 'lucide-react'
 import { api } from '@/lib/api/client'
 import { ApiError, messageOf, unwrap } from '@/lib/api/errors'
 import type { StudentImportResult } from '@/lib/api/schema'
@@ -157,10 +157,10 @@ export const RosterImport = ({
             return false
           }}
         >
-          <Button icon={<UploadOutlined />}>Choose CSV file</Button>
+          <Button icon={<UploadIcon size={16} />}>Choose CSV file</Button>
         </Upload>
         <Button
-          icon={<DownloadOutlined />}
+          icon={<Download size={16} />}
           href={`data:text/csv;charset=utf-8,${encodeURIComponent(ROSTER_TEMPLATE)}`}
           download='unisync-roster-template.csv'
         >

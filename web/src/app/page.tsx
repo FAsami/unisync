@@ -2,20 +2,20 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from 'antd'
 import {
-  AndroidOutlined,
-  AppleOutlined,
-  ArrowRightOutlined,
-  BellOutlined,
-  CalendarOutlined,
-  CheckCircleFilled,
-  LockOutlined,
-  ReadOutlined,
-  SafetyCertificateOutlined,
-  SolutionOutlined,
-  SwapOutlined,
-  TeamOutlined,
-  UserAddOutlined,
-} from '@ant-design/icons'
+  Apple,
+  Smartphone,
+  ArrowRight,
+  Bell,
+  Calendar,
+  CheckCircle2,
+  Lock,
+  BookOpen,
+  ShieldCheck,
+  GraduationCap,
+  ArrowLeftRight,
+  Users,
+  UserPlus,
+} from 'lucide-react'
 import { Reveal } from './reveal'
 
 const NAV_LINKS = [
@@ -26,37 +26,37 @@ const NAV_LINKS = [
 
 const FEATURES = [
   {
-    icon: CalendarOutlined,
+    icon: Calendar,
     title: 'My day',
     description:
       "Students and teachers open the app to today's classes, with what's happening now and what's next, not a static printed routine.",
   },
   {
-    icon: SwapOutlined,
+    icon: ArrowLeftRight,
     title: 'Instant change alerts',
     description:
       'Cancel a class, move it, or swap the room, and the whole section is notified immediately, with the reason attached.',
   },
   {
-    icon: BellOutlined,
+    icon: Bell,
     title: 'One inbox',
     description:
       'Announcements from teachers and the department land in a single notification inbox, not scattered across group chats.',
   },
   {
-    icon: TeamOutlined,
+    icon: Users,
     title: 'Department setup',
     description:
       'Batches, sections, courses, teachers and the weekly routine, all managed from this dashboard, with clashes caught before they happen.',
   },
   {
-    icon: UserAddOutlined,
+    icon: UserPlus,
     title: 'Roster-based access',
     description:
       "Only numbers on a department's roster can sign in. Anyone else can ask to join, and an admin approves it in one click.",
   },
   {
-    icon: LockOutlined,
+    icon: Lock,
     title: 'No passwords',
     description:
       'Sign in with a text code sent to your phone. Nothing to remember, nothing to reset.',
@@ -65,19 +65,19 @@ const FEATURES = [
 
 const ROLES = [
   {
-    icon: SolutionOutlined,
+    icon: GraduationCap,
     title: 'Students',
     description:
       "See your section's schedule, get notified the moment a class changes, and ask your department for access if you're new.",
   },
   {
-    icon: ReadOutlined,
+    icon: BookOpen,
     title: 'Teachers',
     description:
       'Cancel or move your own classes in a tap, and send a notice to everyone in the section at once.',
   },
   {
-    icon: SafetyCertificateOutlined,
+    icon: ShieldCheck,
     title: 'Department admins',
     description:
       'Set up batches, courses and the weekly routine here on the web, then hand the day-to-day over to the app.',
@@ -340,7 +340,7 @@ const Home = () => {
                     <Button
                       type='primary'
                       size='large'
-                      icon={<ArrowRightOutlined />}
+                      icon={<ArrowRight size={16} />}
                       iconPosition='end'
                       className='!border-none !bg-linear-to-r !from-blue-600 !to-blue-500 !shadow-lg !shadow-blue-600/25 motion-reduce:[animation:none!important] [animation:pulseGlow_2.5s_ease-in-out_infinite]'
                     >
@@ -350,12 +350,12 @@ const Home = () => {
                 </div>
                 <div className='mt-5 flex flex-wrap items-center gap-3'>
                   <StoreBadge
-                    icon={<AppleOutlined />}
+                    icon={<Apple size={20} />}
                     line1='Download on the'
                     line2='App Store'
                   />
                   <StoreBadge
-                    icon={<AndroidOutlined />}
+                    icon={<Smartphone size={20} />}
                     line1='GET IT ON'
                     line2='Google Play'
                   />
@@ -469,8 +469,8 @@ const Home = () => {
                 <Reveal key={title} delay={i * 100}>
                   <div className='group relative h-full overflow-hidden rounded-xl border border-slate-200 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-900/5'>
                     <div className='absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-600 to-sky-400' />
-                    <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-lg text-blue-600 transition-transform duration-300 group-hover:scale-110'>
-                      <Icon />
+                    <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-transform duration-300 group-hover:scale-110'>
+                      <Icon size={20} />
                     </div>
                     <h3 className='mt-4 font-bold text-slate-900'>{title}</h3>
                     <p className='mt-2 text-sm text-slate-600'>{description}</p>
@@ -499,8 +499,8 @@ const Home = () => {
               {FEATURES.map(({ icon: Icon, title, description }, i) => (
                 <Reveal key={title} delay={(i % 3) * 90}>
                   <div className='group'>
-                    <div className='flex h-11 w-11 items-center justify-center rounded-lg bg-linear-to-br from-blue-600 to-sky-500 text-lg text-white shadow-md shadow-blue-600/20 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6'>
-                      <Icon />
+                    <div className='flex h-11 w-11 items-center justify-center rounded-lg bg-linear-to-br from-blue-600 to-sky-500 text-white shadow-md shadow-blue-600/20 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6'>
+                      <Icon size={22} />
                     </div>
                     <h3 className='mt-4 font-bold text-slate-900'>{title}</h3>
                     <p className='mt-1.5 text-sm text-slate-600'>
@@ -533,7 +533,7 @@ const Home = () => {
                       'Build the weekly routine, clash-free',
                     ].map((item) => (
                       <li key={item} className='flex items-center gap-2'>
-                        <CheckCircleFilled className='text-blue-200' />
+                        <CheckCircle2 size={16} className='text-blue-200' />
                         {item}
                       </li>
                     ))}
