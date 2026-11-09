@@ -46,7 +46,7 @@ const DeleteAccountPage = () => {
         </div>
 
         <div className='flex items-center justify-center gap-3 mb-2'>
-          <AlertCircle size={24} color='#F87171' />
+          <AlertCircle size={24} color='#b91c1c' />
           <h1 className='text-3xl font-bold text-center text-[var(--color-ink)]'>
             Delete account
           </h1>
@@ -113,7 +113,7 @@ const DeleteAccountPage = () => {
         {step === 'done' ? (
           <div className='text-center'>
             <div className='flex justify-center mb-6'>
-              <CheckCircle2 size={64} color='#4ADE80' />
+              <CheckCircle2 size={64} color='#15803d' />
             </div>
             <h2 className='text-2xl font-bold text-[var(--color-ink)] mb-3'>
               Account deleted

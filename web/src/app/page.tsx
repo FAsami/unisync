@@ -305,7 +305,7 @@ const Home = () => {
         <section className='relative overflow-hidden'>
           <div
             aria-hidden='true'
-            className='absolute inset-0 -z-20 bg-[radial-gradient(circle,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[length:28px_28px] opacity-60 [mask-image:radial-gradient(ellipse_60%_55%_at_30%_20%,black,transparent)]'
+            className='absolute inset-0 -z-20 bg-[radial-gradient(circle,rgba(24,24,27,0.08)_1px,transparent_1px)] bg-[length:28px_28px] opacity-60 [mask-image:radial-gradient(ellipse_60%_55%_at_30%_20%,black,transparent)]'
           />
           <div
             aria-hidden='true'

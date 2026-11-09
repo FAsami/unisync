@@ -151,7 +151,7 @@ const DashboardSidebar = ({
         />
       </div>
       <Menu
-        theme='dark'
+        theme='light'
         mode='inline'
         selectedKeys={[selected]}
         items={items}
