@@ -105,7 +105,7 @@ const AccessRequestsPage = () => {
               <Space direction='vertical' size={0}>
                 <Tag color={STATUS_COLOR[r.status]}>{r.status}</Tag>
                 {r.rejectionReason ? (
-                  <span className='text-xs text-gray-500'>
+                  <span className='text-xs text-[var(--color-ink-faint)]'>
                     {r.rejectionReason}
                   </span>
                 ) : null}

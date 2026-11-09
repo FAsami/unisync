@@ -78,7 +78,7 @@ export default function NotificationScreen() {
           </Text>
           <Text className="text-typography-800 text-base leading-relaxed">{item.body}</Text>
           {item.kind === 'class_change' && classDate ? (
-            <VStack className="mt-8 rounded-2xl border border-outline-100 dark:border-outline-800 p-4" space="sm">
+            <VStack className="mt-8 rounded-lg border border-outline-100 dark:border-outline-800 p-4" space="sm">
               <Text className="text-typography-700">This is about your class on {shortDate(classDate)}.</Text>
               <Pressable onPress={() => router.replace('/(tabs)/schedule')} accessibilityRole="button" className="min-h-[44px] justify-center">
                 <Text className="text-primary-600 font-semibold">Open my schedule</Text>

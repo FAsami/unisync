@@ -98,7 +98,7 @@ export default function ProfileScreen() {
             <Text className="text-sm text-typography-500">{roleLabel(me.role ?? userRole, me.isClassRepresentative)}</Text>
           </VStack>
 
-          <Box className="bg-white dark:bg-background-900 rounded-xl p-4 border border-outline-100 dark:border-outline-800 mt-4">
+          <Box className="bg-white dark:bg-background-900 rounded-md p-4 border border-outline-100 dark:border-outline-800 mt-4">
             <VStack space="sm">
               <InfoRow icon={Phone} label="Phone" value={me.phone} />
               {me.studentId ? (
@@ -117,7 +117,7 @@ export default function ProfileScreen() {
           </Box>
           <Text className="text-typography-500 text-sm mt-3 px-1">Something wrong here? Your department keeps these details; ask them to fix it.</Text>
 
-          <Box className="bg-white dark:bg-background-900 rounded-xl p-4 border border-error-200 dark:border-error-800 mt-8">
+          <Box className="bg-white dark:bg-background-900 rounded-md p-4 border border-error-200 dark:border-error-800 mt-8">
             <Text className="text-base font-semibold text-typography-900">Delete account</Text>
             <Text className="text-sm text-typography-500 mt-1 mb-4">
               You&apos;ll be signed out on every device, stop getting notifications, and won&apos;t be able to sign in again. Your

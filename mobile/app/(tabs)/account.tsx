@@ -49,7 +49,7 @@ const AccountScreen = () => {
             General
           </Text>
 
-          <Box className="bg-white dark:bg-background-900 rounded-xl overflow-hidden shadow-sm">
+          <Box className="bg-white dark:bg-background-900 rounded-md overflow-hidden shadow-sm">
             <Pressable
               onPress={() => router.push('/profile')}
               className="p-4 active:bg-background-50 dark:active:bg-background-800"

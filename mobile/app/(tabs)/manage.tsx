@@ -18,7 +18,7 @@ function Action({ icon, title, description, onPress, color }: { icon: LucideIcon
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${title}. ${description}`}
-      className="rounded-2xl border border-outline-100 dark:border-outline-800 bg-white dark:bg-background-900 p-4 mb-3"
+      className="rounded-lg border border-outline-100 dark:border-outline-800 bg-white dark:bg-background-900 p-4 mb-3"
     >
       <HStack space="md" className="items-center">
         <Box className="h-12 w-12 rounded-full items-center justify-center" style={{ backgroundColor: `${color}1A` }}>
@@ -69,20 +69,20 @@ export default function ManageScreen() {
               color="#4F46E5"
               onPress={() => router.push('/manage/notifications/history')}
             />
-            <VStack className="rounded-2xl bg-background-50 dark:bg-background-900 p-4 mt-3" space="xs">
+            <VStack className="rounded-lg bg-background-50 dark:bg-background-900 p-4 mt-3" space="xs">
               <Text className="text-typography-900 font-semibold">Cancelling or moving a class?</Text>
               <Text className="text-typography-600">Tap the class on Today or Schedule. Students are told automatically.</Text>
             </VStack>
           </>
         ) : (
-          <VStack className="rounded-2xl border border-outline-200 p-6 items-center" space="sm">
+          <VStack className="rounded-lg border border-outline-200 p-6 items-center" space="sm">
             <Icon as={Lock} size={32} className="text-typography-400" />
             <Text className="text-typography-700 text-center">Only teachers, CRs and department admins send notices.</Text>
           </VStack>
         )}
 
         {userRole === 'admin' ? (
-          <VStack className="rounded-2xl border border-outline-200 dark:border-outline-800 p-4 mt-6" space="sm">
+          <VStack className="rounded-lg border border-outline-200 dark:border-outline-800 p-4 mt-6" space="sm">
             <Text className="text-typography-900 font-semibold">Department setup is on the web</Text>
             <Text className="text-typography-600">
               Batches, sections, courses, teachers, the student roster, the routine and access requests are managed from the web dashboard.

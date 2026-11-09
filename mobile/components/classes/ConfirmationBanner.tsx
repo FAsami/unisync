@@ -26,7 +26,7 @@ export function ConfirmationBanner({ message, onHide }: { message?: string; onHi
         accessibilityLiveRegion="polite"
         accessibilityLabel={message}
         accessibilityHint="Tap to dismiss"
-        className="flex-row items-center rounded-2xl bg-success-700 px-4 py-3 shadow-md"
+        className="flex-row items-center rounded-lg bg-success-700 px-4 py-3 shadow-md"
       >
         <Icon as={CheckCircle2} size={22} className="text-white mr-3" />
         <Text className="text-white font-semibold flex-1">{message}</Text>

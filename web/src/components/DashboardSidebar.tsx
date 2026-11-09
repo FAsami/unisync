@@ -115,14 +115,14 @@ const DashboardSidebar = ({
       collapsed={collapsed}
       onCollapse={onCollapse}
       breakpoint='lg'
-      collapsedWidth={isMobile ? 0 : 80}
-      width={250}
+      collapsedWidth={isMobile ? 0 : 64}
+      width={232}
       trigger={null}
       style={{
         overflow: 'auto',
         height: '100vh',
         position: 'fixed',
-        left: isMobile && collapsed ? '-250px' : 0,
+        left: isMobile && collapsed ? '-232px' : 0,
         top: 0,
         bottom: 0,
         zIndex: 100,
@@ -133,25 +133,25 @@ const DashboardSidebar = ({
     >
       <div
         style={{
-          height: 64,
-          margin: 16,
+          height: 48,
+          margin: '12px 8px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: collapsed ? '8px' : '12px',
+          padding: collapsed ? '4px' : '8px',
         }}
       >
         <Image
           src='/logo-transparent.png'
           alt='UniSync Logo'
-          width={collapsed ? 40 : 120}
-          height={40}
+          width={collapsed ? 32 : 104}
+          height={32}
           style={{ objectFit: 'contain', transition: 'all 0.2s' }}
           priority
         />
       </div>
       <Menu
-        theme='light'
+        theme='dark'
         mode='inline'
         selectedKeys={[selected]}
         items={items}

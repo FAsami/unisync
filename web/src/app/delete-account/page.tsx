@@ -39,19 +39,19 @@ const DeleteAccountPage = () => {
     })
 
   return (
-    <div className='min-h-screen flex items-center justify-center p-5 bg-linear-to-br from-blue-50 to-indigo-100'>
-      <div className='w-full max-w-[450px] p-12 bg-white'>
+    <div className='min-h-screen flex items-center justify-center p-5 bg-[var(--color-surface)]'>
+      <div className='w-full max-w-[450px] p-12 bg-[var(--color-surface-raised)] border border-[var(--color-line)] rounded-xl'>
         <div className='flex flex-col items-center justify-center mb-5'>
           <Image src='/logo.png' width={120} height={120} alt='UniSync' />
         </div>
 
         <div className='flex items-center justify-center gap-3 mb-2'>
-          <AlertCircle size={24} color='#B91C1C' />
-          <h1 className='text-3xl font-bold text-center text-gray-900'>
+          <AlertCircle size={24} color='#F87171' />
+          <h1 className='text-3xl font-bold text-center text-[var(--color-ink)]'>
             Delete account
           </h1>
         </div>
-        <div className='text-center text-gray-600 text-sm mb-8'>
+        <div className='text-center text-[var(--color-ink-muted)] text-sm mb-8'>
           {step === 'sign-in'
             ? 'First, confirm the number is yours. We’ll text you a code.'
             : 'UniSync account deletion'}
@@ -113,20 +113,20 @@ const DeleteAccountPage = () => {
         {step === 'done' ? (
           <div className='text-center'>
             <div className='flex justify-center mb-6'>
-              <CheckCircle2 size={64} color='#15803D' />
+              <CheckCircle2 size={64} color='#4ADE80' />
             </div>
-            <h2 className='text-2xl font-bold text-gray-900 mb-3'>
+            <h2 className='text-2xl font-bold text-[var(--color-ink)] mb-3'>
               Account deleted
             </h2>
-            <p className='text-gray-600'>
+            <p className='text-[var(--color-ink-muted)]'>
               Your UniSync account is deleted and you have been signed out
               everywhere.
             </p>
           </div>
         ) : null}
 
-        <div className='mt-8 pt-6 border-t border-gray-200 text-center'>
-          <p className='text-xs text-gray-500'>
+        <div className='mt-8 pt-6 border-t border-[var(--color-line)] text-center'>
+          <p className='text-xs text-[var(--color-ink-faint)]'>
             Need help? Contact your department office.
           </p>
         </div>

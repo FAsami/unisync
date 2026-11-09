@@ -53,7 +53,7 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
       )}
       <Layout
         style={{
-          marginLeft: isMobile ? 0 : collapsed ? 80 : 250,
+          marginLeft: isMobile ? 0 : collapsed ? 64 : 232,
           transition: 'margin-left 0.2s',
           background: 'var(--color-surface)',
         }}
@@ -95,11 +95,11 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
         </Header>
         <Content
           style={{
-            margin: isMobile ? '16px' : '24px 16px',
-            padding: isMobile ? 16 : 24,
+            margin: isMobile ? '12px' : '16px 12px',
+            padding: isMobile ? 12 : 20,
             minHeight: 280,
             background: 'var(--color-surface-raised)',
-            borderRadius: 16,
+            borderRadius: 8,
             border: '1px solid var(--color-line)',
           }}
         >

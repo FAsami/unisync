@@ -23,7 +23,7 @@ function Row({ item }: { item: InboxItem }) {
       onPress={() => router.push({ pathname: '/notification/[id]', params: { id: item.id } })}
       accessibilityRole="button"
       accessibilityLabel={`${item.read ? '' : 'Unread. '}${item.title}. ${item.body}`}
-      className={`p-4 mb-3 rounded-2xl border ${
+      className={`p-4 mb-3 rounded-lg border ${
         item.read
           ? 'bg-white dark:bg-background-900 border-outline-100 dark:border-outline-800'
           : 'bg-primary-50 dark:bg-primary-900/10 border-primary-200 dark:border-primary-800'

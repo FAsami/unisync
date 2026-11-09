@@ -4,19 +4,19 @@
 
 @layer base {
   :root {
-    /* Primary Brand Colors - Blue (matches tokens.json: brand = #2563EB) */
-    --color-primary-0: 239 246 255; /* #eff6ff */
-    --color-primary-50: 239 246 255; /* #eff6ff - brand-soft */
-    --color-primary-100: 219 234 254; /* #dbeafe */
-    --color-primary-200: 191 219 254; /* #bfdbfe */
-    --color-primary-300: 147 197 253; /* #93c5fd */
-    --color-primary-400: 96 165 250; /* #60a5fa */
-    --color-primary-500: 59 130 246; /* #3b82f6 */
-    --color-primary-600: 37 99 235; /* #2563eb - Main Brand */
-    --color-primary-700: 29 78 216; /* #1d4ed8 - brand-pressed */
-    --color-primary-800: 30 64 175; /* #1e40af */
-    --color-primary-900: 30 58 138; /* #1e3a8a */
-    --color-primary-950: 23 37 84; /* #172554 */
+    /* Primary Brand Colors - indigo (tokens.json: brand = #4850B8) */
+    --color-primary-0: 238 240 252; /* #eef0fc - brand-soft */
+    --color-primary-50: 238 240 252; /* #eef0fc */
+    --color-primary-100: 223 225 246; /* #dfe1f6 */
+    --color-primary-200: 193 196 233; /* #c1c4e9 */
+    --color-primary-300: 163 167 221; /* #a3a7dd */
+    --color-primary-400: 132 138 209; /* #848ad1 */
+    --color-primary-500: 102 109 196; /* #666dc4 */
+    --color-primary-600: 72 80 184; /* #4850b8 - Main Brand */
+    --color-primary-700: 56 63 148; /* #383f94 - brand-pressed */
+    --color-primary-800: 42 47 109; /* #2a2f6d */
+    --color-primary-900: 28 31 70; /* #1c1f46 */
+    --color-primary-950: 21 23 51; /* #151733 */
 
     /* Success Colors - Green (matches tokens.json: success = #15803D) */
     --color-success-50: 240 253 244; /* #F0FDF4 */
@@ -80,51 +80,63 @@
     --color-tertiary-900: 76 29 149; /* #4C1D95 */
     --color-tertiary-950: 46 16 101; /* #2E1065 */
 
-    /*Typography - Slate for Light Mode */
-    --color-typography-50: 248 250 252; /* #F8FAFC */
-    --color-typography-100: 241 245 249; /* #F1F5F9 */
-    --color-typography-200: 226 232 240; /* #E2E8F0 */
-    --color-typography-300: 203 213 225; /* #CBD5E1 */
-    --color-typography-400: 148 163 184; /* #94A3B8 */
-    --color-typography-500: 100 116 139; /* #64748B */
-    --color-typography-600: 71 85 105; /* #475569 */
-    --color-typography-700: 51 65 85; /* #334155 */
-    --color-typography-800: 30 41 59; /* #1E293B */
-    --color-typography-900: 15 23 42; /* #0F172A */
+    /* Typography — neutral gray (tokens.json: ink = #18181B, true neutral, not slate) */
+    --color-typography-50: 250 250 250; /* #FAFAFA */
+    --color-typography-100: 242 242 243; /* #F2F2F3 */
+    --color-typography-200: 228 228 231; /* #E4E4E7 */
+    --color-typography-300: 212 212 216; /* #D4D4D8 */
+    --color-typography-400: 161 161 170; /* #A1A1AA - ink-faint */
+    --color-typography-500: 113 113 122; /* #71717A - ink-muted */
+    --color-typography-600: 82 82 91; /* #52525B */
+    --color-typography-700: 63 63 70; /* #3F3F46 */
+    --color-typography-800: 39 39 42; /* #27272A */
+    --color-typography-900: 24 24 27; /* #18181B - ink */
 
-    /* Outline/Border */
-    --color-outline-200: 226 232 240; /* #E2E8F0 */
-    --color-outline-300: 203 213 225; /* #CBD5E1 */
+    /* Outline/Border (tokens.json: line = #E4E4E7, line-strong = #86868F) */
+    --color-outline-200: 228 228 231; /* #E4E4E7 */
+    --color-outline-300: 134 134 143; /* #86868F */
 
-    /* Background */
-    --color-background-0: 255 255 255; /* #FFFFFF */
-    --color-background-50: 248 250 252; /* #F8FAFC */
-    --color-background-100: 241 245 249; /* #F1F5F9 */
+    /* Background (tokens.json: surface = #FAFAFA, surface-sunken = #F2F2F3) */
+    --color-background-0: 255 255 255; /* #FFFFFF - surface-raised */
+    --color-background-50: 250 250 250; /* #FAFAFA - surface */
+    --color-background-100: 242 242 243; /* #F2F2F3 - surface-sunken */
   }
 
   .dark {
-    /* Primary stays same for dark mode */
+    /* Primary — indigo (tokens.json: brand-dark = #7B88E8) */
+    --color-primary-0: 24 27 46; /* #181B2E - brand-soft-dark */
+    --color-primary-50: 24 27 46; /* #181B2E */
+    --color-primary-100: 35 39 67; /* #232743 */
+    --color-primary-200: 57 63 108; /* #393F6C */
+    --color-primary-300: 79 88 149; /* #4F5895 */
+    --color-primary-400: 101 112 191; /* #6570BF */
+    --color-primary-500: 123 136 232; /* #7B88E8 - Main Brand (dark) */
+    --color-primary-600: 102 114 214; /* #6672D6 - brand-pressed-dark */
+    --color-primary-700: 141 150 225; /* #8D96E1 */
+    --color-primary-800: 180 186 236; /* #B4BAEC */
+    --color-primary-900: 219 222 247; /* #DBDEF7 */
+    --color-primary-950: 238 240 252; /* #EEF0FC */
 
-    /* Typography - Inverted for Dark Mode */
-    --color-typography-50: 15 23 42; /* #0F172A (swapped) */
-    --color-typography-100: 30 41 59; /* #1E293B */
-    --color-typography-200: 51 65 85; /* #334155 */
-    --color-typography-300: 71 85 105; /* #475569 */
-    --color-typography-400: 100 116 139; /* #64748B */
-    --color-typography-500: 148 163 184; /* #94A3B8 */
-    --color-typography-600: 203 213 225; /* #CBD5E1 */
-    --color-typography-700: 226 232 240; /* #E2E8F0 */
-    --color-typography-800: 241 245 249; /* #F1F5F9 */
-    --color-typography-900: 248 250 252; /* #F8FAFC (swapped) */
+    /* Typography — inverted neutral gray (tokens.json: ink-dark = #EDEDEF) */
+    --color-typography-50: 10 10 11; /* #0A0A0B (swapped) */
+    --color-typography-100: 22 22 24; /* #161618 */
+    --color-typography-200: 39 39 42; /* #27272A */
+    --color-typography-300: 63 63 70; /* #3F3F46 */
+    --color-typography-400: 104 104 111; /* #68686F - ink-faint-dark */
+    --color-typography-500: 154 154 162; /* #9A9AA2 - ink-muted-dark */
+    --color-typography-600: 212 212 216; /* #D4D4D8 */
+    --color-typography-700: 228 228 231; /* #E4E4E7 */
+    --color-typography-800: 244 244 245; /* #F4F4F5 */
+    --color-typography-900: 237 237 239; /* #EDEDEF - ink-dark (swapped) */
 
-    /* Outline/Border for Dark (tokens.json: line-dark, line-strong-dark) */
-    --color-outline-200: 34 48 74; /* #22304A */
-    --color-outline-300: 81 101 140; /* #51658C */
+    /* Outline/Border for Dark (tokens.json: line-dark = #1F1F22, line-strong-dark = #63636B) */
+    --color-outline-200: 31 31 34; /* #1F1F22 */
+    --color-outline-300: 99 99 107; /* #63636B */
 
     /* Background for Dark (tokens.json: surface-raised/sunken/surface dark) */
-    --color-background-0: 18 27 46; /* #121B2E - surface-raised */
-    --color-background-50: 15 23 38; /* #0F1726 - surface-sunken */
-    --color-background-100: 11 18 32; /* #0B1220 - surface */
+    --color-background-0: 22 22 24; /* #161618 - surface-raised */
+    --color-background-50: 13 13 15; /* #0D0D0F - surface-sunken */
+    --color-background-100: 10 10 11; /* #0A0A0B - surface */
   }
 
   /* Base Styles */
@@ -134,25 +146,25 @@
 
   body {
     @apply bg-background-0 text-typography-900;
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont,
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont,
       'Segoe UI', sans-serif;
   }
 
-  /* Rounded Design Utilities */
+  /* Rounded Design Utilities — dense/sharp (tokens.json radius-md/lg/xl) */
   .rounded-button {
-    @apply rounded-lg; /* 12px for buttons */
+    @apply rounded-md; /* 6px for buttons */
   }
 
   .rounded-input {
-    @apply rounded-xl; /* 16px for inputs */
+    @apply rounded-md; /* 6px for inputs */
   }
 
   .rounded-card {
-    @apply rounded-xl; /* 16px for cards */
+    @apply rounded-lg; /* 8px for cards */
   }
 
   .rounded-modal {
-    @apply rounded-2xl; /* 20px for modals */
+    @apply rounded-xl; /* 12px for modals */
   }
 
   .rounded-pill {

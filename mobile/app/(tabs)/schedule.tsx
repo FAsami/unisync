@@ -127,7 +127,7 @@ export default function ScheduleScreen() {
                   accessibilityRole="button"
                   accessibilityState={{ selected: isSelected }}
                   accessibilityLabel={`${shortDate(d.date)}, ${count} ${count === 1 ? 'class' : 'classes'}`}
-                  className={`items-center rounded-2xl px-3 py-2 min-w-[52px] border ${
+                  className={`items-center rounded-lg px-3 py-2 min-w-[52px] border ${
                     isSelected ? 'bg-primary-500 border-primary-500' : 'border-outline-200 dark:border-outline-800'
                   }`}
                 >
@@ -157,7 +157,7 @@ export default function ScheduleScreen() {
           ) : null}
 
           {week?.scope === 'none' ? (
-            <VStack className="rounded-2xl border border-outline-200 p-6 items-center" space="sm">
+            <VStack className="rounded-lg border border-outline-200 p-6 items-center" space="sm">
               <Heading size="md" className="text-typography-900 text-center">
                 No classes linked to your account yet
               </Heading>
@@ -169,7 +169,7 @@ export default function ScheduleScreen() {
             <VStack>
               <Text className="text-xs font-bold uppercase tracking-widest text-typography-500 mb-2 px-1">{shortDate(day.date)}</Text>
               {day.classes.length === 0 ? (
-                <VStack className="rounded-2xl border border-outline-100 dark:border-outline-800 p-6 items-center" space="xs">
+                <VStack className="rounded-lg border border-outline-100 dark:border-outline-800 p-6 items-center" space="xs">
                   <Icon as={Coffee} size={28} className="text-typography-400" />
                   <Text className="text-typography-700 font-semibold">No classes</Text>
                 </VStack>
@@ -178,7 +178,7 @@ export default function ScheduleScreen() {
                   {week?.canChange ? (
                     <Text className="text-typography-500 text-sm mb-2 px-1">Tap a class to cancel it, move it or change its room.</Text>
                   ) : null}
-                  <VStack className="bg-white dark:bg-background-900 rounded-2xl px-4 border border-outline-100 dark:border-outline-800">
+                  <VStack className="bg-white dark:bg-background-900 rounded-lg px-4 border border-outline-100 dark:border-outline-800">
                     {day.classes.map((c, i) => (
                       <ClassRow
                         key={`${c.routineId}-${c.date}-${c.status}`}

@@ -94,7 +94,7 @@ export function SelectModal<T>({
           onPress={(e) => e.stopPropagation()}
           style={{ height: '80%' }}
         >
-          <View className="bg-white dark:bg-background-950 rounded-t-3xl h-full overflow-hidden">
+          <View className="bg-white dark:bg-background-950 rounded-t-xl h-full overflow-hidden">
             <HStack className="items-center justify-between px-4 py-3 border-b border-outline-100 dark:border-outline-800">
               <TouchableOpacity onPress={onClose} className="p-2">
                 <Text className="text-primary-600 dark:text-primary-400 font-medium">
@@ -109,7 +109,7 @@ export function SelectModal<T>({
 
             {enableSearch && (
               <View className="p-4 border-b border-outline-100 dark:border-outline-800">
-                <View className="flex-row items-center bg-background-100 dark:bg-background-900 rounded-xl px-3 h-12">
+                <View className="flex-row items-center bg-background-100 dark:bg-background-900 rounded-md px-3 h-12">
                   <Search size={20} color="#94A3B8" />
                   <TextInput
                     placeholder={searchPlaceholder}

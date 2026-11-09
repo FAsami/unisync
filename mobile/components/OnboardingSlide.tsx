@@ -19,7 +19,7 @@ export const OnboardingSlide: React.FC<OnboardingSlideProps> = ({
       <View className="flex-1 justify-center items-center w-full mb-5">
         <Image
           source={image}
-          className="w-[300px] h-[300px] max-h-[350px] rounded-3xl overflow-hidden"
+          className="w-[300px] h-[300px] max-h-[350px] rounded-md overflow-hidden"
           resizeMode="contain"
         />
       </View>

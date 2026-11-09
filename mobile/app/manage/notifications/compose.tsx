@@ -104,7 +104,7 @@ export default function ComposeScreen() {
               {audiences?.length === 0 ? (
                 <Text className="text-typography-500">There&apos;s no one you can send to yet. Your department links you to sections on the web dashboard.</Text>
               ) : null}
-              <VStack className="rounded-xl border border-outline-200 overflow-hidden">
+              <VStack className="rounded-md border border-outline-200 overflow-hidden">
                 {audiences?.map((a, i) => {
                   const selected = audience?.type === a.type && audience.id === a.id
                   const count = Number(a.recipients)

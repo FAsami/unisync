@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Image, Pressable, RefreshControl, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { LinearGradient } from 'expo-linear-gradient'
 import { useFocusEffect } from 'expo-router'
 import { Box } from '@/components/ui/box'
 import { Heading } from '@/components/ui/heading'
@@ -21,23 +20,39 @@ type Today = components['schemas']['TodayResponse']
 /** While Home is open, refetch so "Now" and "Next" move on as classes start and end. */
 const REFRESH_MS = 60_000
 
-/** The big "Now" / "Next" card. */
-function HighlightCard({ c, title, colors }: { c: ClassOccurrence; title: string; colors: [string, string] }) {
+/**
+ * The big "Now" / "Next" card: a flat, solid brand fill, not a gradient —
+ * on a near-black canvas a gradient reads as decoration this system doesn't
+ * allow itself (see the design system's README).
+ */
+function HighlightCard({
+  c,
+  title,
+  color,
+  onColor,
+}: {
+  c: ClassOccurrence
+  title: string
+  /** The fill — solid brand or accent, never a gradient. */
+  color: string
+  /** The one contrasting text color for that fill (tokens.json "on-brand"/"on-danger" pattern): dark text on the pale dark-theme accent, white text on the deeper light-theme one. */
+  onColor: string
+}) {
   const { detail } = describeClass(c)
   return (
     <VStack className="mb-6" accessible accessibilityLabel={`${title}: ${classTitle(c)}, ${hhmm(c.start)} to ${hhmm(c.end)}${c.room ? `, ${c.room}` : ''}`}>
       <Text className="text-xs font-bold uppercase tracking-widest text-typography-500 mb-2 px-1">{title}</Text>
-      <LinearGradient colors={colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: 16, padding: 16 }}>
-        <Text className="text-white text-xl font-bold" numberOfLines={2}>
+      <Box style={{ borderRadius: 8, padding: 12, backgroundColor: color }}>
+        <Text style={{ color: onColor }} className="text-xl font-bold" numberOfLines={2}>
           {classTitle(c)}
         </Text>
-        <Text className="text-white/90 mt-2 font-semibold">
+        <Text style={{ color: onColor, opacity: 0.9 }} className="mt-2 font-semibold">
           {hhmm(c.start)} – {hhmm(c.end)}
           {c.room ? ` · ${c.room}` : ''}
         </Text>
-        {c.teacher ? <Text className="text-white/80 mt-1">{c.teacher}</Text> : null}
-        {detail ? <Text className="text-white mt-2">{detail}</Text> : null}
-      </LinearGradient>
+        {c.teacher ? <Text style={{ color: onColor, opacity: 0.8 }} className="mt-1">{c.teacher}</Text> : null}
+        {detail ? <Text style={{ color: onColor }} className="mt-2">{detail}</Text> : null}
+      </Box>
     </VStack>
   )
 }
@@ -45,6 +60,12 @@ function HighlightCard({ c, title, colors }: { c: ClassOccurrence; title: string
 /** "My day" (UX review decision 2): only my classes, with every change already applied by the server. */
 export default function HomeScreen() {
   const { currentMode } = useTheme()
+  const isDark = currentMode === 'dark'
+  // tokens.json brand/accent, each theme's own hex (not the same shade in
+  // both — the dark-theme accent is pale, so it needs dark "on-brand" text).
+  const BRAND = isDark ? '#7B88E8' : '#4850B8'
+  const ACCENT = isDark ? '#A78BFA' : '#6D28D9'
+  const ON_FILL = isDark ? '#0A0A0B' : '#FFFFFF'
   const [today, setToday] = useState<Today>()
   const [problem, setProblem] = useState<ApiError>()
   const [refreshing, setRefreshing] = useState(false)
@@ -107,7 +128,7 @@ export default function HomeScreen() {
         </VStack>
 
         {problem ? (
-          <VStack className="rounded-2xl border border-error-300 bg-error-50 p-4 mb-6" space="sm">
+          <VStack className="rounded-lg border border-error-300 bg-error-50 p-4 mb-6" space="sm">
             <Text className="text-typography-900 font-semibold">Couldn&apos;t load your classes</Text>
             <Text className="text-typography-700">{problem.message}</Text>
             <Pressable onPress={onRefresh} accessibilityRole="button" className="min-h-[44px] justify-center">
@@ -117,7 +138,7 @@ export default function HomeScreen() {
         ) : null}
 
         {today?.scope === 'none' ? (
-          <VStack className="rounded-2xl border border-outline-200 p-6 items-center" space="sm">
+          <VStack className="rounded-lg border border-outline-200 p-6 items-center" space="sm">
             <Heading size="md" className="text-typography-900 text-center">
               No classes linked to your account yet
             </Heading>
@@ -127,13 +148,20 @@ export default function HomeScreen() {
           </VStack>
         ) : today ? (
           <>
-            {today.current ? <HighlightCard c={today.current} title="Now" colors={['#2563EB', '#4F46E5']} /> : null}
+            {today.current ? (
+              <HighlightCard c={today.current} title="Now" color={BRAND} onColor={ON_FILL} />
+            ) : null}
             {today.next ? (
-              <HighlightCard c={today.next} title="Next" colors={today.current ? ['#4F46E5', '#818CF8'] : ['#2563EB', '#4F46E5']} />
+              <HighlightCard
+                c={today.next}
+                title="Next"
+                color={today.current ? ACCENT : BRAND}
+                onColor={ON_FILL}
+              />
             ) : null}
 
             {today.classes.length === 0 ? (
-              <Box className="mb-6 rounded-2xl overflow-hidden border border-outline-100 dark:border-outline-800">
+              <Box className="mb-6 rounded-lg overflow-hidden border border-outline-100 dark:border-outline-800">
                 <Image source={require('../../assets/images/no-classes.png')} style={{ width: '100%', height: 200 }} resizeMode="cover" accessibilityLabel="" />
                 <VStack className="p-6 items-center" space="sm">
                   <Heading size="md" className="text-typography-900 text-center">
@@ -148,7 +176,7 @@ export default function HomeScreen() {
                 {today.canChange ? (
                   <Text className="text-typography-500 text-sm mb-2 px-1">Tap a class to cancel it, move it or change its room.</Text>
                 ) : null}
-                <VStack className="bg-white dark:bg-background-900 rounded-2xl px-4 border border-outline-100 dark:border-outline-800">
+                <VStack className="bg-white dark:bg-background-900 rounded-lg px-4 border border-outline-100 dark:border-outline-800">
                   {today.classes.map((c, i) => (
                     <ClassRow
                       key={`${c.routineId}-${c.date}-${c.status}`}

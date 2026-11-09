@@ -32,7 +32,7 @@ const TabLayout = () => {
           height: 70 + Math.max(insets.bottom, 10),
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontFamily: Fonts.bold,
           letterSpacing: 0.6,
           marginTop: 2,

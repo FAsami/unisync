@@ -99,7 +99,7 @@ export function AppAlertDialog({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="md">
       <ModalBackdrop />
-      <ModalContent className="m-4 bg-white dark:bg-background-900 rounded-3xl border border-outline-100 dark:border-outline-800 shadow-xl max-w-[320px]">
+      <ModalContent className="m-4 bg-white dark:bg-background-900 rounded-md border border-outline-100 dark:border-outline-800 shadow-xl max-w-[320px]">
         <ModalHeader className="pt-8 px-5 pb-2 flex-col items-center">
           <Icon
             as={config.icon}

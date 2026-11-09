@@ -158,7 +158,7 @@ export function ClassActionsSheet({
       <Pressable className="flex-1 bg-black/40" onPress={onClose} accessibilityLabel="Close" />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View
-          className="bg-white dark:bg-background-900 rounded-t-3xl px-5 pt-4"
+          className="bg-white dark:bg-background-900 rounded-t-xl px-5 pt-4"
           style={{ paddingBottom: Math.max(insets.bottom, 16), maxHeight: 640 }}
         >
           <View className="self-center w-10 h-1 rounded-full bg-outline-200 mb-4" />

@@ -20,7 +20,7 @@ function Row({ item }: { item: SentItem }) {
   const status = sentStatus(item)
   const reads = Number(item.readCount)
   return (
-    <VStack className="p-4 mb-3 rounded-2xl border border-outline-100 dark:border-outline-800 bg-white dark:bg-background-900" space="xs">
+    <VStack className="p-4 mb-3 rounded-lg border border-outline-100 dark:border-outline-800 bg-white dark:bg-background-900" space="xs">
       <HStack className="justify-between items-start">
         <Text className="text-base font-bold text-typography-900 flex-1" numberOfLines={2}>
           {item.title}

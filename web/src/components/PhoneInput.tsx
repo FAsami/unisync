@@ -57,8 +57,8 @@ export const PhoneInput = ({
       {...props}
       prefix={
         <span className='flex items-center gap-1'>
-          <Phone size={14} className='text-slate-400' />
-          <span className='text-slate-700 font-medium'>+880</span>
+          <Phone size={14} className='text-[var(--color-ink-faint)]' />
+          <span className='text-[var(--color-ink)] font-medium'>+880</span>
         </span>
       }
       value={displayValue}

@@ -142,7 +142,7 @@ export const RosterImport = ({
         </Space>
       }
     >
-      <p className='text-gray-600 mb-3'>
+      <p className='text-[var(--color-ink-muted)] mb-3'>
         One student per row with the columns{' '}
         <code>phone, first name, last name, student id, batch, section</code>.
         Batch and section are the names you use here (for example 2026 and A).
