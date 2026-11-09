@@ -1,7 +1,7 @@
 import React from 'react'
 import { ScrollView, Switch } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Ionicons } from '@expo/vector-icons'
+import { ChevronRight, LogOut, Moon, User } from 'lucide-react-native'
 import { router } from 'expo-router'
 
 import { Text } from '@/components/ui/text'
@@ -49,7 +49,7 @@ const AccountScreen = () => {
             General
           </Text>
 
-          <Box className="bg-white dark:bg-background-900 rounded-xl overflow-hidden shadow-sm">
+          <Box className="bg-white dark:bg-background-900 rounded-md overflow-hidden shadow-sm">
             <Pressable
               onPress={() => router.push('/profile')}
               className="p-4 active:bg-background-50 dark:active:bg-background-800"
@@ -57,8 +57,7 @@ const AccountScreen = () => {
               <HStack className="items-center justify-between">
                 <HStack className="items-center space-x-3 gap-3">
                   <Icon
-                    as={Ionicons}
-                    name="person-outline"
+                    as={User}
                     size={16}
                     className="text-typography-900"
                   />
@@ -67,8 +66,7 @@ const AccountScreen = () => {
                   </Text>
                 </HStack>
                 <Icon
-                  as={Ionicons}
-                  name="chevron-forward"
+                  as={ChevronRight}
                   size={20}
                   className="text-typography-400"
                 />
@@ -81,8 +79,7 @@ const AccountScreen = () => {
               <HStack className="items-center justify-between">
                 <HStack className="items-center space-x-3 gap-3">
                   <Icon
-                    as={Ionicons}
-                    name={currentMode === 'dark' ? 'moon' : 'moon-outline'}
+                    as={Moon}
                     size={16}
                     className="text-typography-900"
                   />
@@ -107,10 +104,9 @@ const AccountScreen = () => {
             >
               <HStack className="items-center justify-center space-x-2 gap-2">
                 <Icon
-                  as={Ionicons}
-                  name="power"
+                  as={LogOut}
                   size={20}
-                  style={{ color: '#DC2626' }}
+                  style={{ color: '#B91C1C' }}
                 />
                 <Text className="text-base font-bold text-error-600">
                   Sign out

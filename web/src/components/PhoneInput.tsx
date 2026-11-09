@@ -1,7 +1,7 @@
 'use client'
 
 import { Input } from 'antd'
-import { PhoneOutlined } from '@ant-design/icons'
+import { Phone } from 'lucide-react'
 import { InputProps } from 'antd/es/input'
 
 interface PhoneInputProps
@@ -57,8 +57,8 @@ export const PhoneInput = ({
       {...props}
       prefix={
         <span className='flex items-center gap-1'>
-          <PhoneOutlined className='text-gray-400' />
-          <span className='text-gray-700 font-medium'>+880</span>
+          <Phone size={14} className='text-[var(--color-ink-faint)]' />
+          <span className='text-[var(--color-ink)] font-medium'>+880</span>
         </span>
       }
       value={displayValue}

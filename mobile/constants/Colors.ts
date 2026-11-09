@@ -1,26 +1,30 @@
+// Mirrors the UniSync design system (tokens.json): indigo brand, true
+// neutral grays (not slate), and the same semantic reds/greens/ambers in
+// both themes. Dark is the system's primary target; light is drawn with
+// the same care, not left as the forgotten default.
 export const AppColors = {
-  primary: '#2491ff',
-  secondary: '#F59E0B',
-  background: '#F9F7FD',
+  primary: '#4850B8',
+  secondary: '#6D28D9',
+  background: '#FAFAFA',
   surface: '#FFFFFF',
-  textPrimary: '#374151',
-  textSecondary: '#6B7280',
-  success: '#10B981',
-  error: '#EF4444',
-  info: '#2491ff',
-  divider: '#F3F4F6',
+  textPrimary: '#18181B',
+  textSecondary: '#71717A',
+  success: '#15803D',
+  error: '#B91C1C',
+  info: '#4850B8',
+  divider: '#E4E4E7',
 
-  primaryLight: '#59adff',
-  primaryDark: '#0077e6',
-  accent: '#EC4899',
-  accentLight: '#F472B6',
-  warning: '#F97316',
-  tertiary: '#EF4444',
+  primaryLight: '#7B88E8',
+  primaryDark: '#383F94',
+  accent: '#6D28D9',
+  accentLight: '#A78BFA',
+  warning: '#B45309',
+  tertiary: '#6D28D9',
 
-  backgroundDark: '#1F1B24',
-  surfaceDark: '#2D1B3D',
-  textPrimaryDark: '#F9FAFB',
-  textSecondaryDark: '#D1D5DB',
+  backgroundDark: '#0A0A0B',
+  surfaceDark: '#161618',
+  textPrimaryDark: '#EDEDEF',
+  textSecondaryDark: '#9A9AA2',
 } as const
 
 export const Colors = {

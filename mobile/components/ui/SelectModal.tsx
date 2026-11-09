@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
+import { Check, Search, XCircle } from 'lucide-react-native'
 import { Text } from '@/components/ui/text'
 import { HStack } from '@/components/ui/hstack'
 import { VStack } from '@/components/ui/vstack'
@@ -94,7 +94,7 @@ export function SelectModal<T>({
           onPress={(e) => e.stopPropagation()}
           style={{ height: '80%' }}
         >
-          <View className="bg-white dark:bg-background-950 rounded-t-3xl h-full overflow-hidden">
+          <View className="bg-white dark:bg-background-950 rounded-t-xl h-full overflow-hidden">
             <HStack className="items-center justify-between px-4 py-3 border-b border-outline-100 dark:border-outline-800">
               <TouchableOpacity onPress={onClose} className="p-2">
                 <Text className="text-primary-600 dark:text-primary-400 font-medium">
@@ -109,8 +109,8 @@ export function SelectModal<T>({
 
             {enableSearch && (
               <View className="p-4 border-b border-outline-100 dark:border-outline-800">
-                <View className="flex-row items-center bg-background-100 dark:bg-background-900 rounded-xl px-3 h-12">
-                  <Ionicons name="search" size={20} color="#94A3B8" />
+                <View className="flex-row items-center bg-background-100 dark:bg-background-900 rounded-md px-3 h-12">
+                  <Search size={20} color="#94A3B8" />
                   <TextInput
                     placeholder={searchPlaceholder}
                     placeholderTextColor="#94A3B8"
@@ -121,7 +121,7 @@ export function SelectModal<T>({
                   />
                   {searchQuery.length > 0 && (
                     <TouchableOpacity onPress={() => handleSearch('')}>
-                      <Ionicons name="close-circle" size={20} color="#94A3B8" />
+                      <XCircle size={20} color="#94A3B8" />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -130,7 +130,7 @@ export function SelectModal<T>({
 
             {loading ? (
               <View className="flex-1 items-center justify-center">
-                <ActivityIndicator size="large" color="#8B5CF6" />
+                <ActivityIndicator size="large" color="#2563EB" />
               </View>
             ) : (
               <FlatList
@@ -154,7 +154,7 @@ export function SelectModal<T>({
                         {renderItem(item, !!isSelected)}
                       </View>
                       {isSelected && (
-                        <Ionicons name="checkmark" size={20} color="#8B5CF6" />
+                        <Check size={20} color="#2563EB" />
                       )}
                     </TouchableOpacity>
                   )

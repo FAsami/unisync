@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react'
 import { FlatList, Pressable, RefreshControl, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, useFocusEffect } from 'expo-router'
-import { Ionicons } from '@expo/vector-icons'
+import { ArrowLeft, Send, Users } from 'lucide-react-native'
 import { Box } from '@/components/ui/box'
 import { Heading } from '@/components/ui/heading'
 import { HStack } from '@/components/ui/hstack'
@@ -20,7 +20,7 @@ function Row({ item }: { item: SentItem }) {
   const status = sentStatus(item)
   const reads = Number(item.readCount)
   return (
-    <VStack className="p-4 mb-3 rounded-2xl border border-outline-100 dark:border-outline-800 bg-white dark:bg-background-900" space="xs">
+    <VStack className="p-4 mb-3 rounded-lg border border-outline-100 dark:border-outline-800 bg-white dark:bg-background-900" space="xs">
       <HStack className="justify-between items-start">
         <Text className="text-base font-bold text-typography-900 flex-1" numberOfLines={2}>
           {item.title}
@@ -31,7 +31,7 @@ function Row({ item }: { item: SentItem }) {
         {item.body}
       </Text>
       <HStack space="xs" className="items-center mt-1">
-        <Icon as={Ionicons} name="people-outline" size={14} className="text-typography-400" />
+        <Icon as={Users} size={14} className="text-typography-400" />
         <Text className="text-typography-500 text-xs">{item.audience}</Text>
       </HStack>
       <HStack className="justify-between mt-1">
@@ -75,7 +75,7 @@ export default function SentScreen() {
     <SafeAreaView className="flex-1 bg-white dark:bg-background-950">
       <HStack className="items-center px-2 py-2">
         <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back" className="p-3">
-          <Icon as={Ionicons} name="arrow-back" size={22} className="text-typography-900" />
+          <Icon as={ArrowLeft} size={22} className="text-typography-900" />
         </Pressable>
         <Heading size="md" className="text-typography-900 flex-1">
           Sent notices
@@ -105,7 +105,7 @@ export default function SentScreen() {
           ListEmptyComponent={
             items ? (
               <VStack className="items-center py-16" space="sm">
-                <Icon as={Ionicons} name="paper-plane-outline" size={40} className="text-typography-300" />
+                <Icon as={Send} size={40} className="text-typography-300" />
                 <Text className="text-typography-700 font-semibold">Nothing sent yet</Text>
               </VStack>
             ) : null

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Pressable, ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, useLocalSearchParams } from 'expo-router'
-import { Ionicons } from '@expo/vector-icons'
+import { ArrowLeft } from 'lucide-react-native'
 import { Box } from '@/components/ui/box'
 import { Heading } from '@/components/ui/heading'
 import { HStack } from '@/components/ui/hstack'
@@ -13,6 +13,7 @@ import { VStack } from '@/components/ui/vstack'
 import { Notice } from '@/components/signin/Fields'
 import { api, ApiError, call, unwrap } from '@/lib/api'
 import { inboxIcon, type InboxItem } from '@/lib/inbox'
+import { INBOX_ICONS } from '@/lib/inboxIcons'
 import { shortDate } from '@/lib/schedule'
 
 /** One notice, opened from the inbox or from its push (data.notificationId). Opening it marks it read. */
@@ -49,7 +50,7 @@ export default function NotificationScreen() {
     <SafeAreaView className="flex-1 bg-white dark:bg-background-950">
       <HStack className="items-center px-2 py-2">
         <Pressable onPress={back} accessibilityRole="button" accessibilityLabel="Back" className="p-3">
-          <Icon as={Ionicons} name="arrow-back" size={22} className="text-typography-900" />
+          <Icon as={ArrowLeft} size={22} className="text-typography-900" />
         </Pressable>
         <Heading size="md" className="text-typography-900">
           Notification
@@ -67,7 +68,7 @@ export default function NotificationScreen() {
       ) : (
         <ScrollView contentContainerStyle={{ padding: 20 }}>
           <Box className="h-12 w-12 rounded-full bg-primary-100 items-center justify-center mb-4">
-            <Icon as={Ionicons} name={inboxIcon(item)} size={24} className="text-primary-600" />
+            <Icon as={INBOX_ICONS[inboxIcon(item)]} size={24} className="text-primary-600" />
           </Box>
           <Heading size="xl" className="text-typography-900 mb-2">
             {item.title}
@@ -77,7 +78,7 @@ export default function NotificationScreen() {
           </Text>
           <Text className="text-typography-800 text-base leading-relaxed">{item.body}</Text>
           {item.kind === 'class_change' && classDate ? (
-            <VStack className="mt-8 rounded-2xl border border-outline-100 dark:border-outline-800 p-4" space="sm">
+            <VStack className="mt-8 rounded-lg border border-outline-100 dark:border-outline-800 p-4" space="sm">
               <Text className="text-typography-700">This is about your class on {shortDate(classDate)}.</Text>
               <Pressable onPress={() => router.replace('/(tabs)/schedule')} accessibilityRole="button" className="min-h-[44px] justify-center">
                 <Text className="text-primary-600 font-semibold">Open my schedule</Text>

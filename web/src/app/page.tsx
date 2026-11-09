@@ -2,32 +2,21 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from 'antd'
 import {
-  AndroidOutlined,
-  AppleOutlined,
-  ArrowRightOutlined,
-  BellOutlined,
-  CalendarOutlined,
-  CheckCircleFilled,
-  LockOutlined,
-  ReadOutlined,
-  SafetyCertificateOutlined,
-  SolutionOutlined,
-  SwapOutlined,
-  TeamOutlined,
-  UserAddOutlined,
-} from '@ant-design/icons'
+  Apple,
+  Smartphone,
+  ArrowRight,
+  Bell,
+  Calendar,
+  CheckCircle2,
+  Lock,
+  BookOpen,
+  ShieldCheck,
+  GraduationCap,
+  ArrowLeftRight,
+  Users,
+  UserPlus,
+} from 'lucide-react'
 import { Reveal } from './reveal'
-// Scoped to this page only: a distinct, considered type voice instead of the
-// rest of the app's default Geist, without touching the shared root layout.
-// Self-hosted via @fontsource (not next/font/google): that loader fetches the
-// font from Google's CDN at build time, which failed in CI even though it
-// built fine here — a build should not depend on a third-party network call.
-import '@fontsource/plus-jakarta-sans/500.css'
-import '@fontsource/plus-jakarta-sans/600.css'
-import '@fontsource/plus-jakarta-sans/700.css'
-import '@fontsource/plus-jakarta-sans/800.css'
-
-const JAKARTA_FONT_FAMILY = "'Plus Jakarta Sans', sans-serif"
 
 const NAV_LINKS = [
   { href: '#tour', label: 'See it in action' },
@@ -37,37 +26,37 @@ const NAV_LINKS = [
 
 const FEATURES = [
   {
-    icon: CalendarOutlined,
+    icon: Calendar,
     title: 'My day',
     description:
       "Students and teachers open the app to today's classes, with what's happening now and what's next, not a static printed routine.",
   },
   {
-    icon: SwapOutlined,
+    icon: ArrowLeftRight,
     title: 'Instant change alerts',
     description:
       'Cancel a class, move it, or swap the room, and the whole section is notified immediately, with the reason attached.',
   },
   {
-    icon: BellOutlined,
+    icon: Bell,
     title: 'One inbox',
     description:
       'Announcements from teachers and the department land in a single notification inbox, not scattered across group chats.',
   },
   {
-    icon: TeamOutlined,
+    icon: Users,
     title: 'Department setup',
     description:
       'Batches, sections, courses, teachers and the weekly routine, all managed from this dashboard, with clashes caught before they happen.',
   },
   {
-    icon: UserAddOutlined,
+    icon: UserPlus,
     title: 'Roster-based access',
     description:
       "Only numbers on a department's roster can sign in. Anyone else can ask to join, and an admin approves it in one click.",
   },
   {
-    icon: LockOutlined,
+    icon: Lock,
     title: 'No passwords',
     description:
       'Sign in with a text code sent to your phone. Nothing to remember, nothing to reset.',
@@ -76,19 +65,19 @@ const FEATURES = [
 
 const ROLES = [
   {
-    icon: SolutionOutlined,
+    icon: GraduationCap,
     title: 'Students',
     description:
       "See your section's schedule, get notified the moment a class changes, and ask your department for access if you're new.",
   },
   {
-    icon: ReadOutlined,
+    icon: BookOpen,
     title: 'Teachers',
     description:
       'Cancel or move your own classes in a tap, and send a notice to everyone in the section at once.',
   },
   {
-    icon: SafetyCertificateOutlined,
+    icon: ShieldCheck,
     title: 'Department admins',
     description:
       'Set up batches, courses and the weekly routine here on the web, then hand the day-to-day over to the app.',
@@ -166,12 +155,16 @@ const PhoneFrame = ({
   priority?: boolean
 }) => (
   <div className='relative mx-auto w-full max-w-[220px] shrink-0'>
-    <div className='relative rounded-[2.1rem] bg-slate-900 p-2 shadow-xl shadow-slate-900/15 ring-1 ring-black/5'>
+    <div
+      aria-hidden='true'
+      className='absolute inset-4 -z-10 rounded-full bg-[var(--color-brand)]/15 blur-2xl'
+    />
+    <div className='relative rounded-[2.1rem] bg-black p-2 shadow-xl shadow-black/50 ring-1 ring-white/15'>
       <div
         aria-hidden='true'
-        className='absolute top-2 left-1/2 z-10 h-5 w-20 -translate-x-1/2 rounded-full bg-slate-900'
+        className='absolute top-2 left-1/2 z-10 h-5 w-20 -translate-x-1/2 rounded-full bg-black'
       />
-      <div className='relative aspect-[1170/1992] overflow-hidden rounded-[1.6rem] bg-white'>
+      <div className='relative aspect-[1170/1992] overflow-hidden rounded-[1.6rem] bg-[var(--color-surface)]'>
         <Image
           src={src}
           alt={alt}
@@ -195,14 +188,14 @@ const BrowserFrame = ({
   alt: string
   priority?: boolean
 }) => (
-  <div className='overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg shadow-slate-900/5'>
+  <div className='overflow-hidden rounded-xl border border-[var(--color-line)] bg-[var(--color-surface-raised)] shadow-lg shadow-black/20'>
     <div
       aria-hidden='true'
-      className='flex items-center gap-1.5 border-b border-slate-100 bg-slate-50 px-3 py-2.5'
+      className='flex items-center gap-1.5 border-b border-[var(--color-line)] bg-[var(--color-surface-sunken)] px-3 py-2.5'
     >
-      <span className='h-2.5 w-2.5 rounded-full bg-slate-300' />
-      <span className='h-2.5 w-2.5 rounded-full bg-slate-300' />
-      <span className='h-2.5 w-2.5 rounded-full bg-slate-300' />
+      <span className='h-2.5 w-2.5 rounded-full bg-[var(--color-line-strong)]' />
+      <span className='h-2.5 w-2.5 rounded-full bg-[var(--color-line-strong)]' />
+      <span className='h-2.5 w-2.5 rounded-full bg-[var(--color-line-strong)]' />
     </div>
     <div className='relative aspect-[2880/1800]'>
       <Image
@@ -231,10 +224,10 @@ const StoreBadge = ({
   line1: string
   line2: string
 }) => (
-  <span className='inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-1.5 text-white opacity-90 transition-opacity hover:opacity-100'>
+  <span className='inline-flex items-center gap-2 rounded-lg bg-[var(--color-surface-raised)] border border-[var(--color-line)] px-3 py-1.5 text-[var(--color-ink)] opacity-90 transition-opacity hover:opacity-100'>
     <span className='text-xl'>{icon}</span>
     <span className='leading-tight'>
-      <span className='block text-[0.6rem] tracking-wide text-slate-300 uppercase'>
+      <span className='block text-[0.6rem] tracking-wide text-[var(--color-ink-muted)] uppercase'>
         {line1}
       </span>
       <span className='block text-sm font-bold'>{line2}</span>
@@ -247,11 +240,11 @@ const SectionNumber = ({ n, label }: { n: string; label: string }) => (
   <div className='flex items-center gap-4'>
     <span
       aria-hidden='true'
-      className='text-6xl leading-none font-extrabold text-slate-100 select-none sm:text-7xl'
+      className='text-6xl leading-none font-extrabold text-[var(--color-ink-faint)] select-none sm:text-7xl'
     >
       {n}
     </span>
-    <span className='text-sm font-semibold tracking-wide text-blue-600 uppercase'>
+    <span className='text-sm font-semibold tracking-wide text-[var(--color-brand)] uppercase'>
       {label}
     </span>
   </div>
@@ -259,10 +252,7 @@ const SectionNumber = ({ n, label }: { n: string; label: string }) => (
 
 const Home = () => {
   return (
-    <div
-      style={{ fontFamily: JAKARTA_FONT_FAMILY }}
-      className='bg-white text-slate-900 antialiased'
-    >
+    <div className='bg-[var(--color-surface)] text-[var(--color-ink)] antialiased'>
       {/* Scroll-reveal degrades to fully visible without JS. */}
       <noscript>
         <style>
@@ -274,14 +264,10 @@ const Home = () => {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-10px); }
         }
-        @keyframes pulseGlow {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35); }
-          50% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
-        }
       `}</style>
 
       {/* Header */}
-      <header className='sticky top-0 z-20 border-b border-slate-100 bg-white/90 backdrop-blur-sm'>
+      <header className='sticky top-0 z-20 border-b border-[var(--color-line)] bg-[var(--color-surface)]/90 backdrop-blur-sm'>
         <div className='mx-auto flex h-16 max-w-6xl items-center justify-between px-6'>
           <div className='flex items-center gap-2'>
             <Image
@@ -292,12 +278,12 @@ const Home = () => {
             />
             <span className='text-lg font-bold tracking-tight'>UniSync</span>
           </div>
-          <nav className='hidden items-center gap-8 text-sm text-slate-600 md:flex'>
+          <nav className='hidden items-center gap-8 text-sm text-[var(--color-ink-muted)] md:flex'>
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className='!text-slate-600 transition-colors hover:!text-slate-900'
+                className='!text-[var(--color-ink-muted)] transition-colors hover:!text-[var(--color-ink)]'
               >
                 {link.label}
               </a>
@@ -306,7 +292,7 @@ const Home = () => {
           <Link href='/auth/login'>
             <Button
               type='primary'
-              className='!border-none !bg-linear-to-r !from-blue-600 !to-blue-500'
+              className='!border-none !bg-[var(--color-brand)]'
             >
               Sign in
             </Button>
@@ -319,29 +305,29 @@ const Home = () => {
         <section className='relative overflow-hidden'>
           <div
             aria-hidden='true'
-            className='absolute inset-0 -z-20 bg-[radial-gradient(circle,#CBD5E1_1px,transparent_1px)] bg-[length:28px_28px] opacity-60 [mask-image:radial-gradient(ellipse_60%_55%_at_30%_20%,black,transparent)]'
+            className='absolute inset-0 -z-20 bg-[radial-gradient(circle,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[length:28px_28px] opacity-60 [mask-image:radial-gradient(ellipse_60%_55%_at_30%_20%,black,transparent)]'
           />
           <div
             aria-hidden='true'
-            className='absolute -top-40 -right-40 -z-10 h-[32rem] w-[32rem] rounded-full bg-linear-to-br from-blue-400/25 to-indigo-400/10 blur-3xl'
+            className='absolute -top-40 -right-40 -z-10 h-[32rem] w-[32rem] rounded-full bg-[var(--color-brand)]/10 blur-3xl'
           />
           <div className='mx-auto grid max-w-6xl items-center gap-16 px-6 pt-16 pb-24 md:grid-cols-[1.05fr_0.95fr] md:pt-24 md:pb-32'>
             <div>
               <Reveal>
-                <span className='inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700'>
+                <span className='inline-flex items-center gap-2 rounded-full border border-[var(--color-line)] bg-[var(--color-brand-soft)] px-3 py-1 text-xs font-semibold text-[var(--color-brand)]'>
                   Built for one university at a time
                 </span>
               </Reveal>
               <Reveal delay={80}>
-                <h1 className='mt-6 text-4xl leading-[1.05] font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem]'>
+                <h1 className='mt-6 text-4xl leading-[1.05] font-extrabold tracking-tight text-[var(--color-ink)] sm:text-5xl lg:text-[3.4rem]'>
                   Everyone&apos;s schedule,{' '}
-                  <span className='bg-linear-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent'>
+                  <span className='text-[var(--color-brand)]'>
                     always current.
                   </span>
                 </h1>
               </Reveal>
               <Reveal delay={160}>
-                <p className='mt-5 max-w-md text-lg text-slate-600'>
+                <p className='mt-5 max-w-md text-lg text-[var(--color-ink-muted)]'>
                   UniSync keeps students, teachers and department admins in
                   sync: real-time class schedules, instant alerts when a class
                   is cancelled, moved or changes room, and one inbox for
@@ -354,9 +340,9 @@ const Home = () => {
                     <Button
                       type='primary'
                       size='large'
-                      icon={<ArrowRightOutlined />}
+                      icon={<ArrowRight size={16} />}
                       iconPosition='end'
-                      className='!border-none !bg-linear-to-r !from-blue-600 !to-blue-500 !shadow-lg !shadow-blue-600/25 motion-reduce:[animation:none!important] [animation:pulseGlow_2.5s_ease-in-out_infinite]'
+                      className='!border-none !bg-[var(--color-brand)]'
                     >
                       Sign in to set up your department
                     </Button>
@@ -364,16 +350,16 @@ const Home = () => {
                 </div>
                 <div className='mt-5 flex flex-wrap items-center gap-3'>
                   <StoreBadge
-                    icon={<AppleOutlined />}
+                    icon={<Apple size={20} />}
                     line1='Download on the'
                     line2='App Store'
                   />
                   <StoreBadge
-                    icon={<AndroidOutlined />}
+                    icon={<Smartphone size={20} />}
                     line1='GET IT ON'
                     line2='Google Play'
                   />
-                  <span className='text-xs font-medium text-slate-400'>
+                  <span className='text-xs font-medium text-[var(--color-ink-faint)]'>
                     Coming soon
                   </span>
                 </div>
@@ -406,22 +392,25 @@ const Home = () => {
         </section>
 
         {/* Product tour: real screenshots */}
-        <section id='tour' className='border-t border-slate-100 bg-slate-50'>
+        <section
+          id='tour'
+          className='border-t border-[var(--color-line)] bg-[var(--color-surface-sunken)]'
+        >
           <div className='mx-auto max-w-6xl px-6 py-20 sm:py-24'>
             <Reveal>
               <SectionNumber n='01' label='See it in action' />
             </Reveal>
             <Reveal delay={80}>
-              <p className='mt-4 max-w-2xl text-3xl font-bold tracking-tight text-slate-900'>
+              <p className='mt-4 max-w-2xl text-3xl font-bold tracking-tight text-[var(--color-ink)]'>
                 Real screens. Nothing staged.
               </p>
             </Reveal>
 
             <Reveal>
-              <h3 className='mt-14 text-lg font-bold text-slate-900'>
+              <h3 className='mt-14 text-lg font-bold text-[var(--color-ink)]'>
                 For students, teachers and CRs
               </h3>
-              <p className='mt-1 text-sm text-slate-600'>
+              <p className='mt-1 text-sm text-[var(--color-ink-muted)]'>
                 Day-of-class, on the phone.
               </p>
             </Reveal>
@@ -432,12 +421,12 @@ const Home = () => {
                   delay={i * 90}
                   className='w-[220px] shrink-0 sm:w-auto'
                 >
-                  <div className='group transition-transform duration-300 hover:-translate-y-1.5'>
+                  <div className='group rounded-xl border border-[var(--color-line)] bg-[var(--color-surface-raised)] p-5 transition-transform duration-300 hover:-translate-y-1.5'>
                     <PhoneFrame src={shot.src} alt={shot.alt} />
-                    <p className='mt-4 text-center font-semibold text-slate-900'>
+                    <p className='mt-4 text-center font-semibold text-[var(--color-ink)]'>
                       {shot.caption}
                     </p>
-                    <p className='mt-1 text-center text-sm text-slate-600'>
+                    <p className='mt-1 text-center text-sm text-[var(--color-ink-muted)]'>
                       {shot.detail}
                     </p>
                   </div>
@@ -446,20 +435,24 @@ const Home = () => {
             </div>
 
             <Reveal>
-              <h3 className='mt-20 text-lg font-bold text-slate-900'>
+              <h3 className='mt-20 text-lg font-bold text-[var(--color-ink)]'>
                 For department admins
               </h3>
-              <p className='mt-1 text-sm text-slate-600'>Setup, on the web.</p>
+              <p className='mt-1 text-sm text-[var(--color-ink-muted)]'>
+                Setup, on the web.
+              </p>
             </Reveal>
             <div className='mt-8 grid gap-8 sm:grid-cols-2'>
               {DASHBOARD_SHOTS.map((shot, i) => (
                 <Reveal key={shot.caption} delay={i * 90}>
                   <div className='transition-transform duration-300 hover:-translate-y-1.5'>
                     <BrowserFrame src={shot.src} alt={shot.alt} />
-                    <p className='mt-4 font-semibold text-slate-900'>
+                    <p className='mt-4 font-semibold text-[var(--color-ink)]'>
                       {shot.caption}
                     </p>
-                    <p className='mt-1 text-sm text-slate-600'>{shot.detail}</p>
+                    <p className='mt-1 text-sm text-[var(--color-ink-muted)]'>
+                      {shot.detail}
+                    </p>
                   </div>
                 </Reveal>
               ))}
@@ -468,26 +461,30 @@ const Home = () => {
         </section>
 
         {/* Roles */}
-        <section id='roles' className='border-t border-slate-100'>
+        <section id='roles' className='border-t border-[var(--color-line)]'>
           <div className='mx-auto max-w-6xl px-6 py-20 sm:py-24'>
             <Reveal>
               <SectionNumber n='02' label="Who it's for" />
             </Reveal>
             <Reveal delay={80}>
-              <p className='mt-4 max-w-2xl text-3xl font-bold tracking-tight text-slate-900'>
+              <p className='mt-4 max-w-2xl text-3xl font-bold tracking-tight text-[var(--color-ink)]'>
                 Everyone gets what they need, nothing they don&apos;t.
               </p>
             </Reveal>
             <div className='mt-12 grid gap-6 md:grid-cols-3'>
               {ROLES.map(({ icon: Icon, title, description }, i) => (
                 <Reveal key={title} delay={i * 100}>
-                  <div className='group relative h-full overflow-hidden rounded-xl border border-slate-200 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-900/5'>
-                    <div className='absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-600 to-sky-400' />
-                    <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-lg text-blue-600 transition-transform duration-300 group-hover:scale-110'>
-                      <Icon />
+                  <div className='group relative h-full overflow-hidden rounded-xl border border-[var(--color-line)] p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20'>
+                    <div className='absolute inset-x-0 top-0 h-1 bg-[var(--color-brand)]' />
+                    <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-brand-soft)] text-[var(--color-brand)] transition-transform duration-300 group-hover:scale-110'>
+                      <Icon size={20} />
                     </div>
-                    <h3 className='mt-4 font-bold text-slate-900'>{title}</h3>
-                    <p className='mt-2 text-sm text-slate-600'>{description}</p>
+                    <h3 className='mt-4 font-bold text-[var(--color-ink)]'>
+                      {title}
+                    </h3>
+                    <p className='mt-2 text-sm text-[var(--color-ink-muted)]'>
+                      {description}
+                    </p>
                   </div>
                 </Reveal>
               ))}
@@ -498,14 +495,14 @@ const Home = () => {
         {/* Features */}
         <section
           id='features'
-          className='border-t border-slate-100 bg-slate-50'
+          className='border-t border-[var(--color-line)] bg-[var(--color-surface-sunken)]'
         >
           <div className='mx-auto max-w-6xl px-6 py-20 sm:py-24'>
             <Reveal>
               <SectionNumber n='03' label='Features' />
             </Reveal>
             <Reveal delay={80}>
-              <p className='mt-4 max-w-2xl text-3xl font-bold tracking-tight text-slate-900'>
+              <p className='mt-4 max-w-2xl text-3xl font-bold tracking-tight text-[var(--color-ink)]'>
                 Everything a department needs to stay in sync.
               </p>
             </Reveal>
@@ -513,11 +510,13 @@ const Home = () => {
               {FEATURES.map(({ icon: Icon, title, description }, i) => (
                 <Reveal key={title} delay={(i % 3) * 90}>
                   <div className='group'>
-                    <div className='flex h-11 w-11 items-center justify-center rounded-lg bg-linear-to-br from-blue-600 to-sky-500 text-lg text-white shadow-md shadow-blue-600/20 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6'>
-                      <Icon />
+                    <div className='flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--color-brand)] text-[var(--color-on-brand)] shadow-md shadow-black/20 transition-transform duration-300 group-hover:scale-110'>
+                      <Icon size={22} />
                     </div>
-                    <h3 className='mt-4 font-bold text-slate-900'>{title}</h3>
-                    <p className='mt-1.5 text-sm text-slate-600'>
+                    <h3 className='mt-4 font-bold text-[var(--color-ink)]'>
+                      {title}
+                    </h3>
+                    <p className='mt-1.5 text-sm text-[var(--color-ink-muted)]'>
                       {description}
                     </p>
                   </div>
@@ -528,26 +527,32 @@ const Home = () => {
         </section>
 
         {/* For departments / CTA */}
-        <section id='departments' className='border-t border-slate-100'>
+        <section
+          id='departments'
+          className='border-t border-[var(--color-line)]'
+        >
           <div className='mx-auto max-w-6xl px-6 py-20 sm:py-24'>
             <Reveal>
-              <div className='relative flex flex-col items-start justify-between gap-10 overflow-hidden rounded-2xl bg-linear-to-br from-blue-700 via-blue-600 to-sky-500 p-10 text-white md:flex-row md:items-center md:p-14'>
+              <div className='relative flex flex-col items-start justify-between gap-10 overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface-raised)] p-10 text-[var(--color-ink)] md:flex-row md:items-center md:p-14'>
                 <div
                   aria-hidden='true'
-                  className='absolute inset-0 -z-10 bg-[radial-gradient(circle,#ffffff_1px,transparent_1px)] bg-[length:24px_24px] opacity-10'
+                  className='absolute inset-x-0 top-0 h-1 bg-[var(--color-brand)]'
                 />
                 <div>
                   <p className='text-2xl font-bold tracking-tight sm:text-3xl'>
                     Setting up a department takes minutes.
                   </p>
-                  <ul className='mt-5 space-y-2 text-sm text-blue-50'>
+                  <ul className='mt-5 space-y-2 text-sm text-[var(--color-ink-muted)]'>
                     {[
                       'Add batches, sections and courses',
                       'Import your roster from a spreadsheet',
                       'Build the weekly routine, clash-free',
                     ].map((item) => (
                       <li key={item} className='flex items-center gap-2'>
-                        <CheckCircleFilled className='text-blue-200' />
+                        <CheckCircle2
+                          size={16}
+                          className='text-[var(--color-brand)]'
+                        />
                         {item}
                       </li>
                     ))}
@@ -555,8 +560,9 @@ const Home = () => {
                 </div>
                 <Link href='/auth/login' className='shrink-0'>
                   <Button
+                    type='primary'
                     size='large'
-                    className='!border-white !bg-white !text-blue-700 transition-transform duration-200 hover:!bg-blue-50 hover:scale-[1.03]'
+                    className='!border-none !bg-[var(--color-brand)]'
                   >
                     Sign in as a department admin
                   </Button>
@@ -567,15 +573,15 @@ const Home = () => {
         </section>
       </main>
 
-      <footer className='border-t border-slate-100'>
-        <div className='mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-slate-500 sm:flex-row'>
+      <footer className='border-t border-[var(--color-line)]'>
+        <div className='mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-[var(--color-ink-faint)] sm:flex-row'>
           <div className='flex items-center gap-2'>
             <Image src='/logo-transparent.png' alt='' width={18} height={18} />
             <span>&copy; {new Date().getFullYear()} UniSync</span>
           </div>
           <Link
             href='/delete-account'
-            className='!text-slate-500 hover:!text-slate-700'
+            className='!text-[var(--color-ink-faint)] hover:!text-[var(--color-ink-muted)]'
           >
             Delete your account
           </Link>

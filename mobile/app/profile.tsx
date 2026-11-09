@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Pressable, ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
-import { Ionicons } from '@expo/vector-icons'
+import { ArrowLeft, IdCard, Phone, User, Users, type LucideIcon } from 'lucide-react-native'
 import { Avatar } from '@/components/ui/avatar'
 import { Box } from '@/components/ui/box'
 import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button'
@@ -18,11 +18,11 @@ import { useAuth } from '@/contexts/Auth'
 import { api, ApiError, call, session, unwrap } from '@/lib/api'
 import { roleLabel } from '@/lib/roles'
 
-function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+function InfoRow({ icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <HStack className="items-center py-2" accessible accessibilityLabel={`${label}: ${value}`}>
       <Box className="w-10 h-10 rounded-full bg-background-50 dark:bg-background-800 items-center justify-center mr-4">
-        <Icon as={Ionicons} name={icon} size="sm" className="text-typography-600" />
+        <Icon as={icon} size="sm" className="text-typography-600" />
       </Box>
       <VStack className="flex-1">
         <Text className="text-xs text-typography-500 mb-0.5">{label}</Text>
@@ -71,7 +71,7 @@ export default function ProfileScreen() {
     <SafeAreaView className="flex-1 bg-white dark:bg-background-950">
       <HStack className="items-center px-2 py-2">
         <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back" className="p-3">
-          <Icon as={Ionicons} name="arrow-back" size={22} className="text-typography-900" />
+          <Icon as={ArrowLeft} size={22} className="text-typography-900" />
         </Pressable>
         <Heading size="md" className="text-typography-900">
           Profile
@@ -90,7 +90,7 @@ export default function ProfileScreen() {
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
           <VStack className="items-center my-4">
             <Avatar size="2xl" className="bg-primary-500 mb-4 items-center justify-center">
-              <Icon as={Ionicons} name="person" size={45} className="text-white" />
+              <Icon as={User} size={45} className="text-white" />
             </Avatar>
             <Heading size="xl" className="font-bold text-typography-900 mb-1 text-center">
               {name || me.phone}
@@ -98,26 +98,26 @@ export default function ProfileScreen() {
             <Text className="text-sm text-typography-500">{roleLabel(me.role ?? userRole, me.isClassRepresentative)}</Text>
           </VStack>
 
-          <Box className="bg-white dark:bg-background-900 rounded-xl p-4 border border-outline-100 dark:border-outline-800 mt-4">
+          <Box className="bg-white dark:bg-background-900 rounded-md p-4 border border-outline-100 dark:border-outline-800 mt-4">
             <VStack space="sm">
-              <InfoRow icon="call-outline" label="Phone" value={me.phone} />
+              <InfoRow icon={Phone} label="Phone" value={me.phone} />
               {me.studentId ? (
                 <>
                   <Divider className="bg-outline-100 dark:bg-outline-800" />
-                  <InfoRow icon="card-outline" label="Student ID" value={me.studentId} />
+                  <InfoRow icon={IdCard} label="Student ID" value={me.studentId} />
                 </>
               ) : null}
               {me.section ? (
                 <>
                   <Divider className="bg-outline-100 dark:bg-outline-800" />
-                  <InfoRow icon="people-outline" label="Section" value={`Section ${me.section.name}`} />
+                  <InfoRow icon={Users} label="Section" value={`Section ${me.section.name}`} />
                 </>
               ) : null}
             </VStack>
           </Box>
           <Text className="text-typography-500 text-sm mt-3 px-1">Something wrong here? Your department keeps these details; ask them to fix it.</Text>
 
-          <Box className="bg-white dark:bg-background-900 rounded-xl p-4 border border-error-200 dark:border-error-800 mt-8">
+          <Box className="bg-white dark:bg-background-900 rounded-md p-4 border border-error-200 dark:border-error-800 mt-8">
             <Text className="text-base font-semibold text-typography-900">Delete account</Text>
             <Text className="text-sm text-typography-500 mt-1 mb-4">
               You&apos;ll be signed out on every device, stop getting notifications, and won&apos;t be able to sign in again. Your

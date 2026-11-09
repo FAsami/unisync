@@ -8,7 +8,7 @@ const PLACEHOLDER = '#9CA3AF'
 const inputClass =
   'flex-1 text-base text-typography-900 dark:text-typography-0 py-3 px-3'
 const boxClass = (error?: string) =>
-  `flex-row items-center rounded-xl border bg-background-0 dark:bg-background-900 ${
+  `flex-row items-center rounded-md border bg-background-0 dark:bg-background-900 ${
     error ? 'border-error-500' : 'border-outline-200'
   }`
 
@@ -208,7 +208,7 @@ export function Notice({
     success: 'bg-success-50 border-success-300',
   }[tone]
   return (
-    <View className={`rounded-xl border p-4 ${colors}`} accessibilityLiveRegion="polite">
+    <View className={`rounded-md border p-4 ${colors}`} accessibilityLiveRegion="polite">
       <Text className="text-typography-800">{message}</Text>
       {action ? (
         <Pressable onPress={action.onPress} accessibilityRole="button" className="mt-3 min-h-[44px] justify-center">

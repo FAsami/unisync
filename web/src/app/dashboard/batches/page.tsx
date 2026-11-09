@@ -13,7 +13,7 @@ import {
   Table,
   Tag,
 } from 'antd'
-import { PlusOutlined } from '@ant-design/icons'
+import { Plus } from 'lucide-react'
 import dayjs, { type Dayjs } from 'dayjs'
 import { api } from '@/lib/api/client'
 import { unwrap } from '@/lib/api/errors'
@@ -171,7 +171,7 @@ const BatchesPage = () => {
         extra={
           <Button
             type='primary'
-            icon={<PlusOutlined />}
+            icon={<Plus size={16} />}
             onClick={() => setBatchModal({})}
           >
             Add batch
@@ -219,7 +219,7 @@ const BatchesPage = () => {
               <Space>
                 <Button
                   size='small'
-                  icon={<PlusOutlined />}
+                  icon={<Plus size={16} />}
                   onClick={() => setSectionModal({ batch: b })}
                 >
                   Section

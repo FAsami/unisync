@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router'
 import React from 'react'
-import { Ionicons } from '@expo/vector-icons'
+import { Calendar, LayoutGrid, Megaphone, Bell, User } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { HapticTab } from '@/components/HapticTab'
@@ -32,9 +32,9 @@ const TabLayout = () => {
           height: 70 + Math.max(insets.bottom, 10),
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontFamily: Fonts.light,
-          letterSpacing: 0,
+          fontSize: 10,
+          fontFamily: Fonts.bold,
+          letterSpacing: 0.6,
           marginTop: 2,
           marginBottom: 0,
         },
@@ -49,11 +49,7 @@ const TabLayout = () => {
         options={{
           title: 'HOME',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              size={22}
-              name={focused ? 'grid' : 'grid-outline'}
-              color={color}
-            />
+            <LayoutGrid size={22} color={color} strokeWidth={focused ? 2.25 : 1.75} />
           ),
         }}
       />
@@ -62,11 +58,7 @@ const TabLayout = () => {
         options={{
           title: 'SCHEDULE',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              size={22}
-              name={focused ? 'calendar' : 'calendar-outline'}
-              color={color}
-            />
+            <Calendar size={22} color={color} strokeWidth={focused ? 2.25 : 1.75} />
           ),
         }}
       />
@@ -76,11 +68,7 @@ const TabLayout = () => {
           href: showManageTab ? undefined : null,
           title: 'SEND',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              size={22}
-              name={focused ? 'megaphone' : 'megaphone-outline'}
-              color={color}
-            />
+            <Megaphone size={22} color={color} strokeWidth={focused ? 2.25 : 1.75} />
           ),
         }}
       />
@@ -89,11 +77,7 @@ const TabLayout = () => {
         options={{
           title: 'ALERTS',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              size={22}
-              name={focused ? 'notifications' : 'notifications-outline'}
-              color={color}
-            />
+            <Bell size={22} color={color} strokeWidth={focused ? 2.25 : 1.75} />
           ),
         }}
       />
@@ -102,11 +86,7 @@ const TabLayout = () => {
         options={{
           title: 'ACCOUNT',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              size={22}
-              name={focused ? 'person' : 'person-outline'}
-              color={color}
-            />
+            <User size={22} color={color} strokeWidth={focused ? 2.25 : 1.75} />
           ),
         }}
       />

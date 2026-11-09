@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Ionicons } from '@expo/vector-icons'
+import { ArrowLeft, Building2, Undo2, XCircle, ArrowLeftRight, type LucideIcon } from 'lucide-react-native'
 import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button'
 import { Heading } from '@/components/ui/heading'
 import { HStack } from '@/components/ui/hstack'
@@ -17,11 +17,11 @@ import { classTitle, hhmm, shortDate, type ClassOccurrence } from '@/lib/schedul
 type Room = components['schemas']['RoomView']
 type Mode = 'menu' | ClassAction | 'pick-room'
 
-const actionIcon: Record<ClassAction, string> = {
-  cancel: 'close-circle-outline',
-  move: 'swap-horizontal-outline',
-  room: 'business-outline',
-  undo: 'arrow-undo-outline',
+const actionIcon: Record<ClassAction, LucideIcon> = {
+  cancel: XCircle,
+  move: ArrowLeftRight,
+  room: Building2,
+  undo: Undo2,
 }
 
 function PrimaryButton({ text, onPress, busy, tone = 'primary' }: { text: string; onPress: () => void; busy: boolean; tone?: 'primary' | 'danger' }) {
@@ -158,7 +158,7 @@ export function ClassActionsSheet({
       <Pressable className="flex-1 bg-black/40" onPress={onClose} accessibilityLabel="Close" />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View
-          className="bg-white dark:bg-background-900 rounded-t-3xl px-5 pt-4"
+          className="bg-white dark:bg-background-900 rounded-t-xl px-5 pt-4"
           style={{ paddingBottom: Math.max(insets.bottom, 16), maxHeight: 640 }}
         >
           <View className="self-center w-10 h-1 rounded-full bg-outline-200 mb-4" />
@@ -170,7 +170,7 @@ export function ClassActionsSheet({
                 accessibilityLabel="Back"
                 className="mr-2 p-1"
               >
-                <Icon as={Ionicons} name="arrow-back" size={22} className="text-typography-700" />
+                <Icon as={ArrowLeft} size={22} className="text-typography-700" />
               </Pressable>
             ) : null}
             <Heading size="md" className="text-typography-900 flex-1" numberOfLines={1}>
@@ -196,8 +196,7 @@ export function ClassActionsSheet({
                     className="flex-row items-center min-h-[52px] border-b border-outline-100 dark:border-outline-800"
                   >
                     <Icon
-                      as={Ionicons}
-                      name={actionIcon[action]}
+                      as={actionIcon[action]}
                       size={22}
                       className={action === 'cancel' ? 'text-error-600 mr-3' : 'text-primary-600 mr-3'}
                     />

@@ -13,7 +13,7 @@ import {
   Table,
   Tag,
 } from 'antd'
-import { PlusOutlined } from '@ant-design/icons'
+import { Plus } from 'lucide-react'
 import { api } from '@/lib/api/client'
 import { unwrap } from '@/lib/api/errors'
 import { fields, type Course } from '@/lib/api/schema'
@@ -84,7 +84,7 @@ const CoursesPage = () => {
             />
             <Button
               type='primary'
-              icon={<PlusOutlined />}
+              icon={<Plus size={16} />}
               onClick={() => setModal({})}
             >
               Add course

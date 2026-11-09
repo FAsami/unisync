@@ -33,9 +33,9 @@ it('marks one read once, and all read', () => {
 })
 
 it('picks an icon from the class change', () => {
-  expect(inboxIcon(item('1', false, { type: 'class_change', change: 'cancelled' }))).toBe('close-circle-outline')
-  expect(inboxIcon(item('1', false, { type: 'class_change', change: 'restored' }))).toBe('checkmark-circle-outline')
-  expect(inboxIcon(item('1'))).toBe('megaphone-outline')
+  expect(inboxIcon(item('1', false, { type: 'class_change', change: 'cancelled' }))).toBe('cancelled')
+  expect(inboxIcon(item('1', false, { type: 'class_change', change: 'restored' }))).toBe('restored')
+  expect(inboxIcon(item('1'))).toBe('announcement')
 })
 
 it('describes a sent notice by its push, never implying the inbox missed it', () => {

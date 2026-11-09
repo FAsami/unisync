@@ -6,18 +6,13 @@ import {
 } from '@react-navigation/native'
 
 import {
-  Montserrat_400Regular,
-  Montserrat_500Medium,
-  Montserrat_600SemiBold,
-  Montserrat_700Bold,
-  Montserrat_800ExtraBold,
-  Montserrat_900Black,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_800ExtraBold,
   useFonts,
-} from '@expo-google-fonts/montserrat'
-import {
-  LibreBodoni_600SemiBold,
-  LibreBodoni_700Bold,
-} from '@expo-google-fonts/libre-bodoni'
+} from '@expo-google-fonts/inter'
 
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
@@ -113,14 +108,11 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
 const RootLayout = () => {
   const colorScheme = useColorScheme()
   const [loaded] = useFonts({
-    Montserrat_400Regular,
-    Montserrat_500Medium,
-    Montserrat_600SemiBold,
-    Montserrat_700Bold,
-    Montserrat_800ExtraBold,
-    Montserrat_900Black,
-    LibreBodoni_600SemiBold,
-    LibreBodoni_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Inter_800ExtraBold,
   })
 
   if (!loaded) {

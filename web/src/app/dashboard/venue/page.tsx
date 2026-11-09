@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { App, Button, Form, Input, InputNumber, Space, Table } from 'antd'
-import { PlusOutlined } from '@ant-design/icons'
+import { Plus } from 'lucide-react'
 import { api } from '@/lib/api/client'
 import { unwrap } from '@/lib/api/errors'
 import type { Building, Room } from '@/lib/api/schema'
@@ -129,7 +129,7 @@ const VenuePage = () => {
         extra={
           <Button
             type='primary'
-            icon={<PlusOutlined />}
+            icon={<Plus size={16} />}
             onClick={() => setBuildingModal({})}
           >
             Add building
@@ -158,7 +158,7 @@ const VenuePage = () => {
               <Space>
                 <Button
                   size='small'
-                  icon={<PlusOutlined />}
+                  icon={<Plus size={16} />}
                   onClick={() => setRoomModal({ building: b })}
                 >
                   Room

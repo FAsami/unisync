@@ -14,7 +14,7 @@ import {
   TimePicker,
   Typography,
 } from 'antd'
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
+import { Trash2, Pencil, Plus } from 'lucide-react'
 import dayjs, { type Dayjs } from 'dayjs'
 import { api } from '@/lib/api/client'
 import { unwrap } from '@/lib/api/errors'
@@ -147,7 +147,7 @@ const RoutinePage = () => {
         extra={
           <Button
             type='primary'
-            icon={<PlusOutlined />}
+            icon={<Plus size={16} />}
             disabled={!sectionId}
             onClick={() => setModal({})}
           >
@@ -182,7 +182,7 @@ const RoutinePage = () => {
                   type='text'
                   size='small'
                   aria-label={`Add a class on ${dayName}`}
-                  icon={<PlusOutlined />}
+                  icon={<Plus size={16} />}
                   onClick={() => setModal({ dayOfWeek: day })}
                 />
               }
@@ -197,7 +197,7 @@ const RoutinePage = () => {
                   {byDay[day].map((slot) => (
                     <div
                       key={slot.id}
-                      className='border border-gray-200 rounded p-2 bg-gray-50'
+                      className='border border-[var(--color-line)] rounded p-2 bg-[var(--color-surface-sunken)]'
                     >
                       <div className='flex justify-between items-start gap-1'>
                         <Typography.Text strong>
@@ -208,7 +208,7 @@ const RoutinePage = () => {
                             type='text'
                             size='small'
                             aria-label='Edit class'
-                            icon={<EditOutlined />}
+                            icon={<Pencil size={14} />}
                             onClick={() => setModal({ slot })}
                           />
                           <Button
@@ -216,7 +216,7 @@ const RoutinePage = () => {
                             size='small'
                             danger
                             aria-label='Delete class'
-                            icon={<DeleteOutlined />}
+                            icon={<Trash2 size={14} />}
                             onClick={() =>
                               confirmDelete({
                                 title: `Remove ${slot.course.code} on ${dayName} at ${hhmm(slot.startTime)}?`,
@@ -237,7 +237,7 @@ const RoutinePage = () => {
                       <div className='text-sm'>
                         <strong>{slot.course.code}</strong> {slot.course.name}
                       </div>
-                      <div className='text-xs text-gray-500'>
+                      <div className='text-xs text-[var(--color-ink-faint)]'>
                         {slot.teacher.name}
                         {slot.room ? ` · ${slot.room.label}` : ''}
                       </div>

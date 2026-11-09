@@ -8,7 +8,7 @@ export const cardStyle = tva({
     size: {
       sm: 'p-3 rounded',
       md: 'p-4 rounded-md',
-      lg: 'p-6 rounded-xl',
+      lg: 'p-6 rounded-md',
     },
     variant: {
       elevated: 'bg-background-0',
