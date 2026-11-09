@@ -155,7 +155,11 @@ const PhoneFrame = ({
   priority?: boolean
 }) => (
   <div className='relative mx-auto w-full max-w-[220px] shrink-0'>
-    <div className='relative rounded-[2.1rem] bg-black p-2 shadow-xl shadow-black/40 ring-1 ring-white/10'>
+    <div
+      aria-hidden='true'
+      className='absolute inset-4 -z-10 rounded-full bg-[var(--color-brand)]/15 blur-2xl'
+    />
+    <div className='relative rounded-[2.1rem] bg-black p-2 shadow-xl shadow-black/50 ring-1 ring-white/15'>
       <div
         aria-hidden='true'
         className='absolute top-2 left-1/2 z-10 h-5 w-20 -translate-x-1/2 rounded-full bg-black'
@@ -236,7 +240,7 @@ const SectionNumber = ({ n, label }: { n: string; label: string }) => (
   <div className='flex items-center gap-4'>
     <span
       aria-hidden='true'
-      className='text-6xl leading-none font-extrabold text-[var(--color-surface-sunken)] select-none sm:text-7xl'
+      className='text-6xl leading-none font-extrabold text-[var(--color-ink-faint)] select-none sm:text-7xl'
     >
       {n}
     </span>
@@ -417,7 +421,7 @@ const Home = () => {
                   delay={i * 90}
                   className='w-[220px] shrink-0 sm:w-auto'
                 >
-                  <div className='group transition-transform duration-300 hover:-translate-y-1.5'>
+                  <div className='group rounded-xl border border-[var(--color-line)] bg-[var(--color-surface-raised)] p-5 transition-transform duration-300 hover:-translate-y-1.5'>
                     <PhoneFrame src={shot.src} alt={shot.alt} />
                     <p className='mt-4 text-center font-semibold text-[var(--color-ink)]'>
                       {shot.caption}
@@ -529,16 +533,16 @@ const Home = () => {
         >
           <div className='mx-auto max-w-6xl px-6 py-20 sm:py-24'>
             <Reveal>
-              <div className='relative flex flex-col items-start justify-between gap-10 overflow-hidden rounded-2xl bg-[var(--color-brand)] p-10 text-[var(--color-on-brand)] md:flex-row md:items-center md:p-14'>
+              <div className='relative flex flex-col items-start justify-between gap-10 overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface-raised)] p-10 text-[var(--color-ink)] md:flex-row md:items-center md:p-14'>
                 <div
                   aria-hidden='true'
-                  className='absolute inset-0 -z-10 bg-[radial-gradient(circle,rgba(10,10,11,0.08)_1px,transparent_1px)] bg-[length:24px_24px]'
+                  className='absolute inset-x-0 top-0 h-1 bg-[var(--color-brand)]'
                 />
                 <div>
                   <p className='text-2xl font-bold tracking-tight sm:text-3xl'>
                     Setting up a department takes minutes.
                   </p>
-                  <ul className='mt-5 space-y-2 text-sm text-[var(--color-on-brand)]/80'>
+                  <ul className='mt-5 space-y-2 text-sm text-[var(--color-ink-muted)]'>
                     {[
                       'Add batches, sections and courses',
                       'Import your roster from a spreadsheet',
@@ -547,7 +551,7 @@ const Home = () => {
                       <li key={item} className='flex items-center gap-2'>
                         <CheckCircle2
                           size={16}
-                          className='text-[var(--color-on-brand)]/70'
+                          className='text-[var(--color-brand)]'
                         />
                         {item}
                       </li>
@@ -556,8 +560,9 @@ const Home = () => {
                 </div>
                 <Link href='/auth/login' className='shrink-0'>
                   <Button
+                    type='primary'
                     size='large'
-                    className='!border-none !bg-[var(--color-on-brand)] !text-[var(--color-brand)] transition-opacity duration-200 hover:!opacity-90'
+                    className='!border-none !bg-[var(--color-brand)]'
                   >
                     Sign in as a department admin
                   </Button>
